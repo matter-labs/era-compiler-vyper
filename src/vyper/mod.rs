@@ -10,8 +10,17 @@ use std::collections::BTreeMap;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::Arc;
+use std::sync::Mutex;
+
+use rayon::iter::IndexedParallelIterator;
+use rayon::iter::IntoParallelIterator;
+use rayon::iter::ParallelIterator;
+use sha3::digest::FixedOutput;
+use sha3::Digest;
 
 use crate::project::contract::vyper::Contract as VyperContract;
+use crate::project::contract::Contract;
 use crate::project::Project;
 
 use self::combined_json::CombinedJson;
@@ -102,18 +111,47 @@ impl Compiler {
             );
         }
 
-        let output = serde_json::from_slice(output.stdout.as_slice()).map_err(|error| {
-            anyhow::anyhow!(
-                "{} subprocess output parsing error: {}\n{}",
-                self.executable,
-                error,
-                serde_json::from_slice::<serde_json::Value>(output.stdout.as_slice())
-                    .map(|json| serde_json::to_string_pretty(&json).expect("Always valid"))
-                    .unwrap_or_else(
-                        |_| String::from_utf8_lossy(output.stdout.as_slice()).to_string()
-                    ),
-            )
-        })?;
+        let mut output: StandardJsonOutput = serde_json::from_slice(output.stdout.as_slice())
+            .map_err(|error| {
+                anyhow::anyhow!(
+                    "{} subprocess output parsing error: {}\n{}",
+                    self.executable,
+                    error,
+                    serde_json::from_slice::<serde_json::Value>(output.stdout.as_slice())
+                        .map(|json| serde_json::to_string_pretty(&json).expect("Always valid"))
+                        .unwrap_or_else(
+                            |_| String::from_utf8_lossy(output.stdout.as_slice()).to_string()
+                        ),
+                )
+            })?;
+        for (full_path, source) in input.sources.into_iter() {
+            let mut path_split = full_path.split(':');
+            let file_path = path_split.next().ok_or_else(|| {
+                anyhow::anyhow!("Cannot get the file path from full path `{}`", full_path)
+            })?;
+            let contract_name = path_split.next().ok_or_else(|| {
+                anyhow::anyhow!(
+                    "Cannot get the contract name from full path `{}`",
+                    full_path
+                )
+            })?;
+            output
+                .files
+                .as_mut()
+                .ok_or_else(|| anyhow::anyhow!("No contracts in the standard JSON output"))?
+                .get_mut(file_path)
+                .ok_or_else(|| {
+                    anyhow::anyhow!("File `{}` not found in the standard JSON output", file_path)
+                })?
+                .get_mut(contract_name)
+                .ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "Contract `{}` not found in the standard JSON output",
+                        contract_name
+                    )
+                })?
+                .source_code = Some(source.content);
+        }
 
         Ok(output)
     }
@@ -182,15 +220,49 @@ impl Compiler {
 
         let stdout = String::from_utf8_lossy(output.stdout.as_slice()).to_string();
         let lines: Vec<&str> = stdout.lines().collect();
-        let mut contracts = BTreeMap::new();
-        for (path, group) in paths.into_iter().zip(lines.chunks(3)) {
-            let path = path.to_string_lossy().to_string();
-            let contract = VyperContract::try_from_lines(group.to_vec()).map_err(|error| {
-                anyhow::anyhow!("Contract `{}` JSON output parsing: {}", path, error)
-            })?;
-            contracts.insert(path, contract.into());
-        }
-        let project = Project::new(version.to_owned(), contracts);
+        let source_code_hasher = Arc::new(Mutex::new(sha3::Keccak256::new()));
+        let results: BTreeMap<String, anyhow::Result<VyperContract>> = paths
+            .into_par_iter()
+            .zip(lines.into_par_iter().chunks(3))
+            .map(|(path, group)| {
+                let path_str = path.to_string_lossy().to_string();
+                match std::fs::read_to_string(path).map_err(|error| {
+                    anyhow::anyhow!("Source code file `{}` reading error: {}", path_str, error)
+                }) {
+                    Ok(source_code) => source_code_hasher
+                        .lock()
+                        .expect("Sync")
+                        .update(source_code.as_bytes()),
+                    Err(error) => return (path_str, Err(error)),
+                }
+
+                let contract_result = VyperContract::try_from_lines(
+                    version.to_owned(),
+                    group.to_vec(),
+                )
+                .map_err(|error| {
+                    anyhow::anyhow!("Contract `{}` JSON output parsing: {}", path_str, error)
+                });
+
+                (path_str, contract_result)
+            })
+            .collect();
+        let contracts =
+            results
+                .into_iter()
+                .try_fold(BTreeMap::new(), |mut accumulator, (path, result)| {
+                    accumulator.insert(path, result?.into());
+                    Ok::<BTreeMap<String, Contract>, anyhow::Error>(accumulator)
+                })?;
+        let source_code_hash: [u8; compiler_common::BYTE_LENGTH_FIELD] =
+            Arc::try_unwrap(source_code_hasher)
+                .expect("Sync")
+                .into_inner()
+                .expect("Sync")
+                .finalize_fixed()
+                .into();
+
+        let project = Project::new(version.to_owned(), source_code_hash, contracts);
 
         Ok(project)
     }

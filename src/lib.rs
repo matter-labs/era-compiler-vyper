@@ -39,7 +39,7 @@ use std::path::PathBuf;
 ///
 pub fn llvm_ir(
     mut input_files: Vec<PathBuf>,
-    optimize: bool,
+    optimizer_settings: compiler_llvm_context::OptimizerSettings,
     debug_config: Option<compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
     let path = match input_files.len() {
@@ -53,11 +53,6 @@ pub fn llvm_ir(
 
     let project = Project::try_from_llvm_ir_path(&path)?;
 
-    let optimizer_settings = if optimize {
-        compiler_llvm_context::OptimizerSettings::size()
-    } else {
-        compiler_llvm_context::OptimizerSettings::none()
-    };
     let target_machine = compiler_llvm_context::TargetMachine::new(&optimizer_settings)?;
     let build = project.compile(target_machine, optimizer_settings, debug_config)?;
 
@@ -70,7 +65,7 @@ pub fn llvm_ir(
 pub fn standard_output(
     input_files: Vec<PathBuf>,
     vyper: &VyperCompiler,
-    optimize: bool,
+    optimizer_settings: compiler_llvm_context::OptimizerSettings,
     debug_config: Option<compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
     let vyper_version = vyper.version()?;
@@ -82,13 +77,8 @@ pub fn standard_output(
         }
     }
 
-    let project = vyper.batch(&vyper_version.default, input_files, optimize)?;
+    let project = vyper.batch(&vyper_version.default, input_files, true)?;
 
-    let optimizer_settings = if optimize {
-        compiler_llvm_context::OptimizerSettings::size()
-    } else {
-        compiler_llvm_context::OptimizerSettings::none()
-    };
     let target_machine = compiler_llvm_context::TargetMachine::new(&optimizer_settings)?;
     let build = project.compile(target_machine, optimizer_settings, debug_config)?;
 
@@ -101,7 +91,7 @@ pub fn standard_output(
 pub fn combined_json(
     input_files: Vec<PathBuf>,
     vyper: &VyperCompiler,
-    optimize: bool,
+    optimizer_settings: compiler_llvm_context::OptimizerSettings,
     debug_config: Option<compiler_llvm_context::DebugConfig>,
     output_directory: Option<PathBuf>,
     overwrite: bool,
@@ -117,13 +107,8 @@ pub fn combined_json(
         }
     }
 
-    let project = vyper.batch(&vyper_version.default, input_files.clone(), optimize)?;
+    let project = vyper.batch(&vyper_version.default, input_files.clone(), true)?;
 
-    let optimizer_settings = if optimize {
-        compiler_llvm_context::OptimizerSettings::size()
-    } else {
-        compiler_llvm_context::OptimizerSettings::none()
-    };
     let target_machine = compiler_llvm_context::TargetMachine::new(&optimizer_settings)?;
     let build = project.compile(target_machine, optimizer_settings, debug_config)?;
 

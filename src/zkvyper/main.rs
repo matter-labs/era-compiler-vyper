@@ -57,16 +57,6 @@ fn main_inner() -> anyhow::Result<()> {
 
     inkwell::support::enable_llvm_pretty_stack_trace();
     compiler_llvm_context::initialize_target();
-    if let Some(llvm_options) = arguments.llvm_options {
-        let llvm_options = shell_words::split(llvm_options.as_str())
-            .map_err(|error| anyhow::anyhow!("LLVM options parsing error: {}", error))?;
-        let llvm_options = Vec::from_iter(llvm_options.iter().map(String::as_str));
-        inkwell::support::parse_command_line_options(
-            llvm_options.len() as i32,
-            llvm_options.as_slice(),
-            "",
-        );
-    }
 
     let vyper = compiler_vyper::VyperCompiler::new(
         arguments
@@ -74,15 +64,20 @@ fn main_inner() -> anyhow::Result<()> {
             .unwrap_or_else(|| compiler_vyper::VyperCompiler::DEFAULT_EXECUTABLE_NAME.to_owned()),
     );
 
+    let optimizer_settings = match arguments.optimization {
+        Some(mode) => compiler_llvm_context::OptimizerSettings::try_from_cli(mode)?,
+        None => compiler_llvm_context::OptimizerSettings::cycles(),
+    };
+
     let build = if arguments.llvm_ir {
-        compiler_vyper::llvm_ir(arguments.input_files, !arguments.no_optimize, debug_config)
+        compiler_vyper::llvm_ir(arguments.input_files, optimizer_settings, debug_config)
     } else {
         match arguments.format.as_deref() {
             Some("combined_json") => {
                 compiler_vyper::combined_json(
                     arguments.input_files,
                     &vyper,
-                    !arguments.no_optimize,
+                    optimizer_settings,
                     debug_config,
                     arguments.output_directory,
                     arguments.overwrite,
@@ -95,7 +90,7 @@ fn main_inner() -> anyhow::Result<()> {
             Some(_) | None => compiler_vyper::standard_output(
                 arguments.input_files,
                 &vyper,
-                !arguments.no_optimize,
+                optimizer_settings,
                 debug_config,
             ),
         }

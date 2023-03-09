@@ -10,6 +10,7 @@ use std::path::Path;
 
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
+use sha3::Digest;
 
 use crate::build::contract::Contract as ContractBuild;
 use crate::build::Build;
@@ -24,6 +25,8 @@ use self::contract::Contract;
 pub struct Project {
     /// The Vyper compiler version.
     pub version: semver::Version,
+    /// The project source code hash.
+    pub source_code_hash: [u8; compiler_common::BYTE_LENGTH_FIELD],
     /// The contract data,
     pub contracts: BTreeMap<String, Contract>,
 }
@@ -32,22 +35,36 @@ impl Project {
     ///
     /// A shortcut constructor.
     ///
-    pub fn new(version: semver::Version, contracts: BTreeMap<String, Contract>) -> Self {
-        Self { version, contracts }
+    pub fn new(
+        version: semver::Version,
+        source_code_hash: [u8; compiler_common::BYTE_LENGTH_FIELD],
+        contracts: BTreeMap<String, Contract>,
+    ) -> Self {
+        Self {
+            version,
+            source_code_hash,
+            contracts,
+        }
     }
 
     ///
     /// Parses the LLVM IR source code file and returns the source data.
     ///
     pub fn try_from_llvm_ir_path(path: &Path) -> anyhow::Result<Self> {
-        let code = std::fs::read_to_string(path)
+        let source_code = std::fs::read_to_string(path)
             .map_err(|error| anyhow::anyhow!("LLVM IR file {:?} reading error: {}", path, error))?;
         let path = path.to_string_lossy().to_string();
 
-        let mut project_contracts = BTreeMap::new();
-        project_contracts.insert(path, LLVMIRContract::new(code).into());
+        let source_code_hash = sha3::Keccak256::digest(source_code.as_bytes()).into();
 
-        Ok(Self::new(crate::r#const::LLVM_VERSION, project_contracts))
+        let mut project_contracts = BTreeMap::new();
+        project_contracts.insert(path, LLVMIRContract::new(source_code).into());
+
+        Ok(Self::new(
+            compiler_llvm_context::LLVM_VERSION,
+            source_code_hash,
+            project_contracts,
+        ))
     }
 
     ///
@@ -66,6 +83,7 @@ impl Project {
             .map(|(path, contract)| {
                 let contract_build = contract.compile(
                     path.as_str(),
+                    self.source_code_hash,
                     target_machine.clone(),
                     optimizer_settings.clone(),
                     debug_config.clone(),
@@ -90,6 +108,7 @@ impl Project {
                 crate::r#const::FORWARDER_CONTRACT_ASSEMBLY.to_owned(),
                 zkevm_assembly::Assembly::from_string(
                     crate::r#const::FORWARDER_CONTRACT_ASSEMBLY.to_owned(),
+                    sha3::Keccak256::digest(crate::r#const::FORWARDER_CONTRACT_ASSEMBLY).into(),
                 )?,
                 crate::r#const::FORWARDER_CONTRACT_BYTECODE.clone(),
                 crate::r#const::FORWARDER_CONTRACT_HASH.clone(),

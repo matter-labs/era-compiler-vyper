@@ -1,16 +1,17 @@
 //!
-//! The Vyper LLL IR JSON representation.
+//! The Vyper contract function representation.
 //!
+
+use inkwell::types::BasicType;
 
 use compiler_llvm_context::Dependency;
 use compiler_llvm_context::WriteLLVM;
-use inkwell::types::BasicType;
 
 use crate::metadata::function::Function as FunctionMetadata;
 use crate::project::contract::vyper::expression::Expression;
 
 ///
-/// The Vyper LLL IR JSON representation.
+/// The Vyper contract function representation.
 ///
 #[derive(Debug)]
 pub struct Function {

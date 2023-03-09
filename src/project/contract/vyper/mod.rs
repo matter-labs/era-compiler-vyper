@@ -15,7 +15,8 @@ use compiler_llvm_context::Dependency;
 use compiler_llvm_context::WriteLLVM;
 
 use crate::build::contract::Contract as ContractBuild;
-use crate::metadata::Metadata;
+use crate::metadata::Metadata as SourceMetadata;
+use crate::project::contract::metadata::Metadata as ContractMetadata;
 use crate::project::dependency_data::DependencyData;
 
 use self::expression::Expression;
@@ -26,8 +27,10 @@ use self::function::Function;
 ///
 #[derive(Debug, Clone)]
 pub struct Contract {
-    /// The metadata.
-    pub metadata: Metadata,
+    /// The source file upstream Vyper compiler version.
+    pub source_version: semver::Version,
+    /// The source metadata.
+    pub source_metadata: SourceMetadata,
     /// The inner expression.
     pub expression: Expression,
     /// The contract ABI data.
@@ -43,9 +46,15 @@ impl Contract {
     ///
     /// A shortcut constructor.
     ///
-    pub fn new(metadata: Metadata, expression: Expression, abi: BTreeMap<String, String>) -> Self {
+    pub fn new(
+        source_version: semver::Version,
+        source_metadata: SourceMetadata,
+        expression: Expression,
+        abi: BTreeMap<String, String>,
+    ) -> Self {
         Self {
-            metadata,
+            source_version,
+            source_metadata,
             expression,
             abi,
             dependency_data: Arc::new(RwLock::new(DependencyData::default())),
@@ -59,7 +68,10 @@ impl Contract {
     /// 2. The contract functions metadata
     /// 3. The contract ABI data
     ///
-    pub fn try_from_lines(mut lines: Vec<&str>) -> anyhow::Result<Self> {
+    pub fn try_from_lines(
+        source_version: semver::Version,
+        mut lines: Vec<&str>,
+    ) -> anyhow::Result<Self> {
         if lines.len() != Self::EXPECTED_LINES {
             anyhow::bail!(
                 "Expected {} lines with JSONs, found {}",
@@ -73,11 +85,11 @@ impl Contract {
         let deserializer = serde_stacker::Deserializer::new(&mut deserializer);
         let expression = Expression::deserialize(deserializer)?;
 
-        let metadata: Metadata = serde_json::from_str(lines.remove(0))?;
+        let metadata: SourceMetadata = serde_json::from_str(lines.remove(0))?;
 
         let abi: BTreeMap<String, String> = serde_json::from_str(lines.remove(0))?;
 
-        Ok(Self::new(metadata, expression, abi))
+        Ok(Self::new(source_version, metadata, expression, abi))
     }
 
     ///
@@ -86,12 +98,22 @@ impl Contract {
     pub fn compile(
         mut self,
         contract_path: &str,
+        source_code_hash: [u8; compiler_common::BYTE_LENGTH_FIELD],
         target_machine: compiler_llvm_context::TargetMachine,
         optimizer_settings: compiler_llvm_context::OptimizerSettings,
         debug_config: Option<compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
         let llvm = inkwell::context::Context::create();
         let optimizer = compiler_llvm_context::Optimizer::new(target_machine, optimizer_settings);
+
+        let metadata_hash = ContractMetadata::new(
+            &source_code_hash,
+            &self.source_version,
+            semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
+            optimizer.settings().to_owned(),
+        )
+        .keccak256();
+
         let mut context = compiler_llvm_context::Context::<DependencyData>::new(
             &llvm,
             llvm.create_module(contract_path),
@@ -99,6 +121,7 @@ impl Contract {
             Some(self.dependency_data.clone()),
             debug_config,
         );
+
         self.declare(&mut context).map_err(|error| {
             anyhow::anyhow!(
                 "The contract `{}` LLVM IR generator declaration pass error: {}",
@@ -114,7 +137,9 @@ impl Contract {
                 error
             )
         })?;
-        let mut build = context.build(contract_path)?;
+
+        let mut build = context.build(contract_path, metadata_hash)?;
+
         if dependency_data.read().expect("Sync").is_forwarder_used {
             build.factory_dependencies.insert(
                 crate::r#const::FORWARDER_CONTRACT_HASH.clone(),
@@ -201,23 +226,28 @@ where
 
         let mut functions = Vec::with_capacity(function_expressions.capacity());
         for (label, expression, code_type) in function_expressions.into_iter() {
-            let metadata_name = self
-                .metadata
-                .function_info
-                .iter()
-                .find_map(|(name, function)| {
-                    if label
-                        .strip_suffix(format!("_{}", crate::r#const::LABEL_SUFFIX_COMMON).as_str())
-                        .unwrap_or(label.as_str())
-                        == function.ir_identifier.as_str()
-                    {
-                        Some(name.to_owned())
-                    } else {
-                        None
-                    }
-                });
+            let metadata_name =
+                self.source_metadata
+                    .function_info
+                    .iter()
+                    .find_map(|(name, function)| {
+                        if label
+                            .strip_suffix(
+                                format!("_{}", crate::r#const::LABEL_SUFFIX_COMMON).as_str(),
+                            )
+                            .unwrap_or(label.as_str())
+                            == function.ir_identifier.as_str()
+                        {
+                            Some(name.to_owned())
+                        } else {
+                            None
+                        }
+                    });
             let metadata = match metadata_name {
-                Some(metadata_name) => self.metadata.function_info.remove(metadata_name.as_str()),
+                Some(metadata_name) => self
+                    .source_metadata
+                    .function_info
+                    .remove(metadata_name.as_str()),
                 None => None,
             };
             functions.push((Function::new(label, metadata, expression), code_type));

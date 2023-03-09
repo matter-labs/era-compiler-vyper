@@ -8,6 +8,8 @@ pub mod error;
 use std::collections::BTreeMap;
 
 use serde::Deserialize;
+use sha3::digest::FixedOutput;
+use sha3::Digest;
 
 use crate::project::contract::vyper::Contract as VyperContract;
 use crate::project::Project;
@@ -55,16 +57,34 @@ impl Output {
         };
 
         let mut project_contracts = BTreeMap::new();
+        let mut source_code_hasher = sha3::Keccak256::new();
         for (path, file) in files.into_iter() {
             for (name, contract) in file.into_iter() {
                 let full_path = format!("{path}:{name}");
 
-                let project_contract =
-                    VyperContract::new(contract.metadata, contract.ir, contract.evm.abi);
+                source_code_hasher.update(
+                    contract
+                        .source_code
+                        .expect("Must be set at this point")
+                        .as_bytes(),
+                );
+
+                let project_contract = VyperContract::new(
+                    version.to_owned(),
+                    contract.metadata,
+                    contract.ir,
+                    contract.evm.abi,
+                );
                 project_contracts.insert(full_path, project_contract.into());
             }
         }
+        let source_code_hash: [u8; compiler_common::BYTE_LENGTH_FIELD] =
+            source_code_hasher.finalize_fixed().into();
 
-        Ok(Project::new(version.to_owned(), project_contracts))
+        Ok(Project::new(
+            version.to_owned(),
+            source_code_hash,
+            project_contracts,
+        ))
     }
 }

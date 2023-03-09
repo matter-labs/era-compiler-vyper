@@ -3,6 +3,7 @@
 //!
 
 pub mod llvm_ir;
+pub mod metadata;
 pub mod vyper;
 
 use crate::build::contract::Contract as ContractBuild;
@@ -42,6 +43,7 @@ impl Contract {
     pub fn compile(
         self,
         contract_path: &str,
+        source_code_hash: [u8; compiler_common::BYTE_LENGTH_FIELD],
         target_machine: compiler_llvm_context::TargetMachine,
         optimizer_settings: compiler_llvm_context::OptimizerSettings,
         debug_config: Option<compiler_llvm_context::DebugConfig>,
@@ -49,12 +51,14 @@ impl Contract {
         match self {
             Self::Vyper(inner) => inner.compile(
                 contract_path,
+                source_code_hash,
                 target_machine,
                 optimizer_settings,
                 debug_config,
             ),
             Self::LLVMIR(inner) => inner.compile(
                 contract_path,
+                source_code_hash,
                 target_machine,
                 optimizer_settings,
                 debug_config,

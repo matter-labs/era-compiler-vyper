@@ -16,6 +16,8 @@ use self::evm::EVM;
 ///
 #[derive(Debug, Deserialize)]
 pub struct Contract {
+    /// The source code.
+    pub source_code: Option<String>,
     /// The contract IR code.
     pub ir: Expression,
     /// The contract metadata.

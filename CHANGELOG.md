@@ -1,5 +1,17 @@
 # The `zkvyper` changelog
 
+## [1.3.3] - 2023-03-09
+
+### Added
+
+- The contract metadata hash to the end of bytecode
+- More optimizations
+
+### Changed
+
+- The optimizer settings to support multiple modes
+- The optimizer now optimizes for performance instead of size by default
+
 ## [1.3.2] - 2023-02-14
 
 ### Added
