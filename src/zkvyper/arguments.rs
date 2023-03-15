@@ -50,6 +50,14 @@ pub struct Arguments {
     /// Dump all IRs to files in the specified directory.
     #[structopt(long = "debug-output-dir")]
     pub debug_output_directory: Option<PathBuf>,
+
+    /// Sets the `verify each` option in LLVM.
+    #[structopt(long = "llvm-verify-each")]
+    pub llvm_verify_each: bool,
+
+    /// Sets the `debug logging` option in LLVM.
+    #[structopt(long = "llvm-debug-logging")]
+    pub llvm_debug_logging: bool,
 }
 
 impl Arguments {

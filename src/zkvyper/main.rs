@@ -64,10 +64,12 @@ fn main_inner() -> anyhow::Result<()> {
             .unwrap_or_else(|| compiler_vyper::VyperCompiler::DEFAULT_EXECUTABLE_NAME.to_owned()),
     );
 
-    let optimizer_settings = match arguments.optimization {
+    let mut optimizer_settings = match arguments.optimization {
         Some(mode) => compiler_llvm_context::OptimizerSettings::try_from_cli(mode)?,
         None => compiler_llvm_context::OptimizerSettings::cycles(),
     };
+    optimizer_settings.is_verify_each_enabled = arguments.llvm_verify_each;
+    optimizer_settings.is_debug_logging_enabled = arguments.llvm_debug_logging;
 
     let build = if arguments.llvm_ir {
         compiler_vyper::llvm_ir(arguments.input_files, optimizer_settings, debug_config)

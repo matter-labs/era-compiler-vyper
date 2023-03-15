@@ -1,5 +1,11 @@
 # The `zkvyper` changelog
 
+## [1.3.4] - 2023-03-15
+
+### Added
+
+- LLVM options for debugging and verification
+
 ## [1.3.3] - 2023-03-09
 
 ### Added
