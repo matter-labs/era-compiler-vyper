@@ -65,6 +65,7 @@ pub fn llvm_ir(
 pub fn standard_output(
     input_files: Vec<PathBuf>,
     vyper: &VyperCompiler,
+    vyper_optimizer_enabled: bool,
     optimizer_settings: compiler_llvm_context::OptimizerSettings,
     debug_config: Option<compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
@@ -77,7 +78,7 @@ pub fn standard_output(
         }
     }
 
-    let project = vyper.batch(&vyper_version.default, input_files, true)?;
+    let project = vyper.batch(&vyper_version.default, input_files, vyper_optimizer_enabled)?;
 
     let target_machine = compiler_llvm_context::TargetMachine::new(&optimizer_settings)?;
     let build = project.compile(target_machine, optimizer_settings, debug_config)?;
@@ -91,6 +92,7 @@ pub fn standard_output(
 pub fn combined_json(
     input_files: Vec<PathBuf>,
     vyper: &VyperCompiler,
+    vyper_optimizer_enabled: bool,
     optimizer_settings: compiler_llvm_context::OptimizerSettings,
     debug_config: Option<compiler_llvm_context::DebugConfig>,
     output_directory: Option<PathBuf>,
@@ -102,12 +104,16 @@ pub fn combined_json(
 
     if let Some(ref debug_config) = debug_config {
         for path in input_files.iter() {
-            let lll_debug = vyper.lll_debug(path.as_path(), true)?;
+            let lll_debug = vyper.lll_debug(path.as_path(), vyper_optimizer_enabled)?;
             debug_config.dump_lll(path.to_string_lossy().as_ref(), lll_debug.as_str())?;
         }
     }
 
-    let project = vyper.batch(&vyper_version.default, input_files.clone(), true)?;
+    let project = vyper.batch(
+        &vyper_version.default,
+        input_files.clone(),
+        vyper_optimizer_enabled,
+    )?;
 
     let target_machine = compiler_llvm_context::TargetMachine::new(&optimizer_settings)?;
     let build = project.compile(target_machine, optimizer_settings, debug_config)?;

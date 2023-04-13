@@ -8,6 +8,9 @@ use std::path::PathBuf;
 
 use self::arguments::Arguments;
 
+/// The rayon worker stack size.
+const RAYON_WORKER_STACK_SIZE: usize = 16 * 1024 * 1024;
+
 #[cfg(target_env = "musl")]
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -51,6 +54,11 @@ fn main_inner() -> anyhow::Result<()> {
         None => None,
     };
 
+    rayon::ThreadPoolBuilder::new()
+        .stack_size(RAYON_WORKER_STACK_SIZE)
+        .build_global()
+        .expect("Thread pool configuration failure");
+
     for path in arguments.input_files.iter_mut() {
         *path = path.canonicalize()?;
     }
@@ -79,6 +87,7 @@ fn main_inner() -> anyhow::Result<()> {
                 compiler_vyper::combined_json(
                     arguments.input_files,
                     &vyper,
+                    !arguments.disable_vyper_optimizer,
                     optimizer_settings,
                     debug_config,
                     arguments.output_directory,
@@ -92,6 +101,7 @@ fn main_inner() -> anyhow::Result<()> {
             Some(_) | None => compiler_vyper::standard_output(
                 arguments.input_files,
                 &vyper,
+                !arguments.disable_vyper_optimizer,
                 optimizer_settings,
                 debug_config,
             ),

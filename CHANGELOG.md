@@ -1,5 +1,16 @@
 # The `zkvyper` changelog
 
+## [1.3.5] - 2023-04-04
+
+### Added
+
+- An option to disable the `vyper` optimizer
+
+### Changed
+
+- Increased the stack size for `rayon` workers to 16 MB
+- Improved the CLI interface description (see `--help`)
+
 ## [1.3.4] - 2023-03-15
 
 ### Added
