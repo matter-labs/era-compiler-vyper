@@ -54,7 +54,7 @@ lazy_static! {
     pub static ref FORWARDER_CONTRACT_BYTECODE_WORDS: Vec<[u8; compiler_common::BYTE_LENGTH_FIELD]> = {
         let metadata_hash = sha3::Keccak256::digest(FORWARDER_CONTRACT_ASSEMBLY.as_bytes()).into();
         let mut assembly =
-            zkevm_assembly::Assembly::from_string(FORWARDER_CONTRACT_ASSEMBLY.to_owned(), metadata_hash).expect("Always valid");
+            zkevm_assembly::Assembly::from_string(FORWARDER_CONTRACT_ASSEMBLY.to_owned(), Some(metadata_hash)).expect("Always valid");
         assembly
             .compile_to_bytecode().expect("Always valid")
     };

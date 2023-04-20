@@ -32,6 +32,8 @@ pub use self::vyper::standard_json::output::Output as VyperCompilerStandardOutpu
 pub use self::vyper::version::Version as VyperVersion;
 pub use self::vyper::Compiler as VyperCompiler;
 
+mod tests;
+
 use std::path::PathBuf;
 
 ///
@@ -40,6 +42,7 @@ use std::path::PathBuf;
 pub fn llvm_ir(
     mut input_files: Vec<PathBuf>,
     optimizer_settings: compiler_llvm_context::OptimizerSettings,
+    include_metadata_hash: bool,
     debug_config: Option<compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
     let path = match input_files.len() {
@@ -54,7 +57,12 @@ pub fn llvm_ir(
     let project = Project::try_from_llvm_ir_path(&path)?;
 
     let target_machine = compiler_llvm_context::TargetMachine::new(&optimizer_settings)?;
-    let build = project.compile(target_machine, optimizer_settings, debug_config)?;
+    let build = project.compile(
+        target_machine,
+        optimizer_settings,
+        include_metadata_hash,
+        debug_config,
+    )?;
 
     Ok(build)
 }
@@ -67,6 +75,7 @@ pub fn standard_output(
     vyper: &VyperCompiler,
     vyper_optimizer_enabled: bool,
     optimizer_settings: compiler_llvm_context::OptimizerSettings,
+    include_metadata_hash: bool,
     debug_config: Option<compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
     let vyper_version = vyper.version()?;
@@ -81,7 +90,12 @@ pub fn standard_output(
     let project = vyper.batch(&vyper_version.default, input_files, vyper_optimizer_enabled)?;
 
     let target_machine = compiler_llvm_context::TargetMachine::new(&optimizer_settings)?;
-    let build = project.compile(target_machine, optimizer_settings, debug_config)?;
+    let build = project.compile(
+        target_machine,
+        optimizer_settings,
+        include_metadata_hash,
+        debug_config,
+    )?;
 
     Ok(build)
 }
@@ -89,11 +103,13 @@ pub fn standard_output(
 ///
 /// Runs the combined JSON mode.
 ///
+#[allow(clippy::too_many_arguments)]
 pub fn combined_json(
     input_files: Vec<PathBuf>,
     vyper: &VyperCompiler,
     vyper_optimizer_enabled: bool,
     optimizer_settings: compiler_llvm_context::OptimizerSettings,
+    include_metadata_hash: bool,
     debug_config: Option<compiler_llvm_context::DebugConfig>,
     output_directory: Option<PathBuf>,
     overwrite: bool,
@@ -116,7 +132,12 @@ pub fn combined_json(
     )?;
 
     let target_machine = compiler_llvm_context::TargetMachine::new(&optimizer_settings)?;
-    let build = project.compile(target_machine, optimizer_settings, debug_config)?;
+    let build = project.compile(
+        target_machine,
+        optimizer_settings,
+        include_metadata_hash,
+        debug_config,
+    )?;
 
     let mut combined_json = vyper.combined_json(input_files.as_slice())?;
     build.write_to_combined_json(&mut combined_json, &zkvyper_version)?;

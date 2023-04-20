@@ -74,6 +74,7 @@ impl Project {
         self,
         target_machine: compiler_llvm_context::TargetMachine,
         optimizer_settings: compiler_llvm_context::OptimizerSettings,
+        include_metadata_hash: bool,
         debug_config: Option<compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<Build> {
         let mut build = Build::default();
@@ -86,6 +87,7 @@ impl Project {
                     self.source_code_hash,
                     target_machine.clone(),
                     optimizer_settings.clone(),
+                    include_metadata_hash,
                     debug_config.clone(),
                 );
                 (path, contract_build)
@@ -108,7 +110,9 @@ impl Project {
                 crate::r#const::FORWARDER_CONTRACT_ASSEMBLY.to_owned(),
                 zkevm_assembly::Assembly::from_string(
                     crate::r#const::FORWARDER_CONTRACT_ASSEMBLY.to_owned(),
-                    sha3::Keccak256::digest(crate::r#const::FORWARDER_CONTRACT_ASSEMBLY).into(),
+                    Some(
+                        sha3::Keccak256::digest(crate::r#const::FORWARDER_CONTRACT_ASSEMBLY).into(),
+                    ),
                 )?,
                 crate::r#const::FORWARDER_CONTRACT_BYTECODE.clone(),
                 crate::r#const::FORWARDER_CONTRACT_HASH.clone(),

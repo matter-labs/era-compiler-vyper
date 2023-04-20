@@ -5,6 +5,7 @@
 pub mod arguments;
 
 use std::path::PathBuf;
+use std::str::FromStr;
 
 use self::arguments::Arguments;
 
@@ -79,8 +80,21 @@ fn main_inner() -> anyhow::Result<()> {
     optimizer_settings.is_verify_each_enabled = arguments.llvm_verify_each;
     optimizer_settings.is_debug_logging_enabled = arguments.llvm_debug_logging;
 
+    let include_metadata_hash = match arguments.metadata_hash {
+        Some(metadata_hash) => {
+            let metadata = compiler_llvm_context::MetadataHash::from_str(metadata_hash.as_str())?;
+            metadata != compiler_llvm_context::MetadataHash::None
+        }
+        None => true,
+    };
+
     let build = if arguments.llvm_ir {
-        compiler_vyper::llvm_ir(arguments.input_files, optimizer_settings, debug_config)
+        compiler_vyper::llvm_ir(
+            arguments.input_files,
+            optimizer_settings,
+            include_metadata_hash,
+            debug_config,
+        )
     } else {
         match arguments.format.as_deref() {
             Some("combined_json") => {
@@ -89,6 +103,7 @@ fn main_inner() -> anyhow::Result<()> {
                     &vyper,
                     !arguments.disable_vyper_optimizer,
                     optimizer_settings,
+                    include_metadata_hash,
                     debug_config,
                     arguments.output_directory,
                     arguments.overwrite,
@@ -103,6 +118,7 @@ fn main_inner() -> anyhow::Result<()> {
                 &vyper,
                 !arguments.disable_vyper_optimizer,
                 optimizer_settings,
+                include_metadata_hash,
                 debug_config,
             ),
         }

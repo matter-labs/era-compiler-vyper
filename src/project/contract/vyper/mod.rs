@@ -101,24 +101,32 @@ impl Contract {
         source_code_hash: [u8; compiler_common::BYTE_LENGTH_FIELD],
         target_machine: compiler_llvm_context::TargetMachine,
         optimizer_settings: compiler_llvm_context::OptimizerSettings,
+        include_metadata_hash: bool,
         debug_config: Option<compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
         let llvm = inkwell::context::Context::create();
         let optimizer = compiler_llvm_context::Optimizer::new(target_machine, optimizer_settings);
 
-        let metadata_hash = ContractMetadata::new(
-            &source_code_hash,
-            &self.source_version,
-            semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
-            optimizer.settings().to_owned(),
-        )
-        .keccak256();
+        let metadata_hash = if include_metadata_hash {
+            Some(
+                ContractMetadata::new(
+                    &source_code_hash,
+                    &self.source_version,
+                    semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
+                    optimizer.settings().to_owned(),
+                )
+                .keccak256(),
+            )
+        } else {
+            None
+        };
 
         let mut context = compiler_llvm_context::Context::<DependencyData>::new(
             &llvm,
             llvm.create_module(contract_path),
             optimizer,
             Some(self.dependency_data.clone()),
+            include_metadata_hash,
             debug_config,
         );
 
@@ -274,6 +282,7 @@ impl Dependency for DependencyData {
         _target_machine: compiler_llvm_context::TargetMachine,
         _optimizer_settings: compiler_llvm_context::OptimizerSettings,
         _is_system_mode: bool,
+        _include_metadata_hash: bool,
         _debug_config: Option<compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<String> {
         if name == crate::r#const::FORWARDER_CONTRACT_NAME {

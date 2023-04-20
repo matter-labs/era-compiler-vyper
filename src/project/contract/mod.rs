@@ -46,6 +46,7 @@ impl Contract {
         source_code_hash: [u8; compiler_common::BYTE_LENGTH_FIELD],
         target_machine: compiler_llvm_context::TargetMachine,
         optimizer_settings: compiler_llvm_context::OptimizerSettings,
+        include_metadata_hash: bool,
         debug_config: Option<compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
         match self {
@@ -54,6 +55,7 @@ impl Contract {
                 source_code_hash,
                 target_machine,
                 optimizer_settings,
+                include_metadata_hash,
                 debug_config,
             ),
             Self::LLVMIR(inner) => inner.compile(
@@ -61,6 +63,7 @@ impl Contract {
                 source_code_hash,
                 target_machine,
                 optimizer_settings,
+                include_metadata_hash,
                 debug_config,
             ),
         }

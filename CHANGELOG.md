@@ -1,5 +1,21 @@
 # The `zkvyper` changelog
 
+## [1.3.6] - 2023-04-18
+
+### Added
+
+- The `CODESIZE` support in runtime code
+- An option not to include the metadata hash at the end of bytecode
+
+### Changed
+
+- Calldata instructions now return 0 in deploy code
+
+### Fixed
+
+- The LLVM crash with memory offsets `>= 2^64`
+- The LLVM crash with ternary operator on fat memory pointers
+
 ## [1.3.5] - 2023-04-04
 
 ### Added

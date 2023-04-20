@@ -58,6 +58,12 @@ pub struct Arguments {
     #[structopt(long = "llvm-ir")]
     pub llvm_ir: bool,
 
+    /// Set the metadata hash mode.
+    /// The only supported value is `none` that disables appending the metadata hash.
+    /// Is enabled by default.
+    #[structopt(long = "metadata-hash")]
+    pub metadata_hash: Option<String>,
+
     /// Dump all IRs to files in the specified directory.
     /// Only for testing and debugging.
     #[structopt(long = "debug-output-dir")]

@@ -32,18 +32,25 @@ impl Contract {
         source_code_hash: [u8; compiler_common::BYTE_LENGTH_FIELD],
         target_machine: compiler_llvm_context::TargetMachine,
         optimizer_settings: compiler_llvm_context::OptimizerSettings,
+        include_metadata_hash: bool,
         debug_config: Option<compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
         let llvm = inkwell::context::Context::create();
         let optimizer = compiler_llvm_context::Optimizer::new(target_machine, optimizer_settings);
 
-        let metadata_hash = ContractMetadata::new(
-            &source_code_hash,
-            &compiler_llvm_context::LLVM_VERSION,
-            semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
-            optimizer.settings().to_owned(),
-        )
-        .keccak256();
+        let metadata_hash = if include_metadata_hash {
+            Some(
+                ContractMetadata::new(
+                    &source_code_hash,
+                    &compiler_llvm_context::LLVM_VERSION,
+                    semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
+                    optimizer.settings().to_owned(),
+                )
+                .keccak256(),
+            )
+        } else {
+            None
+        };
 
         let memory_buffer = inkwell::memory_buffer::MemoryBuffer::create_from_memory_range_copy(
             self.source_code.as_bytes(),
@@ -57,6 +64,7 @@ impl Contract {
             module,
             optimizer,
             None,
+            include_metadata_hash,
             debug_config,
         );
 

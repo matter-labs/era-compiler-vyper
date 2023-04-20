@@ -219,6 +219,8 @@ pub enum Instruction {
     /// The LLL IR EVM opcode.
     CALLDATACOPY([Box<Expression>; 3]),
     /// The LLL IR EVM opcode.
+    CODESIZE,
+    /// The LLL IR EVM opcode.
     CODECOPY([Box<Expression>; 3]),
     /// The LLL IR EVM opcode.
     EXTCODESIZE([Box<Expression>; 1]),
@@ -983,16 +985,56 @@ impl Instruction {
 
             Self::CALLDATALOAD(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
-                compiler_llvm_context::calldata::load(context, arguments[0].into_int_value())
-                    .map(Some)
+
+                match context
+                    .code_type()
+                    .ok_or_else(|| anyhow::anyhow!("The contract code part type is undefined"))?
+                {
+                    compiler_llvm_context::CodeType::Deploy => {
+                        Ok(Some(context.field_const(0).as_basic_value_enum()))
+                    }
+                    compiler_llvm_context::CodeType::Runtime => {
+                        compiler_llvm_context::calldata::load(
+                            context,
+                            arguments[0].into_int_value(),
+                        )
+                        .map(Some)
+                    }
+                }
             }
-            Self::CALLDATASIZE => compiler_llvm_context::calldata::size(context).map(Some),
+            Self::CALLDATASIZE => {
+                match context
+                    .code_type()
+                    .ok_or_else(|| anyhow::anyhow!("The contract code part type is undefined"))?
+                {
+                    compiler_llvm_context::CodeType::Deploy => {
+                        Ok(Some(context.field_const(0).as_basic_value_enum()))
+                    }
+                    compiler_llvm_context::CodeType::Runtime => {
+                        compiler_llvm_context::calldata::size(context).map(Some)
+                    }
+                }
+            }
             Self::CALLDATACOPY(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;
+
+                let source_offset = match context
+                    .code_type()
+                    .ok_or_else(|| anyhow::anyhow!("The contract code part type is undefined"))?
+                {
+                    compiler_llvm_context::CodeType::Deploy => {
+                        compiler_llvm_context::calldata::size(context)?
+                    }
+                    compiler_llvm_context::CodeType::Runtime => {
+                        arguments[1].into_int_value().as_basic_value_enum()
+                    }
+                }
+                .into_int_value();
+
                 compiler_llvm_context::calldata::copy(
                     context,
                     arguments[0].into_int_value(),
-                    arguments[1].into_int_value(),
+                    source_offset,
                     arguments[2].into_int_value(),
                 )
                 .map(|_| None)
@@ -1046,6 +1088,22 @@ impl Instruction {
                     ),
                 }
                 .map(|_| None)
+            }
+            Self::CODESIZE => {
+                match context
+                    .code_type()
+                    .ok_or_else(|| anyhow::anyhow!("The contract code part type is undefined"))?
+                {
+                    compiler_llvm_context::CodeType::Deploy => {
+                        compiler_llvm_context::calldata::size(context).map(Some)
+                    }
+                    compiler_llvm_context::CodeType::Runtime => {
+                        let code_source =
+                            compiler_llvm_context::zkevm_general::code_source(context)?;
+                        compiler_llvm_context::ext_code::size(context, code_source.into_int_value())
+                            .map(Some)
+                    }
+                }
             }
             Self::CODECOPY(arguments) => {
                 if let compiler_llvm_context::CodeType::Runtime = context
