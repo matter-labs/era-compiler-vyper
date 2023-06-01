@@ -11,7 +11,7 @@ use serde::Deserialize;
 ///
 #[derive(Debug, Deserialize)]
 pub struct EVM {
-    /// The contract ABI representation.
+    /// The contract ABI.
     #[serde(rename = "methodIdentifiers")]
     pub abi: BTreeMap<String, String>,
 }

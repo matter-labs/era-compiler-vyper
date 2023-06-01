@@ -1,5 +1,5 @@
 //!
-//! The `vyper --combined-json` output representation.
+//! The `vyper --combined-json` output.
 //!
 
 pub mod contract;
@@ -15,7 +15,7 @@ use serde::Serialize;
 use self::contract::Contract;
 
 ///
-/// The `vyper --combined-json` output representation.
+/// The `vyper --combined-json` output.
 ///
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct CombinedJson {

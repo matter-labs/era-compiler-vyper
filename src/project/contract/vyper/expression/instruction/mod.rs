@@ -78,6 +78,8 @@ pub enum Instruction {
     Pass,
     /// The LLL IR `deploy` instruction.
     Deploy(Deploy),
+    /// The LLL IR `unique_symbol` instruction.
+    Unique_Symbol([Box<Expression>; 1]),
 
     /// The LLL IR pseudo opcode.
     UCLAMP([Box<Expression>; 3]),
@@ -326,9 +328,9 @@ impl Instruction {
     {
         let debug_string = format!("`{arguments:?}`");
 
-        let mut result = Vec::with_capacity(N);
-        for (index, expression) in arguments.into_iter().enumerate() {
-            result.push(expression.into_llvm_value(context)?.ok_or_else(|| {
+        let mut values = Vec::with_capacity(N);
+        for (index, expression) in arguments.into_iter().enumerate().rev() {
+            values.push(expression.into_llvm_value(context)?.ok_or_else(|| {
                 anyhow::anyhow!(
                     "Expression #{} of the instruction `{}` has zero valency",
                     index,
@@ -336,17 +338,18 @@ impl Instruction {
                 )
             })?);
         }
+        values.reverse();
 
-        if result.len() != N {
+        if values.len() != N {
             anyhow::bail!(
                 "Expected {} arguments, found only {}: `{:?}`",
                 N,
-                result.len(),
-                result
+                values.len(),
+                values
             );
         }
 
-        Ok(result.try_into().expect("Always valid"))
+        Ok(values.try_into().expect("Always valid"))
     }
 
     ///
@@ -422,6 +425,7 @@ impl Instruction {
             }
             Self::Pass => Ok(None),
             Self::Deploy(_inner) => Ok(None),
+            Self::Unique_Symbol(_inner) => Ok(None),
 
             Self::UCLAMP(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;

@@ -40,8 +40,9 @@ impl Compiler {
     /// The default executable name.
     pub const DEFAULT_EXECUTABLE_NAME: &'static str = "vyper";
 
-    /// The supported version of `vyper`.
-    pub const SUPPORTED_VERSION: semver::Version = semver::Version::new(0, 3, 3);
+    /// The supported versions of `vyper`.
+    pub const SUPPORTED_VERSIONS: [semver::Version; 2] =
+        [semver::Version::new(0, 3, 3), semver::Version::new(0, 3, 9)];
 
     ///
     /// A shortcut constructor.
@@ -124,24 +125,23 @@ impl Compiler {
                         ),
                 )
             })?;
+
         for (full_path, source) in input.sources.into_iter() {
-            let mut path_split = full_path.split(':');
-            let file_path = path_split.next().ok_or_else(|| {
-                anyhow::anyhow!("Cannot get the file path from full path `{}`", full_path)
-            })?;
-            let contract_name = path_split.next().ok_or_else(|| {
-                anyhow::anyhow!(
-                    "Cannot get the contract name from full path `{}`",
-                    full_path
-                )
-            })?;
+            let last_slash_position = full_path.rfind('/');
+            let last_dot_position = full_path.rfind('.');
+            let contract_name = &full_path[last_slash_position.unwrap_or_default()
+                ..last_dot_position.unwrap_or(full_path.len())];
+
+            Self::check_unsupported(source.content.as_str())
+                .map_err(|error| anyhow::anyhow!("Contract `{}`: {}", full_path, error))?;
+
             output
                 .files
                 .as_mut()
                 .ok_or_else(|| anyhow::anyhow!("No contracts in the standard JSON output"))?
-                .get_mut(file_path)
+                .get_mut(full_path.as_str())
                 .ok_or_else(|| {
-                    anyhow::anyhow!("File `{}` not found in the standard JSON output", file_path)
+                    anyhow::anyhow!("File `{}` not found in the standard JSON output", full_path)
                 })?
                 .get_mut(contract_name)
                 .ok_or_else(|| {
@@ -226,15 +226,22 @@ impl Compiler {
             .zip(lines.into_par_iter().chunks(3))
             .map(|(path, group)| {
                 let path_str = path.to_string_lossy().to_string();
-                match std::fs::read_to_string(path).map_err(|error| {
+                let source_code = match std::fs::read_to_string(path).map_err(|error| {
                     anyhow::anyhow!("Source code file `{}` reading error: {}", path_str, error)
                 }) {
-                    Ok(source_code) => source_code_hasher
-                        .lock()
-                        .expect("Sync")
-                        .update(source_code.as_bytes()),
+                    Ok(source_code) => source_code,
                     Err(error) => return (path_str, Err(error)),
+                };
+
+                if let Err(error) = Self::check_unsupported(source_code.as_str()) {
+                    let error = anyhow::anyhow!("Contract `{}`: {}", path_str, error);
+                    return (path_str, Err(error));
                 }
+
+                source_code_hasher
+                    .lock()
+                    .expect("Sync")
+                    .update(source_code.as_bytes());
 
                 let contract_result = VyperContract::try_from_lines(
                     version.to_owned(),
@@ -318,14 +325,33 @@ impl Compiler {
             .map_err(|error| anyhow::anyhow!("{} version parsing: {}", self.executable, error))?;
 
         let version = Version::new(long, default);
-        if version.default != Self::SUPPORTED_VERSION {
+        if !Self::SUPPORTED_VERSIONS.contains(&version.default) {
             anyhow::bail!(
-                "`vyper` versions !={} are not supported, found {}",
-                Self::SUPPORTED_VERSION,
+                "Only `vyper` versions {:?} are supported, found {}",
+                Self::SUPPORTED_VERSIONS,
                 version.default,
             );
         }
 
         Ok(version)
+    }
+
+    ///
+    /// Checks for unsupported code is a Vyper source code file.
+    ///
+    pub fn check_unsupported(source_code: &str) -> anyhow::Result<()> {
+        for function in [
+            crate::r#const::FORBIDDEN_FUNCTION_NAME_CREATE_COPY_OF,
+            crate::r#const::FORBIDDEN_FUNCTION_NAME_CREATE_FROM_BLUEPRINT,
+        ] {
+            if source_code.contains(function) {
+                return Err(anyhow::anyhow!(
+                    "Built-in function `{}` is not supported",
+                    function
+                ));
+            }
+        }
+
+        Ok(())
     }
 }

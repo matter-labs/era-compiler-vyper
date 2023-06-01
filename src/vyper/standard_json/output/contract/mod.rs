@@ -6,7 +6,6 @@ pub mod evm;
 
 use serde::Deserialize;
 
-use crate::metadata::Metadata;
 use crate::project::contract::vyper::expression::Expression;
 
 use self::evm::EVM;
@@ -20,8 +19,6 @@ pub struct Contract {
     pub source_code: Option<String>,
     /// The contract IR code.
     pub ir: Expression,
-    /// The contract metadata.
-    pub metadata: Metadata,
     /// The contract EVM inner object.
     pub evm: EVM,
 }

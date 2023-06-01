@@ -1,14 +1,14 @@
 //!
-//! The Vyper compiler version representation.
+//! The Vyper compiler version.
 //!
 
 ///
-/// The Vyper compiler version representation.
+/// The Vyper compiler version.
 ///
 pub struct Version {
     /// The long version string.
     pub long: String,
-    /// The short `semver` representation.
+    /// The short `semver`.
     pub default: semver::Version,
 }
 

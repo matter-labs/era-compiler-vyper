@@ -1,5 +1,5 @@
 //!
-//! The `vyper -f ir_json` output representation.
+//! The `vyper -f ir_json` output.
 //!
 
 pub mod instruction;
@@ -15,7 +15,7 @@ use self::instruction::seq::Seq as SeqInstruction;
 use self::instruction::Instruction;
 
 ///
-/// The LLL IR JSON expression representation.
+/// The LLL IR JSON expression.
 ///
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
@@ -47,22 +47,35 @@ impl Expression {
                 sequence.normalize_deploy_code();
                 Ok(sequence)
             }
-            instruction => anyhow::bail!("Expected `seq`, found `{:?}`", instruction),
+            Self::Instruction(Instruction::Deploy(_deploy)) => {
+                let mut sequence = SeqInstruction::default();
+                sequence.normalize_deploy_code();
+                Ok(sequence)
+            }
+            instruction => anyhow::bail!("Expected [`seq`, `deploy`], found `{:?}`", instruction),
         }
     }
 
     ///
     /// Extracts the runtime code expression from the deploy code.
     ///
-    pub fn extract_runtime_code(&mut self) -> anyhow::Result<(SeqInstruction, Self)> {
+    pub fn extract_runtime_code(&mut self) -> anyhow::Result<Option<(SeqInstruction, Self)>> {
         match self {
             Self::Instruction(Instruction::Seq(ref mut sequence)) => {
-                let (mut runtime_code, immutables_size) =
-                    sequence.extract_runtime_code()?.unwrap_or_default();
-                runtime_code.normalize_runtime_code();
-                Ok((runtime_code, immutables_size))
+                match sequence.extract_runtime_code()? {
+                    Some((mut runtime_code, immutables_size)) => {
+                        runtime_code.normalize_runtime_code();
+                        Ok(Some((runtime_code, immutables_size)))
+                    }
+                    None => Ok(None),
+                }
             }
-            instruction => anyhow::bail!("Expected `seq`, found `{:?}`", instruction),
+            Self::Instruction(Instruction::Deploy(ref mut deploy)) => {
+                let (mut runtime_code, immutables_size) = deploy.extract_runtime_code()?;
+                runtime_code.normalize_runtime_code();
+                Ok(Some((runtime_code, immutables_size)))
+            }
+            instruction => anyhow::bail!("Expected [`seq`, `deploy`], found `{:?}`", instruction),
         }
     }
 

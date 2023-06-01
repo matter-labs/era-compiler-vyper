@@ -14,7 +14,7 @@ use serde::Serialize;
 #[allow(non_camel_case_types)]
 #[allow(clippy::upper_case_acronyms)]
 pub enum Selection {
-    /// The function signature hashes JSON representation.
+    /// The function signature hashes JSON.
     #[serde(rename = "evm.methodIdentifiers")]
     MethodIdentifiers,
     /// The LLL IR.

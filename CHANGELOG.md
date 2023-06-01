@@ -1,5 +1,16 @@
 # The `zkvyper` changelog
 
+## [1.3.7] - 2023-05-29
+
+### Added
+
+- The zkEVM assembly compilation mode (`--zkasm`)
+- The vyper v1.3.9 support
+
+### Fixed
+
+- The evaluation order of EVM instruction arguments in LLL IR
+
 ## [1.3.6] - 2023-04-18
 
 ### Added
@@ -70,7 +81,7 @@
 
 ### Added
 
-- The `--llvm-ir` compilation mode
+- The LLVM IR compilation mode (`--llvm-ir`)
 
 ### Changed
 

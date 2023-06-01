@@ -19,17 +19,19 @@ use crate::project::contract::vyper::expression::Expression;
 /// translated as entities of the same level with branching in the contract entry.
 ///
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Deploy([Box<Expression>; 3]);
+pub struct Deploy(Vec<Expression>);
 
 impl Deploy {
     ///
     /// Extracts the runtime code expression from the deploy code.
     ///
-    pub fn extract_runtime_code(self) -> anyhow::Result<(SeqInstruction, Expression)> {
-        let [_zero_1, expression, immutables_size] = self.0;
+    pub fn extract_runtime_code(&mut self) -> anyhow::Result<(SeqInstruction, Expression)> {
+        let _zero_1 = self.0.remove(0);
+        let expression = self.0.remove(0);
+        let immutables_size = self.0.remove(0);
 
-        match *expression {
-            Expression::Instruction(Instruction::Seq(sequence)) => Ok((sequence, *immutables_size)),
+        match expression {
+            Expression::Instruction(Instruction::Seq(sequence)) => Ok((sequence, immutables_size)),
             expression => anyhow::bail!("Expected `seq`, found `{:?}`", expression),
         }
     }

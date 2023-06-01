@@ -52,11 +52,17 @@ pub struct Arguments {
     #[structopt(short = "f")]
     pub format: Option<String>,
 
-    /// Switch to the LLVM IR mode.
+    /// Switch to LLVM IR mode.
     /// Only one input LLVM IR file is allowed.
     /// Cannot be used with the combined or standard JSON modes.
     #[structopt(long = "llvm-ir")]
     pub llvm_ir: bool,
+
+    /// Switch to zkEVM assembly mode.
+    /// Only one input zkEVM assembly file is allowed.
+    /// Cannot be used with the combined or standard JSON modes.
+    #[structopt(long = "zkasm")]
+    pub zkasm: bool,
 
     /// Set the metadata hash mode.
     /// The only supported value is `none` that disables appending the metadata hash.

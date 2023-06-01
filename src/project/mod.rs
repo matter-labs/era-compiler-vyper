@@ -1,5 +1,5 @@
 //!
-//! The Vyper project representation.
+//! The Vyper project.
 //!
 
 pub mod contract;
@@ -16,10 +16,11 @@ use crate::build::contract::Contract as ContractBuild;
 use crate::build::Build;
 
 use self::contract::llvm_ir::Contract as LLVMIRContract;
+use self::contract::zkasm::Contract as ZKASMContract;
 use self::contract::Contract;
 
 ///
-/// The Vyper project representation.
+/// The Vyper project.
 ///
 #[derive(Debug, Clone)]
 pub struct Project {
@@ -62,6 +63,27 @@ impl Project {
 
         Ok(Self::new(
             compiler_llvm_context::LLVM_VERSION,
+            source_code_hash,
+            project_contracts,
+        ))
+    }
+
+    ///
+    /// Parses the zkEVM assembly source code file and returns the source data.
+    ///
+    pub fn try_from_zkasm_path(path: &Path) -> anyhow::Result<Self> {
+        let source_code = std::fs::read_to_string(path).map_err(|error| {
+            anyhow::anyhow!("zkEVM assembly file {:?} reading error: {}", path, error)
+        })?;
+        let path = path.to_string_lossy().to_string();
+
+        let source_code_hash = sha3::Keccak256::digest(source_code.as_bytes()).into();
+
+        let mut project_contracts = BTreeMap::new();
+        project_contracts.insert(path, ZKASMContract::new(source_code).into());
+
+        Ok(Self::new(
+            compiler_llvm_context::ZKEVM_VERSION,
             source_code_hash,
             project_contracts,
         ))

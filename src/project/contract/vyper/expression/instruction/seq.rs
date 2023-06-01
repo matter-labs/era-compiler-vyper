@@ -44,12 +44,12 @@ impl Seq {
     /// Extracts the runtime code expression from the deploy code.
     ///
     pub fn extract_runtime_code(&mut self) -> anyhow::Result<Option<(Self, Expression)>> {
-        Ok(match self.0.pop() {
-            Some(Expression::Instruction(Instruction::Deploy(deploy))) => {
-                Some(deploy.extract_runtime_code()?)
+        for expression in self.0.iter_mut() {
+            if let Ok(Some(result)) = expression.extract_runtime_code() {
+                return Ok(Some(result));
             }
-            _ => None,
-        })
+        }
+        Ok(None)
     }
 
     ///
@@ -95,13 +95,16 @@ impl Seq {
     /// If the deploy code does not have a terminator, a normal return is inserted.
     ///
     pub fn normalize_deploy_code(&mut self) {
-        if !self.0.is_empty() {
-            return;
+        if self.0.is_empty()
+            || matches!(
+                self.0.get(0),
+                Some(Expression::Instruction(Instruction::Deploy(_)))
+            )
+        {
+            self.0.push(Expression::Instruction(Instruction::RETURN(
+                ReturnInstruction::default(),
+            )))
         }
-
-        self.0.push(Expression::Instruction(Instruction::RETURN(
-            ReturnInstruction::default(),
-        )))
     }
 
     ///

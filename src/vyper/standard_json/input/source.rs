@@ -1,5 +1,5 @@
 //!
-//! The `vyper --standard-json` input source representation.
+//! The `vyper --standard-json` input source.
 //!
 
 use std::io::Read;
@@ -8,7 +8,7 @@ use std::path::Path;
 use serde::Serialize;
 
 ///
-/// The `vyper --standard-json` input source representation.
+/// The `vyper --standard-json` input source.
 ///
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]

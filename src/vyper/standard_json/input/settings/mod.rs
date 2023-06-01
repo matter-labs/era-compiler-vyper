@@ -1,5 +1,5 @@
 //!
-//! The `vyper --standard-json` input settings representation.
+//! The `vyper --standard-json` input settings.
 //!
 
 pub mod evm_version;
@@ -13,7 +13,7 @@ use self::evm_version::EVMVersion;
 use self::selection::Selection;
 
 ///
-/// The `vyper --standard-json` input settings representation.
+/// The `vyper --standard-json` input settings.
 ///
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]

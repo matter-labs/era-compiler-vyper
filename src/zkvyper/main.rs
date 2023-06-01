@@ -95,6 +95,8 @@ fn main_inner() -> anyhow::Result<()> {
             include_metadata_hash,
             debug_config,
         )
+    } else if arguments.zkasm {
+        compiler_vyper::zkasm(arguments.input_files, include_metadata_hash, debug_config)
     } else {
         match arguments.format.as_deref() {
             Some("combined_json") => {

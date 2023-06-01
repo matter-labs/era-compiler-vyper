@@ -23,6 +23,9 @@ pub const LABEL_DESTINATION_PREFIX: &str = "_sym_";
 /// The default sequence identifier.
 pub const DEFAULT_SEQUENCE_IDENTIFIER: &str = "seq";
 
+/// The default pass identifier.
+pub const DEFAULT_PASS_IDENTIFIER: &str = "pass";
+
 /// The internal function prefix.
 pub const FUNCTION_PREFIX_INTERNAL: &str = "internal";
 
@@ -43,6 +46,12 @@ pub const LABEL_SUFFIX_COMMON: &str = "common";
 
 /// The cleanup label suffix.
 pub const LABEL_SUFFIX_CLEANUP: &str = "cleanup";
+
+/// The forbidden function `create_copy_of`.
+pub const FORBIDDEN_FUNCTION_NAME_CREATE_COPY_OF: &str = "create_copy_of";
+
+/// The forbidden function `create_from_blueprint`.
+pub const FORBIDDEN_FUNCTION_NAME_CREATE_FROM_BLUEPRINT: &str = "create_from_blueprint";
 
 /// The forwarder contract name.
 pub const FORWARDER_CONTRACT_NAME: &str = "__VYPER_FORWARDER_CONTRACT";

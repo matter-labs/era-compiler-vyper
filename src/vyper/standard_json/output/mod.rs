@@ -1,5 +1,5 @@
 //!
-//! The `vyper --standard-json` output representation.
+//! The `vyper --standard-json` output.
 //!
 
 pub mod contract;
@@ -11,6 +11,7 @@ use serde::Deserialize;
 use sha3::digest::FixedOutput;
 use sha3::Digest;
 
+use crate::metadata::Metadata as SourceMetadata;
 use crate::project::contract::vyper::Contract as VyperContract;
 use crate::project::Project;
 
@@ -18,7 +19,7 @@ use self::contract::Contract;
 use self::error::Error;
 
 ///
-/// The `vyper --standard-json` output representation.
+/// The `vyper --standard-json` output.
 ///
 /// Unlike in the Solidity compiler, it is not passed up to the hardhat plugin, but only used here
 /// internally to reduce the number of calls to the `vyper` subprocess.
@@ -40,7 +41,7 @@ pub struct Output {
 
 impl Output {
     ///
-    /// Converts the `vyper` JSON output into a convenient project representation.
+    /// Converts the `vyper` JSON output into a convenient project.
     ///
     pub fn try_into_project(mut self, version: &semver::Version) -> anyhow::Result<Project> {
         let files = match self.files.take() {
@@ -71,7 +72,7 @@ impl Output {
 
                 let project_contract = VyperContract::new(
                     version.to_owned(),
-                    contract.metadata,
+                    SourceMetadata::default(),
                     contract.ir,
                     contract.evm.abi,
                 );

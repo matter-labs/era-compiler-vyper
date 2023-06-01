@@ -49,13 +49,44 @@ pub fn llvm_ir(
         1 => input_files.remove(0),
         0 => anyhow::bail!("The input file is missing"),
         length => anyhow::bail!(
-            "Only one input file is allowed in the LLVM IR mode, but found {}",
+            "Only one input file is allowed in LLVM IR mode, but found {}",
             length
         ),
     };
 
     let project = Project::try_from_llvm_ir_path(&path)?;
 
+    let target_machine = compiler_llvm_context::TargetMachine::new(&optimizer_settings)?;
+    let build = project.compile(
+        target_machine,
+        optimizer_settings,
+        include_metadata_hash,
+        debug_config,
+    )?;
+
+    Ok(build)
+}
+
+///
+/// Runs the zkEVM assembly mode.
+///
+pub fn zkasm(
+    mut input_files: Vec<PathBuf>,
+    include_metadata_hash: bool,
+    debug_config: Option<compiler_llvm_context::DebugConfig>,
+) -> anyhow::Result<Build> {
+    let path = match input_files.len() {
+        1 => input_files.remove(0),
+        0 => anyhow::bail!("The input file is missing"),
+        length => anyhow::bail!(
+            "Only one input file is allowed in zkEVM assembly mode, but found {}",
+            length
+        ),
+    };
+
+    let project = Project::try_from_zkasm_path(&path)?;
+
+    let optimizer_settings = compiler_llvm_context::OptimizerSettings::none();
     let target_machine = compiler_llvm_context::TargetMachine::new(&optimizer_settings)?;
     let build = project.compile(
         target_machine,

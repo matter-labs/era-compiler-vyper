@@ -1,5 +1,5 @@
 //!
-//! The `vyper --standard-json` input representation.
+//! The `vyper --standard-json` input.
 //!
 
 pub mod language;
@@ -20,7 +20,7 @@ use self::settings::Settings;
 use self::source::Source;
 
 ///
-/// The `vyper --standard-json` input representation.
+/// The `vyper --standard-json` input.
 ///
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]

@@ -1,5 +1,5 @@
 //!
-//! The `vyper --combined-json` contract representation.
+//! The `vyper --combined-json` contract.
 //!
 
 use std::collections::BTreeMap;
@@ -8,7 +8,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 ///
-/// The contract representation.
+/// The contract.
 ///
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Contract {
@@ -31,7 +31,7 @@ pub struct Contract {
 
 impl Contract {
     ///
-    /// Creates a forwarder representation.
+    /// Creates a forwarder.
     ///
     pub fn new_forwarder() -> Self {
         Self {

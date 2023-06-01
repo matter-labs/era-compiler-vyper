@@ -1,5 +1,5 @@
 //!
-//! The `vyper <input>.sol --standard-json` representation.
+//! The `vyper <input>.sol --standard-json`.
 //!
 
 pub mod input;

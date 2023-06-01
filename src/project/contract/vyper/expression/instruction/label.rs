@@ -49,7 +49,20 @@ impl Label {
     ///
     /// Checks whether the label body is empty. If it is, nothing is generated.
     ///
-    pub fn is_body_empty(&self) -> bool {
+    /// The cleanup block cannot be ignored in deploy code, because `vyper` generates jumps to them.
+    ///
+    pub fn can_block_be_ignored(&self) -> bool {
+        let label_name = match self.0.get(0).expect("Always exists").try_into_identifier() {
+            Ok(identifier) => identifier,
+            Err(_) => return true,
+        };
+
+        if label_name.starts_with("external___init")
+            && label_name.ends_with(crate::r#const::LABEL_SUFFIX_CLEANUP)
+        {
+            return false;
+        }
+
         matches!(
             self.0.get(2),
             Some(Expression::Instruction(Instruction::Pass))
@@ -59,11 +72,16 @@ impl Label {
     ///
     /// Checks whether the label body is an empty sequence. If it is, a return is appended.
     ///
-    pub fn is_body_empty_sequence(&self) -> bool {
+    /// Only used by the cleanup block in deploy code.
+    ///
+    pub fn is_block_empty_sequence(&self) -> bool {
         match self.0.get(2) {
             Some(Expression::Instruction(Instruction::Pass)) => true,
             Some(Expression::Instruction(Instruction::Seq(sequence))) => {
                 sequence.is_pass_or_empty()
+            }
+            Some(Expression::Identifier(identifier)) => {
+                identifier.as_str() == crate::r#const::DEFAULT_PASS_IDENTIFIER
             }
             Some(_) => false,
             None => true,
@@ -84,7 +102,7 @@ impl Label {
     where
         D: compiler_llvm_context::Dependency,
     {
-        if self.is_empty() || self.is_body_empty() {
+        if self.is_empty() || self.can_block_be_ignored() {
             return Ok(());
         }
 
@@ -143,10 +161,10 @@ impl Label {
     where
         D: compiler_llvm_context::Dependency,
     {
-        if self.is_empty() || self.is_body_empty() {
+        if self.is_empty() || self.can_block_be_ignored() {
             return Ok(());
         }
-        let is_block_empty_sequence = self.is_body_empty_sequence();
+        let is_block_empty_sequence = self.is_block_empty_sequence();
 
         let label_name = self.0.remove(0);
         let block = self.0.remove(1);

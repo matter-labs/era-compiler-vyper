@@ -1,5 +1,5 @@
 //!
-//! The Vyper contract representation.
+//! The Vyper contract.
 //!
 
 pub mod expression;
@@ -23,7 +23,7 @@ use self::expression::Expression;
 use self::function::Function;
 
 ///
-/// The Vyper contract representation.
+/// The Vyper contract.
 ///
 #[derive(Debug, Clone)]
 pub struct Contract {
@@ -202,7 +202,8 @@ where
     }
 
     fn into_llvm(mut self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
-        let (mut runtime_code, immutables_size) = self.expression.extract_runtime_code()?;
+        let (mut runtime_code, immutables_size) =
+            self.expression.extract_runtime_code()?.unwrap_or_default();
         let mut deploy_code = self.expression.try_into_deploy_code()?;
 
         match immutables_size {
@@ -234,18 +235,22 @@ where
 
         let mut functions = Vec::with_capacity(function_expressions.capacity());
         for (label, expression, code_type) in function_expressions.into_iter() {
+            let mut metadata_label = label
+                .strip_suffix(format!("_{}", compiler_llvm_context::CodeType::Deploy).as_str())
+                .unwrap_or(label.as_str());
+            metadata_label = label
+                .strip_suffix(format!("_{}", compiler_llvm_context::CodeType::Runtime).as_str())
+                .unwrap_or(metadata_label);
+            metadata_label = label
+                .strip_suffix(format!("_{}", crate::r#const::LABEL_SUFFIX_COMMON).as_str())
+                .unwrap_or(metadata_label);
+
             let metadata_name =
                 self.source_metadata
                     .function_info
                     .iter()
                     .find_map(|(name, function)| {
-                        if label
-                            .strip_suffix(
-                                format!("_{}", crate::r#const::LABEL_SUFFIX_COMMON).as_str(),
-                            )
-                            .unwrap_or(label.as_str())
-                            == function.ir_identifier.as_str()
-                        {
+                        if metadata_label == function.ir_identifier.as_str() {
                             Some(name.to_owned())
                         } else {
                             None
@@ -255,7 +260,8 @@ where
                 Some(metadata_name) => self
                     .source_metadata
                     .function_info
-                    .remove(metadata_name.as_str()),
+                    .get(metadata_name.as_str())
+                    .cloned(),
                 None => None,
             };
             functions.push((Function::new(label, metadata, expression), code_type));

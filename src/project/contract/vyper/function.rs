@@ -1,5 +1,5 @@
 //!
-//! The Vyper contract function representation.
+//! The Vyper contract function.
 //!
 
 use inkwell::types::BasicType;
@@ -11,7 +11,7 @@ use crate::metadata::function::Function as FunctionMetadata;
 use crate::project::contract::vyper::expression::Expression;
 
 ///
-/// The Vyper contract function representation.
+/// The Vyper contract function.
 ///
 #[derive(Debug)]
 pub struct Function {

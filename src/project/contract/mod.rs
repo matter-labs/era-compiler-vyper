@@ -1,18 +1,20 @@
 //!
-//! The contract representation.
+//! The contract.
 //!
 
 pub mod llvm_ir;
 pub mod metadata;
 pub mod vyper;
+pub mod zkasm;
 
 use crate::build::contract::Contract as ContractBuild;
 
 use self::llvm_ir::Contract as LLVMIRContract;
 use self::vyper::Contract as VyperContract;
+use self::zkasm::Contract as ZKASMContract;
 
 ///
-/// The contract representation.
+/// The contract.
 ///
 #[derive(Debug, Clone)]
 #[allow(non_camel_case_types)]
@@ -22,6 +24,8 @@ pub enum Contract {
     Vyper(VyperContract),
     /// The LLVM IR contract.
     LLVMIR(LLVMIRContract),
+    /// The LLVM IR contract.
+    ZKASM(ZKASMContract),
 }
 
 impl From<VyperContract> for Contract {
@@ -33,6 +37,12 @@ impl From<VyperContract> for Contract {
 impl From<LLVMIRContract> for Contract {
     fn from(inner: LLVMIRContract) -> Self {
         Self::LLVMIR(inner)
+    }
+}
+
+impl From<ZKASMContract> for Contract {
+    fn from(inner: ZKASMContract) -> Self {
+        Self::ZKASM(inner)
     }
 }
 
@@ -62,6 +72,13 @@ impl Contract {
                 contract_path,
                 source_code_hash,
                 target_machine,
+                optimizer_settings,
+                include_metadata_hash,
+                debug_config,
+            ),
+            Self::ZKASM(inner) => inner.compile(
+                contract_path,
+                source_code_hash,
                 optimizer_settings,
                 include_metadata_hash,
                 debug_config,

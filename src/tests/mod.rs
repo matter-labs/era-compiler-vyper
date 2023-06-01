@@ -5,6 +5,8 @@
 #![cfg(test)]
 #![allow(dead_code)]
 
+pub mod builtins;
+
 use std::collections::BTreeMap;
 
 use crate::vyper::standard_json::input::settings::evm_version::EVMVersion as VyperStandardJsonInputSettingsEVMVersion;
@@ -12,7 +14,7 @@ use crate::vyper::standard_json::input::settings::selection::Selection as VyperS
 use crate::vyper::standard_json::input::Input as VyperStandardJsonInput;
 use crate::vyper::Compiler as VyperCompiler;
 
-pub fn build_vyper(source_code: &str) -> anyhow::Result<()> {
+pub fn build_vyper(source_code: &str, version: semver::Version) -> anyhow::Result<()> {
     inkwell::support::enable_llvm_pretty_stack_trace();
     compiler_llvm_context::initialize_target();
     let optimizer_settings = compiler_llvm_context::OptimizerSettings::none();
@@ -26,10 +28,13 @@ pub fn build_vyper(source_code: &str) -> anyhow::Result<()> {
         true,
     )?;
 
-    let vyper = VyperCompiler::new("vyper".to_owned());
+    let vyper = VyperCompiler::new(VyperCompiler::DEFAULT_EXECUTABLE_NAME.to_owned());
+    if vyper.version()?.default != version {
+        return Ok(());
+    }
     let output = vyper.standard_json(input)?;
 
-    let project = output.try_into_project(&VyperCompiler::SUPPORTED_VERSION)?;
+    let project = output.try_into_project(&version)?;
     let _build = project.compile(
         compiler_llvm_context::TargetMachine::new(&optimizer_settings)?,
         optimizer_settings,
