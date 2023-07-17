@@ -14,7 +14,12 @@ def f():
     return
 "#;
 
-    super::build_vyper(source_code, semver::Version::new(0, 3, 9)).expect("Test failure")
+    super::build_vyper(
+        source_code,
+        semver::Version::new(0, 3, 9),
+        "Built-in function `create_copy_of` is not supported",
+    )
+    .expect("Test failure")
 }
 
 #[test]
@@ -27,5 +32,10 @@ def f():
     return
 "#;
 
-    super::build_vyper(source_code, semver::Version::new(0, 3, 9)).expect("Test failure")
+    super::build_vyper(
+        source_code,
+        semver::Version::new(0, 3, 9),
+        "Built-in function `create_from_blueprint` is not supported",
+    )
+    .expect("Test failure")
 }

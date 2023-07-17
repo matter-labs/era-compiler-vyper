@@ -39,7 +39,7 @@ impl If {
         context: &mut compiler_llvm_context::Context<'ctx, D>,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: compiler_llvm_context::Dependency,
+        D: compiler_llvm_context::Dependency + Clone,
     {
         let main_block = context.append_basic_block("if_main");
         let join_block = context.append_basic_block("if_join");

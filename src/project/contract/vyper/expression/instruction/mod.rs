@@ -324,7 +324,7 @@ impl Instruction {
         context: &mut compiler_llvm_context::Context<'ctx, D>,
     ) -> anyhow::Result<[inkwell::values::BasicValueEnum<'ctx>; N]>
     where
-        D: compiler_llvm_context::Dependency,
+        D: compiler_llvm_context::Dependency + Clone,
     {
         let debug_string = format!("`{arguments:?}`");
 
@@ -394,7 +394,7 @@ impl Instruction {
         context: &mut compiler_llvm_context::Context<'ctx, D>,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: compiler_llvm_context::Dependency,
+        D: compiler_llvm_context::Dependency + Clone,
     {
         match self {
             Self::With(inner) => inner.into_llvm_value(context),

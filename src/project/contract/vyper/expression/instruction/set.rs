@@ -22,7 +22,7 @@ impl Set {
         context: &mut compiler_llvm_context::Context<D>,
     ) -> anyhow::Result<()>
     where
-        D: compiler_llvm_context::Dependency,
+        D: compiler_llvm_context::Dependency + Clone,
     {
         let [identifier, value] = self.0;
         let identifier = identifier.try_into_identifier()?;

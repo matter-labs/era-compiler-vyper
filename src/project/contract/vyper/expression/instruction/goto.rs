@@ -30,7 +30,7 @@ impl Goto {
         label_name: String,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: compiler_llvm_context::Dependency,
+        D: compiler_llvm_context::Dependency + Clone,
     {
         let function = context
             .get_function(label_name.as_str())
@@ -66,7 +66,7 @@ impl Goto {
         label_name: String,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: compiler_llvm_context::Dependency,
+        D: compiler_llvm_context::Dependency + Clone,
     {
         let block = context
             .current_function()
@@ -109,7 +109,7 @@ impl Goto {
         context: &mut compiler_llvm_context::Context<D>,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: compiler_llvm_context::Dependency,
+        D: compiler_llvm_context::Dependency + Clone,
     {
         let label_name = self.0.remove(0).try_into_identifier()?;
 

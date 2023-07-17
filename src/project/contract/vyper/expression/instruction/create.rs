@@ -16,7 +16,7 @@ pub fn create<'ctx, D>(
     salt: Option<inkwell::values::IntValue<'ctx>>,
 ) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>>
 where
-    D: compiler_llvm_context::Dependency,
+    D: compiler_llvm_context::Dependency + Clone,
 {
     let success_block = context.append_basic_block("create_success_block");
     let failure_block = context.append_basic_block("create_failure_block");

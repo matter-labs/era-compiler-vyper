@@ -24,8 +24,7 @@ pub struct Arguments {
     #[structopt(parse(from_os_str))]
     pub input_files: Vec<PathBuf>,
 
-    /// Create one file per component and
-    /// contract/file at the specified directory, if given.
+    /// Create one file per component and contract/file at the specified directory, if given.
     #[structopt(short = "o", long = "output-dir")]
     pub output_directory: Option<PathBuf>,
 
@@ -38,52 +37,62 @@ pub struct Arguments {
     #[structopt(short = "O", long = "optimization")]
     pub optimization: Option<char>,
 
-    /// Disable the `vyper` optimizer.
+    /// Disable the `vyper` LLL IR optimizer.
     #[structopt(long = "disable-vyper-optimizer")]
     pub disable_vyper_optimizer: bool,
 
     /// Specify the path to the `vyper` executable. By default, the one in `${PATH}` is used.
-    /// LLVM IR mode: `vyper` is unused.
+    /// In LLVM IR mode `vyper` is unused.
     #[structopt(long = "vyper")]
     pub vyper: Option<String>,
 
-    /// The extra output format string.
-    /// Passed to `vyper` without changes.
+    /// An extra output format string.
+    /// See `vyper --help` for available options.
     #[structopt(short = "f")]
     pub format: Option<String>,
 
     /// Switch to LLVM IR mode.
     /// Only one input LLVM IR file is allowed.
-    /// Cannot be used with the combined or standard JSON modes.
+    /// Cannot be used with combined or standard JSON modes.
     #[structopt(long = "llvm-ir")]
     pub llvm_ir: bool,
 
     /// Switch to zkEVM assembly mode.
     /// Only one input zkEVM assembly file is allowed.
-    /// Cannot be used with the combined or standard JSON modes.
+    /// Cannot be used with combined or standard JSON modes.
     #[structopt(long = "zkasm")]
     pub zkasm: bool,
 
-    /// Set the metadata hash mode.
-    /// The only supported value is `none` that disables appending the metadata hash.
-    /// Is enabled by default.
+    /// Set metadata hash mode: `keccak256` | `none`.
+    /// `keccak256` is enabled by default.
     #[structopt(long = "metadata-hash")]
     pub metadata_hash: Option<String>,
 
-    /// Dump all IRs to files in the specified directory.
+    /// Dump all IR (LLL, LLVM IR, assembly) to files in the specified directory.
     /// Only for testing and debugging.
     #[structopt(long = "debug-output-dir")]
     pub debug_output_directory: Option<PathBuf>,
 
-    /// Set the verify-each option in LLVM.
+    /// Set the `verify-each` option in LLVM.
     /// Only for testing and debugging.
     #[structopt(long = "llvm-verify-each")]
     pub llvm_verify_each: bool,
 
-    /// Set the debug-logging option in LLVM.
+    /// Set the `debug-logging` option in LLVM.
     /// Only for testing and debugging.
     #[structopt(long = "llvm-debug-logging")]
     pub llvm_debug_logging: bool,
+
+    /// Run this process recursively and provide JSON input to compile a single contract.
+    /// Only for usage from within the compiler.
+    #[structopt(long = "recursive-process")]
+    pub recursive_process: bool,
+}
+
+impl Default for Arguments {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Arguments {
@@ -93,10 +102,23 @@ impl Arguments {
     pub fn new() -> Self {
         Self::from_args()
     }
-}
 
-impl Default for Arguments {
-    fn default() -> Self {
-        Self::new()
+    ///
+    /// Validates the arguments.
+    ///
+    pub fn validate(&self) -> anyhow::Result<()> {
+        if self.version && std::env::args().count() > 2 {
+            anyhow::bail!("No other options are allowed while getting the compiler version.");
+        }
+
+        if self.recursive_process && std::env::args().count() > 2 {
+            anyhow::bail!("No other options are allowed in recursive mode.");
+        }
+
+        if self.llvm_ir && self.zkasm {
+            anyhow::bail!("Either LLVM IR or assembly mode can be used, but not both.");
+        }
+
+        Ok(())
     }
 }

@@ -127,7 +127,7 @@ impl Expression {
         context: &mut compiler_llvm_context::Context<'ctx, D>,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: compiler_llvm_context::Dependency,
+        D: compiler_llvm_context::Dependency + Clone,
     {
         match self {
             Self::Instruction(inner) => inner.into_llvm_value(context),

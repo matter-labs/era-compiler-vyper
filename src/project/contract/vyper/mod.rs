@@ -6,10 +6,9 @@ pub mod expression;
 pub mod function;
 
 use std::collections::BTreeMap;
-use std::sync::Arc;
-use std::sync::RwLock;
 
 use serde::Deserialize;
+use serde::Serialize;
 
 use compiler_llvm_context::Dependency;
 use compiler_llvm_context::WriteLLVM;
@@ -25,10 +24,12 @@ use self::function::Function;
 ///
 /// The Vyper contract.
 ///
-#[derive(Debug, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Contract {
-    /// The source file upstream Vyper compiler version.
-    pub source_version: semver::Version,
+    /// The Vyper compiler version.
+    pub version: semver::Version,
+    /// The Vyper contract source code.
+    pub source_code: String,
     /// The source metadata.
     pub source_metadata: SourceMetadata,
     /// The inner expression.
@@ -36,7 +37,7 @@ pub struct Contract {
     /// The contract ABI data.
     pub abi: BTreeMap<String, String>,
     /// The dependency data.
-    pub dependency_data: Arc<RwLock<DependencyData>>,
+    pub dependency_data: DependencyData,
 }
 
 impl Contract {
@@ -47,17 +48,19 @@ impl Contract {
     /// A shortcut constructor.
     ///
     pub fn new(
-        source_version: semver::Version,
+        version: semver::Version,
+        source_code: String,
         source_metadata: SourceMetadata,
         expression: Expression,
         abi: BTreeMap<String, String>,
     ) -> Self {
         Self {
-            source_version,
+            version,
+            source_code,
             source_metadata,
             expression,
             abi,
-            dependency_data: Arc::new(RwLock::new(DependencyData::default())),
+            dependency_data: DependencyData::default(),
         }
     }
 
@@ -69,7 +72,8 @@ impl Contract {
     /// 3. The contract ABI data
     ///
     pub fn try_from_lines(
-        source_version: semver::Version,
+        version: semver::Version,
+        source_code: String,
         mut lines: Vec<&str>,
     ) -> anyhow::Result<Self> {
         if lines.len() != Self::EXPECTED_LINES {
@@ -89,7 +93,7 @@ impl Contract {
 
         let abi: BTreeMap<String, String> = serde_json::from_str(lines.remove(0))?;
 
-        Ok(Self::new(source_version, metadata, expression, abi))
+        Ok(Self::new(version, source_code, metadata, expression, abi))
     }
 
     ///
@@ -98,35 +102,30 @@ impl Contract {
     pub fn compile(
         mut self,
         contract_path: &str,
-        source_code_hash: [u8; compiler_common::BYTE_LENGTH_FIELD],
-        target_machine: compiler_llvm_context::TargetMachine,
+        source_code_hash: Option<[u8; compiler_common::BYTE_LENGTH_FIELD]>,
         optimizer_settings: compiler_llvm_context::OptimizerSettings,
-        include_metadata_hash: bool,
         debug_config: Option<compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
         let llvm = inkwell::context::Context::create();
-        let optimizer = compiler_llvm_context::Optimizer::new(target_machine, optimizer_settings);
+        let optimizer = compiler_llvm_context::Optimizer::new(optimizer_settings);
 
-        let metadata_hash = if include_metadata_hash {
-            Some(
-                ContractMetadata::new(
-                    &source_code_hash,
-                    &self.source_version,
-                    semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
-                    optimizer.settings().to_owned(),
-                )
-                .keccak256(),
+        let metadata_hash = source_code_hash.map(|source_code_hash| {
+            ContractMetadata::new(
+                &source_code_hash,
+                &self.version,
+                semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
+                optimizer.settings().to_owned(),
             )
-        } else {
-            None
-        };
+            .keccak256()
+        });
 
+        let dependency_data = DependencyData::default();
         let mut context = compiler_llvm_context::Context::<DependencyData>::new(
             &llvm,
             llvm.create_module(contract_path),
             optimizer,
-            Some(self.dependency_data.clone()),
-            include_metadata_hash,
+            Some(dependency_data),
+            metadata_hash.is_some(),
             debug_config,
         );
 
@@ -137,7 +136,6 @@ impl Contract {
                 error
             )
         })?;
-        let dependency_data = self.dependency_data.clone();
         self.into_llvm(&mut context).map_err(|error| {
             anyhow::anyhow!(
                 "The contract `{}` LLVM IR generator definition pass error: {}",
@@ -146,9 +144,10 @@ impl Contract {
             )
         })?;
 
+        let is_forwarder_used = context.vyper().is_forwarder_used();
         let mut build = context.build(contract_path, metadata_hash)?;
 
-        if dependency_data.read().expect("Sync").is_forwarder_used {
+        if is_forwarder_used {
             build.factory_dependencies.insert(
                 crate::r#const::FORWARDER_CONTRACT_HASH.clone(),
                 crate::r#const::FORWARDER_CONTRACT_NAME.to_owned(),
@@ -161,7 +160,7 @@ impl Contract {
 
 impl<D> WriteLLVM<D> for Contract
 where
-    D: Dependency,
+    D: Dependency + Clone,
 {
     fn declare(&mut self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
         let mut entry = compiler_llvm_context::EntryFunction::default();
@@ -212,7 +211,7 @@ where
                     .as_u64()
                     .ok_or_else(|| anyhow::anyhow!("Immutable size `{}` parsing error", number))?;
                 let vyper_data =
-                    compiler_llvm_context::ContextVyperData::new(immutables_size as usize);
+                    compiler_llvm_context::ContextVyperData::new(immutables_size as usize, false);
                 context.set_vyper_data(vyper_data);
             }
             expression => anyhow::bail!("Invalid immutables size format: {:?}", expression),
@@ -283,18 +282,13 @@ where
 
 impl Dependency for DependencyData {
     fn compile(
-        contract: Arc<RwLock<Self>>,
-        name: &str,
-        _target_machine: compiler_llvm_context::TargetMachine,
+        _contract: Self,
+        _name: &str,
         _optimizer_settings: compiler_llvm_context::OptimizerSettings,
         _is_system_mode: bool,
         _include_metadata_hash: bool,
         _debug_config: Option<compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<String> {
-        if name == crate::r#const::FORWARDER_CONTRACT_NAME {
-            contract.write().expect("Sync").is_forwarder_used = true;
-        }
-
         Ok(crate::r#const::FORWARDER_CONTRACT_HASH.clone())
     }
 

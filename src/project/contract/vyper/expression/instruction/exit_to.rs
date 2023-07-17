@@ -22,7 +22,7 @@ impl ExitTo {
         context: &mut compiler_llvm_context::Context<D>,
     ) -> anyhow::Result<()>
     where
-        D: compiler_llvm_context::Dependency,
+        D: compiler_llvm_context::Dependency + Clone,
     {
         let label_name = self.0.remove(0).try_into_identifier()?;
         if label_name.as_str() == crate::r#const::VARIABLE_IDENTIFIER_RETURN_PC {

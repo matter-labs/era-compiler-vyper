@@ -12,7 +12,7 @@ pub fn ceil_32<'ctx, D>(
     value: inkwell::values::IntValue<'ctx>,
 ) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>>
 where
-    D: compiler_llvm_context::Dependency,
+    D: compiler_llvm_context::Dependency + Clone,
 {
     let remainder = context.builder().build_int_unsigned_rem(
         value,

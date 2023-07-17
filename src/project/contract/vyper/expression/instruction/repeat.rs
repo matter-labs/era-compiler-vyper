@@ -36,7 +36,7 @@ impl Repeat {
         context: &mut compiler_llvm_context::Context<D>,
     ) -> anyhow::Result<()>
     where
-        D: compiler_llvm_context::Dependency,
+        D: compiler_llvm_context::Dependency + Clone,
     {
         let index_identifier = self.0.remove(0).try_into_identifier()?;
         let start = self.0.remove(0);

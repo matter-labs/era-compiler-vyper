@@ -38,7 +38,7 @@ impl Function {
 
 impl<D> WriteLLVM<D> for Function
 where
-    D: Dependency,
+    D: Dependency + Clone,
 {
     fn declare(&mut self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
         let mut argument_types = vec![];

@@ -34,7 +34,7 @@ We recommend at least 4 GB of RAM available for the build process.
    Also install the `musl` target if you are compiling on Linux in order to distribute the binary:  
    `rustup target add x86_64-unknown-linux-musl`  
 
-3. Download [version `0.3.3` of the Vyper compiler](https://docs.vyperlang.org/en/v0.3.3/installing-vyper.html).  
+3. Download [v0.3.3 or v0.3.9 of the Vyper compiler](https://github.com/vyperlang/vyper/releases).  
    If it is not named exactly `vyper` in your `$PATH`, see the `--vyper` option below.  
    
 4. Check out or clone the appropriate branch of this repository.  
@@ -65,10 +65,23 @@ We recommend at least 4 GB of RAM available for the build process.
 
 Check `./target/*/zkvyper --help` for compiler usage.  
 
-Version `0.3.3` of the Vyper compiler must be available in `PATH`, or the `--vyper` option must be used instead.  
+A support version of the Vyper compiler must be available in `$PATH`, or its path must be passed explicitly with the `--vyper` option.
+
+Supported versions:
+- 0.3.3
+- 0.3.9
 
 For big projects it is more convenient to use the compiler via the Hardhat plugin. For single-file contracts, or small
 projects, the CLI suffices.
+
+## Unit testing
+
+For running unit tests, `zkvyper` itself must also be available in `$PATH`, because it calls itself recursively to allow
+compiling each contract in a separate process. To successfully run unit tests:
+
+1. Run `cargo build --release`.
+2. Move the binary from `./target/release/zkvyper` to a directory from `$PATH`, or add the target directory itself to `$PATH`.
+3. Run `cargo test`.
 
 ## CLI reference
 
@@ -98,7 +111,8 @@ Specify the path to the `vyper` executable. By default, the one in `${PATH}` is 
 In LLVM IR mode `vyper` is unused.  
 
 #### `-f <format>`
-An extra output format string.  See `vyper --help` for available options.  
+An extra output format string.
+See `vyper --help` for available options.
 
 #### `--llvm-ir`
 Switch to LLVM IR mode.  
@@ -111,21 +125,24 @@ Only one input zkEVM assembly file is allowed.
 Cannot be used with combined or standard JSON modes.  
 
 #### `--metadata-hash`
-Set the metadata hash mode.  
-The only supported value is `none` that disables appending the metadata hash.  
-Is enabled by default.  
+Set metadata hash mode: `keccak256` | `none`.
+`keccak256` is enabled by default.
 
 #### `--debug-output-dir <path>`
 Dump all IR (LLL, LLVM IR, assembly) to files in the specified directory.  
 Only for testing and debugging.  
 
 #### `--llvm-verify-each`
-Set the verify-each option in LLVM.  
+Set the `verify-each` option in LLVM.
 Only for testing and debugging.  
 
 #### `--llvm-debug-logging`
-Set the debug-logging option in LLVM.  
+Set the `debug-logging` option in LLVM.
 Only for testing and debugging.  
+
+#### `--recursive-process`
+Run this process recursively and provide JSON input to compile a single contract.  
+Only for usage from within the compiler.  
 
 ## Troubleshooting
 
@@ -144,9 +161,10 @@ at your option.
 
 ## Resources
 
-[zkSync Era compiler toolchain documentation](https://era.zksync.io/docs/api/compiler-toolchain)
+[zkSync Era compiler toolchain documentation](https://era.zksync.io/docs/api/compiler-toolchain)  
 
-[Vyper documentation](https://vyper.readthedocs.io/en/v0.3.3/)  
+[Vyper v0.3.3 documentation](https://vyper.readthedocs.io/en/v0.3.3/)  
+[Vyper v0.3.9 documentation](https://vyper.readthedocs.io/en/v0.3.9/)  
 
 [Vyper LLL IR](https://github.com/vyperlang/vyper/blob/master/vyper/ir/README.md)  
 

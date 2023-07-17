@@ -7,6 +7,9 @@ pub mod metadata;
 pub mod vyper;
 pub mod zkasm;
 
+use serde::Deserialize;
+use serde::Serialize;
+
 use crate::build::contract::Contract as ContractBuild;
 
 use self::llvm_ir::Contract as LLVMIRContract;
@@ -16,7 +19,7 @@ use self::zkasm::Contract as ZKASMContract;
 ///
 /// The contract.
 ///
-#[derive(Debug, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[allow(non_camel_case_types)]
 #[allow(clippy::upper_case_acronyms)]
 pub enum Contract {
@@ -53,36 +56,40 @@ impl Contract {
     pub fn compile(
         self,
         contract_path: &str,
-        source_code_hash: [u8; compiler_common::BYTE_LENGTH_FIELD],
-        target_machine: compiler_llvm_context::TargetMachine,
+        source_code_hash: Option<[u8; compiler_common::BYTE_LENGTH_FIELD]>,
         optimizer_settings: compiler_llvm_context::OptimizerSettings,
-        include_metadata_hash: bool,
         debug_config: Option<compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
         match self {
             Self::Vyper(inner) => inner.compile(
                 contract_path,
                 source_code_hash,
-                target_machine,
                 optimizer_settings,
-                include_metadata_hash,
                 debug_config,
             ),
             Self::LLVMIR(inner) => inner.compile(
                 contract_path,
                 source_code_hash,
-                target_machine,
                 optimizer_settings,
-                include_metadata_hash,
                 debug_config,
             ),
             Self::ZKASM(inner) => inner.compile(
                 contract_path,
                 source_code_hash,
                 optimizer_settings,
-                include_metadata_hash,
                 debug_config,
             ),
+        }
+    }
+
+    ///
+    /// Returns the source code reference.
+    ///
+    pub fn source_code(&self) -> &str {
+        match self {
+            Self::Vyper(inner) => inner.source_code.as_str(),
+            Self::LLVMIR(inner) => inner.source_code.as_str(),
+            Self::ZKASM(inner) => inner.source_code.as_str(),
         }
     }
 }

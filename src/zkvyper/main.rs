@@ -21,10 +21,10 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 ///
 fn main() {
     std::process::exit(match main_inner() {
-        Ok(()) => compiler_common::EXIT_CODE_SUCCESS,
+        Ok(()) => 0,
         Err(error) => {
             eprintln!("{error}");
-            compiler_common::EXIT_CODE_FAILURE
+            1
         }
     })
 }
@@ -34,6 +34,14 @@ fn main() {
 ///
 fn main_inner() -> anyhow::Result<()> {
     let mut arguments = Arguments::new();
+    arguments.validate()?;
+
+    rayon::ThreadPoolBuilder::new()
+        .stack_size(RAYON_WORKER_STACK_SIZE)
+        .build_global()
+        .expect("Thread pool configuration failure");
+    inkwell::support::enable_llvm_pretty_stack_trace();
+    compiler_llvm_context::initialize_target();
 
     if arguments.version {
         println!(
@@ -43,6 +51,10 @@ fn main_inner() -> anyhow::Result<()> {
             inkwell::support::get_commit_id().to_string(),
         );
         return Ok(());
+    }
+
+    if arguments.recursive_process {
+        return compiler_vyper::run_process();
     }
 
     let debug_config = match arguments.debug_output_directory {
@@ -55,17 +67,9 @@ fn main_inner() -> anyhow::Result<()> {
         None => None,
     };
 
-    rayon::ThreadPoolBuilder::new()
-        .stack_size(RAYON_WORKER_STACK_SIZE)
-        .build_global()
-        .expect("Thread pool configuration failure");
-
     for path in arguments.input_files.iter_mut() {
         *path = path.canonicalize()?;
     }
-
-    inkwell::support::enable_llvm_pretty_stack_trace();
-    compiler_llvm_context::initialize_target();
 
     let vyper = compiler_vyper::VyperCompiler::new(
         arguments

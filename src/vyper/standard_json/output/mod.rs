@@ -13,6 +13,7 @@ use sha3::Digest;
 
 use crate::metadata::Metadata as SourceMetadata;
 use crate::project::contract::vyper::Contract as VyperContract;
+use crate::project::contract::Contract as ProjectContract;
 use crate::project::Project;
 
 use self::contract::Contract;
@@ -57,27 +58,24 @@ impl Output {
             }
         };
 
-        let mut project_contracts = BTreeMap::new();
-        let mut source_code_hasher = sha3::Keccak256::new();
+        let mut project_contracts: BTreeMap<String, ProjectContract> = BTreeMap::new();
         for (path, file) in files.into_iter() {
             for (name, contract) in file.into_iter() {
                 let full_path = format!("{path}:{name}");
-
-                source_code_hasher.update(
-                    contract
-                        .source_code
-                        .expect("Must be set at this point")
-                        .as_bytes(),
-                );
-
                 let project_contract = VyperContract::new(
                     version.to_owned(),
+                    contract.source_code.expect("Must be set by the tester"),
                     SourceMetadata::default(),
                     contract.ir,
                     contract.evm.abi,
                 );
                 project_contracts.insert(full_path, project_contract.into());
             }
+        }
+
+        let mut source_code_hasher = sha3::Keccak256::new();
+        for (_path, contract) in project_contracts.iter() {
+            source_code_hasher.update(contract.source_code().as_bytes());
         }
         let source_code_hash: [u8; compiler_common::BYTE_LENGTH_FIELD] =
             source_code_hasher.finalize_fixed().into();

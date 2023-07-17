@@ -31,7 +31,7 @@ impl Revert {
         context: &mut compiler_llvm_context::Context<D>,
     ) -> anyhow::Result<()>
     where
-        D: compiler_llvm_context::Dependency,
+        D: compiler_llvm_context::Dependency + Clone,
     {
         let arguments = Instruction::translate_arguments_llvm::<D, 2>(self.0, context)?;
         compiler_llvm_context::r#return::revert(

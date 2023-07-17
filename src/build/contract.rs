@@ -6,12 +6,15 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
+use serde::Deserialize;
+use serde::Serialize;
+
 use crate::vyper::combined_json::contract::Contract as CombinedJsonContract;
 
 ///
 /// The Vyper contract build.
 ///
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Contract {
     /// The LLVM module build.
     pub build: compiler_llvm_context::Build,

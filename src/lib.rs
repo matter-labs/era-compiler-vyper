@@ -2,11 +2,10 @@
 //! Vyper to zkEVM compiler library.
 //!
 
-extern crate core;
-
 pub(crate) mod build;
 pub(crate) mod r#const;
 pub(crate) mod metadata;
+pub(crate) mod process;
 pub(crate) mod project;
 pub(crate) mod vyper;
 
@@ -14,6 +13,10 @@ pub use self::build::contract::Contract as ContractBuild;
 pub use self::build::Build;
 pub use self::metadata::function::Function as FunctionMetadata;
 pub use self::metadata::Metadata;
+pub use self::process::input::Input as ProcessInput;
+pub use self::process::output::Output as ProcessOutput;
+pub use self::process::run as run_process;
+pub use self::process::EXECUTABLE;
 pub use self::project::contract::Contract;
 pub use self::project::Project;
 pub use self::r#const::*;
@@ -56,11 +59,10 @@ pub fn llvm_ir(
 
     let project = Project::try_from_llvm_ir_path(&path)?;
 
-    let target_machine = compiler_llvm_context::TargetMachine::new(&optimizer_settings)?;
     let build = project.compile(
-        target_machine,
         optimizer_settings,
         include_metadata_hash,
+        zkevm_assembly::RunningVmEncodingMode::Production,
         debug_config,
     )?;
 
@@ -87,11 +89,10 @@ pub fn zkasm(
     let project = Project::try_from_zkasm_path(&path)?;
 
     let optimizer_settings = compiler_llvm_context::OptimizerSettings::none();
-    let target_machine = compiler_llvm_context::TargetMachine::new(&optimizer_settings)?;
     let build = project.compile(
-        target_machine,
         optimizer_settings,
         include_metadata_hash,
+        zkevm_assembly::RunningVmEncodingMode::Production,
         debug_config,
     )?;
 
@@ -109,8 +110,6 @@ pub fn standard_output(
     include_metadata_hash: bool,
     debug_config: Option<compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
-    let vyper_version = vyper.version()?;
-
     if let Some(ref debug_config) = debug_config {
         for path in input_files.iter() {
             let lll_debug = vyper.lll_debug(path.as_path(), true)?;
@@ -118,13 +117,12 @@ pub fn standard_output(
         }
     }
 
-    let project = vyper.batch(&vyper_version.default, input_files, vyper_optimizer_enabled)?;
+    let project = vyper.batch(&vyper.version.default, input_files, vyper_optimizer_enabled)?;
 
-    let target_machine = compiler_llvm_context::TargetMachine::new(&optimizer_settings)?;
     let build = project.compile(
-        target_machine,
         optimizer_settings,
         include_metadata_hash,
+        zkevm_assembly::RunningVmEncodingMode::Production,
         debug_config,
     )?;
 
@@ -145,8 +143,6 @@ pub fn combined_json(
     output_directory: Option<PathBuf>,
     overwrite: bool,
 ) -> anyhow::Result<()> {
-    let vyper_version = vyper.version()?;
-
     let zkvyper_version = semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid");
 
     if let Some(ref debug_config) = debug_config {
@@ -156,17 +152,16 @@ pub fn combined_json(
         }
     }
 
-    let project = vyper.batch(
-        &vyper_version.default,
+    let project: Project = vyper.batch(
+        &vyper.version.default,
         input_files.clone(),
         vyper_optimizer_enabled,
     )?;
 
-    let target_machine = compiler_llvm_context::TargetMachine::new(&optimizer_settings)?;
     let build = project.compile(
-        target_machine,
         optimizer_settings,
         include_metadata_hash,
+        zkevm_assembly::RunningVmEncodingMode::Production,
         debug_config,
     )?;
 

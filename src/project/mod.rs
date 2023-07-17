@@ -14,6 +14,7 @@ use sha3::Digest;
 
 use crate::build::contract::Contract as ContractBuild;
 use crate::build::Build;
+use crate::process::input::Input as ProcessInput;
 
 use self::contract::llvm_ir::Contract as LLVMIRContract;
 use self::contract::zkasm::Contract as ZKASMContract;
@@ -59,7 +60,10 @@ impl Project {
         let source_code_hash = sha3::Keccak256::digest(source_code.as_bytes()).into();
 
         let mut project_contracts = BTreeMap::new();
-        project_contracts.insert(path, LLVMIRContract::new(source_code).into());
+        project_contracts.insert(
+            path,
+            LLVMIRContract::new(compiler_llvm_context::LLVM_VERSION, source_code).into(),
+        );
 
         Ok(Self::new(
             compiler_llvm_context::LLVM_VERSION,
@@ -80,7 +84,10 @@ impl Project {
         let source_code_hash = sha3::Keccak256::digest(source_code.as_bytes()).into();
 
         let mut project_contracts = BTreeMap::new();
-        project_contracts.insert(path, ZKASMContract::new(source_code).into());
+        project_contracts.insert(
+            path,
+            ZKASMContract::new(compiler_llvm_context::ZKEVM_VERSION, source_code).into(),
+        );
 
         Ok(Self::new(
             compiler_llvm_context::ZKEVM_VERSION,
@@ -94,25 +101,31 @@ impl Project {
     ///
     pub fn compile(
         self,
-        target_machine: compiler_llvm_context::TargetMachine,
         optimizer_settings: compiler_llvm_context::OptimizerSettings,
         include_metadata_hash: bool,
+        bytecode_encoding: zkevm_assembly::RunningVmEncodingMode,
         debug_config: Option<compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<Build> {
         let mut build = Build::default();
+        let source_code_hash = if include_metadata_hash {
+            Some(self.source_code_hash)
+        } else {
+            None
+        };
         let results: BTreeMap<String, anyhow::Result<ContractBuild>> = self
             .contracts
             .into_par_iter()
-            .map(|(path, contract)| {
-                let contract_build = contract.compile(
-                    path.as_str(),
-                    self.source_code_hash,
-                    target_machine.clone(),
+            .map(|(full_path, contract)| {
+                let process_output = crate::process::call(ProcessInput::new(
+                    full_path.clone(),
+                    contract,
+                    source_code_hash,
+                    bytecode_encoding == zkevm_assembly::RunningVmEncodingMode::Testing,
                     optimizer_settings.clone(),
-                    include_metadata_hash,
                     debug_config.clone(),
-                );
-                (path, contract_build)
+                ));
+
+                (full_path, process_output.map(|output| output.build))
             })
             .collect();
 
@@ -130,12 +143,7 @@ impl Project {
         if is_forwarder_used {
             let forwarder_build = compiler_llvm_context::Build::new(
                 crate::r#const::FORWARDER_CONTRACT_ASSEMBLY.to_owned(),
-                zkevm_assembly::Assembly::from_string(
-                    crate::r#const::FORWARDER_CONTRACT_ASSEMBLY.to_owned(),
-                    Some(
-                        sha3::Keccak256::digest(crate::r#const::FORWARDER_CONTRACT_ASSEMBLY).into(),
-                    ),
-                )?,
+                None,
                 crate::r#const::FORWARDER_CONTRACT_BYTECODE.clone(),
                 crate::r#const::FORWARDER_CONTRACT_HASH.clone(),
             );

@@ -22,7 +22,7 @@ impl Assert {
         context: &mut compiler_llvm_context::Context<D>,
     ) -> anyhow::Result<()>
     where
-        D: compiler_llvm_context::Dependency,
+        D: compiler_llvm_context::Dependency + Clone,
     {
         let [condition] = self.0;
 

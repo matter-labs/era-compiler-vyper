@@ -1,5 +1,21 @@
 # The `zkvyper` changelog
 
+## [1.3.9] - 2023-07-03
+
+### Fixed
+
+- An issue with non-determinism in contract metadata hash
+
+## [1.3.8] - 2023-06-29
+
+### Changed
+
+- Each contract is now compiled in a separate process
+
+### Fixed
+
+- The CLI argument validation to rule out incompatible options
+
 ## [1.3.7] - 2023-05-29
 
 ### Added

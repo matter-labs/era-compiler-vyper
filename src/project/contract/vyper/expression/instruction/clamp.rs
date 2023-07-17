@@ -15,7 +15,7 @@ pub fn ordinary<'ctx, D>(
     is_signed: bool,
 ) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>>
 where
-    D: compiler_llvm_context::Dependency,
+    D: compiler_llvm_context::Dependency + Clone,
 {
     let error_block = context.append_basic_block("if_error");
     let join_block = context.append_basic_block("if_join");
@@ -65,7 +65,7 @@ pub fn with_predicate<'ctx, D>(
     predicate: inkwell::IntPredicate,
 ) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>>
 where
-    D: compiler_llvm_context::Dependency,
+    D: compiler_llvm_context::Dependency + Clone,
 {
     let error_block = context.append_basic_block("clamp_single_error");
     let join_block = context.append_basic_block("clamp_single_join");

@@ -100,7 +100,7 @@ impl Label {
     ///
     pub fn declare<D>(&self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()>
     where
-        D: compiler_llvm_context::Dependency,
+        D: compiler_llvm_context::Dependency + Clone,
     {
         if self.is_empty() || self.can_block_be_ignored() {
             return Ok(());
@@ -159,7 +159,7 @@ impl Label {
         context: &mut compiler_llvm_context::Context<D>,
     ) -> anyhow::Result<()>
     where
-        D: compiler_llvm_context::Dependency,
+        D: compiler_llvm_context::Dependency + Clone,
     {
         if self.is_empty() || self.can_block_be_ignored() {
             return Ok(());

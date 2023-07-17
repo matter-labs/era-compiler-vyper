@@ -150,7 +150,7 @@ impl Seq {
         context: &mut compiler_llvm_context::Context<'ctx, D>,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: compiler_llvm_context::Dependency,
+        D: compiler_llvm_context::Dependency + Clone,
     {
         let (mut labels, expressions) = self.drain_and_split();
 
@@ -176,7 +176,7 @@ impl Seq {
 
 impl<D> compiler_llvm_context::WriteLLVM<D> for Seq
 where
-    D: compiler_llvm_context::Dependency,
+    D: compiler_llvm_context::Dependency + Clone,
 {
     fn into_llvm(mut self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
         let current_block = context.basic_block();

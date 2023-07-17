@@ -15,7 +15,7 @@ pub fn load_bytes<'ctx, D>(
     length: inkwell::values::IntValue<'ctx>,
 ) -> anyhow::Result<()>
 where
-    D: compiler_llvm_context::Dependency,
+    D: compiler_llvm_context::Dependency + Clone,
 {
     let condition_block = context.append_basic_block("immutable_load_bytes_repeat_condition");
     let body_block = context.append_basic_block("immutable_load_bytes_repeat_body");

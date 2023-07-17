@@ -3,11 +3,12 @@
 //!
 
 use serde::Deserialize;
+use serde::Serialize;
 
 ///
 /// The Vyper metadata function.
 ///
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Function {
     /// The function name.
     pub name: String,
