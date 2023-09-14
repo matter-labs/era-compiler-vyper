@@ -47,19 +47,21 @@ pub struct Arguments {
     pub vyper: Option<String>,
 
     /// An extra output format string.
-    /// See `vyper --help` for available options.
+    /// See `vyper --help` for available options including combined JSON mode.
     #[structopt(short = "f")]
     pub format: Option<String>,
 
     /// Switch to LLVM IR mode.
     /// Only one input LLVM IR file is allowed.
-    /// Cannot be used with combined or standard JSON modes.
+    /// Cannot be used with combined JSON mode.
+    /// Use this mode at your own risk, as LLVM IR input validation is not implemented.
     #[structopt(long = "llvm-ir")]
     pub llvm_ir: bool,
 
     /// Switch to zkEVM assembly mode.
     /// Only one input zkEVM assembly file is allowed.
-    /// Cannot be used with combined or standard JSON modes.
+    /// Cannot be used with combined JSON modes.
+    /// Use this mode at your own risk, as EraVM assembly input validation is not implemented.
     #[structopt(long = "zkasm")]
     pub zkasm: bool,
 

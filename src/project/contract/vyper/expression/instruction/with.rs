@@ -31,10 +31,10 @@ impl With {
     ///
     pub fn into_llvm_value<'ctx, D>(
         self,
-        context: &mut compiler_llvm_context::Context<'ctx, D>,
+        context: &mut compiler_llvm_context::EraVMContext<'ctx, D>,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: compiler_llvm_context::Dependency + Clone,
+        D: compiler_llvm_context::EraVMDependency + Clone,
     {
         let [identifier, value, block] = self.0;
         let identifier = identifier.try_into_identifier()?;

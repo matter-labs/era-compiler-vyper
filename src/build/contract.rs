@@ -17,14 +17,14 @@ use crate::vyper::combined_json::contract::Contract as CombinedJsonContract;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Contract {
     /// The LLVM module build.
-    pub build: compiler_llvm_context::Build,
+    pub build: compiler_llvm_context::EraVMBuild,
 }
 
 impl Contract {
     ///
     /// A shortcut constructor.
     ///
-    pub fn new(build: compiler_llvm_context::Build) -> Self {
+    pub fn new(build: compiler_llvm_context::EraVMBuild) -> Self {
         Self { build }
     }
 
@@ -42,7 +42,7 @@ impl Contract {
         let assembly_file_name = format!(
             "{}.{}",
             contract_name,
-            compiler_common::EXTENSION_ZKEVM_ASSEMBLY
+            compiler_common::EXTENSION_ERAVM_ASSEMBLY
         );
         let mut assembly_file_path = output_directory.to_owned();
         assembly_file_path.push(assembly_file_name);
@@ -65,7 +65,7 @@ impl Contract {
         let binary_file_name = format!(
             "{}.{}",
             contract_name,
-            compiler_common::EXTENSION_ZKEVM_BINARY
+            compiler_common::EXTENSION_ERAVM_BINARY
         );
         let mut binary_file_path = output_directory.to_owned();
         binary_file_path.push(binary_file_name);

@@ -10,8 +10,8 @@ use std::collections::BTreeMap;
 use serde::Deserialize;
 use serde::Serialize;
 
-use compiler_llvm_context::Dependency;
-use compiler_llvm_context::WriteLLVM;
+use compiler_llvm_context::EraVMDependency;
+use compiler_llvm_context::EraVMWriteLLVM;
 
 use crate::build::contract::Contract as ContractBuild;
 use crate::metadata::Metadata as SourceMetadata;
@@ -120,7 +120,7 @@ impl Contract {
         });
 
         let dependency_data = DependencyData::default();
-        let mut context = compiler_llvm_context::Context::<DependencyData>::new(
+        let mut context = compiler_llvm_context::EraVMContext::<DependencyData>::new(
             &llvm,
             llvm.create_module(contract_path),
             optimizer,
@@ -158,31 +158,35 @@ impl Contract {
     }
 }
 
-impl<D> WriteLLVM<D> for Contract
+impl<D> EraVMWriteLLVM<D> for Contract
 where
-    D: Dependency + Clone,
+    D: EraVMDependency + Clone,
 {
-    fn declare(&mut self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
-        let mut entry = compiler_llvm_context::EntryFunction::default();
+    fn declare(
+        &mut self,
+        context: &mut compiler_llvm_context::EraVMContext<D>,
+    ) -> anyhow::Result<()> {
+        let mut entry = compiler_llvm_context::EraVMEntryFunction::default();
         entry.declare(context)?;
 
-        let mut runtime =
-            compiler_llvm_context::Runtime::new(compiler_llvm_context::AddressSpace::HeapAuxiliary);
+        let mut runtime = compiler_llvm_context::EraVMRuntime::new(
+            compiler_llvm_context::EraVMAddressSpace::HeapAuxiliary,
+        );
         runtime.declare(context)?;
 
-        compiler_llvm_context::DeployCodeFunction::new(
-            compiler_llvm_context::DummyLLVMWritable::default(),
+        compiler_llvm_context::EraVMDeployCodeFunction::new(
+            compiler_llvm_context::EraVMDummyLLVMWritable::default(),
         )
         .declare(context)?;
-        compiler_llvm_context::RuntimeCodeFunction::new(
-            compiler_llvm_context::DummyLLVMWritable::default(),
+        compiler_llvm_context::EraVMRuntimeCodeFunction::new(
+            compiler_llvm_context::EraVMDummyLLVMWritable::default(),
         )
         .declare(context)?;
 
         for name in [
-            compiler_llvm_context::Runtime::FUNCTION_DEPLOY_CODE,
-            compiler_llvm_context::Runtime::FUNCTION_RUNTIME_CODE,
-            compiler_llvm_context::Runtime::FUNCTION_ENTRY,
+            compiler_llvm_context::EraVMRuntime::FUNCTION_DEPLOY_CODE,
+            compiler_llvm_context::EraVMRuntime::FUNCTION_RUNTIME_CODE,
+            compiler_llvm_context::EraVMRuntime::FUNCTION_ENTRY,
         ]
         .into_iter()
         {
@@ -190,7 +194,7 @@ where
                 .get_function(name)
                 .expect("Always exists")
                 .borrow_mut()
-                .set_vyper_data(compiler_llvm_context::FunctionVyperData::default());
+                .set_vyper_data(compiler_llvm_context::EraVMFunctionVyperData::default());
         }
 
         entry.into_llvm(context)?;
@@ -200,7 +204,10 @@ where
         Ok(())
     }
 
-    fn into_llvm(mut self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
+    fn into_llvm(
+        mut self,
+        context: &mut compiler_llvm_context::EraVMContext<D>,
+    ) -> anyhow::Result<()> {
         let (mut runtime_code, immutables_size) =
             self.expression.extract_runtime_code()?.unwrap_or_default();
         let mut deploy_code = self.expression.try_into_deploy_code()?;
@@ -210,8 +217,10 @@ where
                 let immutables_size = number
                     .as_u64()
                     .ok_or_else(|| anyhow::anyhow!("Immutable size `{}` parsing error", number))?;
-                let vyper_data =
-                    compiler_llvm_context::ContextVyperData::new(immutables_size as usize, false);
+                let vyper_data = compiler_llvm_context::EraVMContextVyperData::new(
+                    immutables_size as usize,
+                    false,
+                );
                 context.set_vyper_data(vyper_data);
             }
             expression => anyhow::bail!("Invalid immutables size format: {:?}", expression),
@@ -220,25 +229,37 @@ where
         let mut function_expressions = deploy_code
             .extract_functions()?
             .into_iter()
-            .map(|(label, expression)| (label, expression, compiler_llvm_context::CodeType::Deploy))
-            .collect::<Vec<(String, Expression, compiler_llvm_context::CodeType)>>();
+            .map(|(label, expression)| {
+                (
+                    label,
+                    expression,
+                    compiler_llvm_context::EraVMCodeType::Deploy,
+                )
+            })
+            .collect::<Vec<(String, Expression, compiler_llvm_context::EraVMCodeType)>>();
         function_expressions.extend(
             runtime_code
                 .extract_functions()?
                 .into_iter()
                 .map(|(label, expression)| {
-                    (label, expression, compiler_llvm_context::CodeType::Runtime)
+                    (
+                        label,
+                        expression,
+                        compiler_llvm_context::EraVMCodeType::Runtime,
+                    )
                 })
-                .collect::<Vec<(String, Expression, compiler_llvm_context::CodeType)>>(),
+                .collect::<Vec<(String, Expression, compiler_llvm_context::EraVMCodeType)>>(),
         );
 
         let mut functions = Vec::with_capacity(function_expressions.capacity());
         for (label, expression, code_type) in function_expressions.into_iter() {
             let mut metadata_label = label
-                .strip_suffix(format!("_{}", compiler_llvm_context::CodeType::Deploy).as_str())
+                .strip_suffix(format!("_{}", compiler_llvm_context::EraVMCodeType::Deploy).as_str())
                 .unwrap_or(label.as_str());
             metadata_label = label
-                .strip_suffix(format!("_{}", compiler_llvm_context::CodeType::Runtime).as_str())
+                .strip_suffix(
+                    format!("_{}", compiler_llvm_context::EraVMCodeType::Runtime).as_str(),
+                )
                 .unwrap_or(metadata_label);
             metadata_label = label
                 .strip_suffix(format!("_{}", crate::r#const::LABEL_SUFFIX_COMMON).as_str())
@@ -273,14 +294,14 @@ where
             function.into_llvm(context)?;
         }
 
-        compiler_llvm_context::DeployCodeFunction::new(deploy_code).into_llvm(context)?;
-        compiler_llvm_context::RuntimeCodeFunction::new(runtime_code).into_llvm(context)?;
+        compiler_llvm_context::EraVMDeployCodeFunction::new(deploy_code).into_llvm(context)?;
+        compiler_llvm_context::EraVMRuntimeCodeFunction::new(runtime_code).into_llvm(context)?;
 
         Ok(())
     }
 }
 
-impl Dependency for DependencyData {
+impl EraVMDependency for DependencyData {
     fn compile(
         _contract: Self,
         _name: &str,

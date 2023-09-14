@@ -4,8 +4,8 @@
 
 use inkwell::types::BasicType;
 
-use compiler_llvm_context::Dependency;
-use compiler_llvm_context::WriteLLVM;
+use compiler_llvm_context::EraVMDependency;
+use compiler_llvm_context::EraVMWriteLLVM;
 
 use crate::metadata::function::Function as FunctionMetadata;
 use crate::project::contract::vyper::expression::Expression;
@@ -36,11 +36,14 @@ impl Function {
     }
 }
 
-impl<D> WriteLLVM<D> for Function
+impl<D> EraVMWriteLLVM<D> for Function
 where
-    D: Dependency + Clone,
+    D: EraVMDependency + Clone,
 {
-    fn declare(&mut self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
+    fn declare(
+        &mut self,
+        context: &mut compiler_llvm_context::EraVMContext<D>,
+    ) -> anyhow::Result<()> {
         let mut argument_types = vec![];
         if self
             .name
@@ -61,12 +64,12 @@ where
         )?;
         function
             .borrow_mut()
-            .set_vyper_data(compiler_llvm_context::FunctionVyperData::default());
+            .set_vyper_data(compiler_llvm_context::EraVMFunctionVyperData::default());
 
         Ok(())
     }
 
-    fn into_llvm(self, context: &mut compiler_llvm_context::Context<D>) -> anyhow::Result<()> {
+    fn into_llvm(self, context: &mut compiler_llvm_context::EraVMContext<D>) -> anyhow::Result<()> {
         context.set_current_function(self.name.as_str())?;
 
         let llvm_entry_block = context.current_function().borrow().entry_block();

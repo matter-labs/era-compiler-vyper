@@ -41,7 +41,7 @@ fn main_inner() -> anyhow::Result<()> {
         .build_global()
         .expect("Thread pool configuration failure");
     inkwell::support::enable_llvm_pretty_stack_trace();
-    compiler_llvm_context::initialize_target();
+    compiler_llvm_context::initialize_target(compiler_llvm_context::Target::EraVM); // TODO: pass from CLI
 
     if arguments.version {
         println!(
@@ -86,8 +86,9 @@ fn main_inner() -> anyhow::Result<()> {
 
     let include_metadata_hash = match arguments.metadata_hash {
         Some(metadata_hash) => {
-            let metadata = compiler_llvm_context::MetadataHash::from_str(metadata_hash.as_str())?;
-            metadata != compiler_llvm_context::MetadataHash::None
+            let metadata =
+                compiler_llvm_context::EraVMMetadataHash::from_str(metadata_hash.as_str())?;
+            metadata != compiler_llvm_context::EraVMMetadataHash::None
         }
         None => true,
     };

@@ -19,10 +19,10 @@ impl ExitTo {
     ///
     pub fn into_llvm_value<D>(
         mut self,
-        context: &mut compiler_llvm_context::Context<D>,
+        context: &mut compiler_llvm_context::EraVMContext<D>,
     ) -> anyhow::Result<()>
     where
-        D: compiler_llvm_context::Dependency + Clone,
+        D: compiler_llvm_context::EraVMDependency + Clone,
     {
         let label_name = self.0.remove(0).try_into_identifier()?;
         if label_name.as_str() == crate::r#const::VARIABLE_IDENTIFIER_RETURN_PC {
@@ -31,13 +31,7 @@ impl ExitTo {
         }
         let label_name = label_name
             .strip_prefix(crate::r#const::LABEL_DESTINATION_PREFIX)
-            .ok_or_else(|| {
-                anyhow::anyhow!(
-                    "Block `{}` has no `{}` prefix",
-                    label_name,
-                    crate::r#const::LABEL_DESTINATION_PREFIX
-                )
-            })?;
+            .unwrap_or(label_name.as_str());
 
         let block = context
             .current_function()

@@ -9,13 +9,13 @@
 /// from the immutable storage system contract to the heap.
 ///
 pub fn load_bytes<'ctx, D>(
-    context: &mut compiler_llvm_context::Context<'ctx, D>,
+    context: &mut compiler_llvm_context::EraVMContext<'ctx, D>,
     heap_offset: inkwell::values::IntValue<'ctx>,
     immutable_offset: inkwell::values::IntValue<'ctx>,
     length: inkwell::values::IntValue<'ctx>,
 ) -> anyhow::Result<()>
 where
-    D: compiler_llvm_context::Dependency + Clone,
+    D: compiler_llvm_context::EraVMDependency + Clone,
 {
     let condition_block = context.append_basic_block("immutable_load_bytes_repeat_condition");
     let body_block = context.append_basic_block("immutable_load_bytes_repeat_body");
@@ -57,16 +57,18 @@ where
         immutable_offset_pointer,
         "immutable_load_bytes_immutable_offset_value",
     );
-    let immutable_value =
-        compiler_llvm_context::immutable::load(context, immutable_offset_value.into_int_value())?;
+    let immutable_value = compiler_llvm_context::eravm_evm_immutable::load(
+        context,
+        immutable_offset_value.into_int_value(),
+    )?;
 
     let heap_offset_value = context.build_load(
         heap_offset_pointer,
         "immutable_load_bytes_heap_offset_value",
     );
-    let heap_pointer = compiler_llvm_context::Pointer::new_with_offset(
+    let heap_pointer = compiler_llvm_context::EraVMPointer::new_with_offset(
         context,
-        compiler_llvm_context::AddressSpace::Heap,
+        compiler_llvm_context::EraVMAddressSpace::Heap,
         context.field_type(),
         heap_offset_value.into_int_value(),
         "immutable_load_bytes_heap_pointer",

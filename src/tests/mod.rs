@@ -42,7 +42,7 @@ pub fn build_vyper(
     }
 
     inkwell::support::enable_llvm_pretty_stack_trace();
-    compiler_llvm_context::initialize_target();
+    compiler_llvm_context::initialize_target(compiler_llvm_context::Target::EraVM);
     let _ = crate::process::EXECUTABLE.set(PathBuf::from(crate::r#const::DEFAULT_EXECUTABLE_NAME));
     let optimizer_settings = compiler_llvm_context::OptimizerSettings::none();
 

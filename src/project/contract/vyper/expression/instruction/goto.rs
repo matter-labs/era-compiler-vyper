@@ -26,11 +26,11 @@ impl Goto {
     ///
     pub fn into_function_call<'ctx, D>(
         self,
-        context: &mut compiler_llvm_context::Context<D>,
+        context: &mut compiler_llvm_context::EraVMContext<D>,
         label_name: String,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: compiler_llvm_context::Dependency + Clone,
+        D: compiler_llvm_context::EraVMDependency + Clone,
     {
         let function = context
             .get_function(label_name.as_str())
@@ -43,9 +43,9 @@ impl Goto {
                     continue;
                 }
             }
-
-            let value = expression.into_llvm_value(context)?.expect("Always exists");
-            arguments.push(value);
+            if let Some(value) = expression.into_llvm_value(context)? {
+                arguments.push(value);
+            }
         }
 
         context.build_call(
@@ -62,11 +62,11 @@ impl Goto {
     ///
     pub fn into_block_call<'ctx, D>(
         self,
-        context: &mut compiler_llvm_context::Context<D>,
+        context: &mut compiler_llvm_context::EraVMContext<D>,
         label_name: String,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: compiler_llvm_context::Dependency + Clone,
+        D: compiler_llvm_context::EraVMDependency + Clone,
     {
         let block = context
             .current_function()
@@ -106,10 +106,10 @@ impl Goto {
     ///
     pub fn into_llvm_value<'ctx, D>(
         mut self,
-        context: &mut compiler_llvm_context::Context<D>,
+        context: &mut compiler_llvm_context::EraVMContext<D>,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: compiler_llvm_context::Dependency + Clone,
+        D: compiler_llvm_context::EraVMDependency + Clone,
     {
         let label_name = self.0.remove(0).try_into_identifier()?;
 

@@ -28,13 +28,13 @@ impl Revert {
     ///
     pub fn into_llvm_value<D>(
         self,
-        context: &mut compiler_llvm_context::Context<D>,
+        context: &mut compiler_llvm_context::EraVMContext<D>,
     ) -> anyhow::Result<()>
     where
-        D: compiler_llvm_context::Dependency + Clone,
+        D: compiler_llvm_context::EraVMDependency + Clone,
     {
         let arguments = Instruction::translate_arguments_llvm::<D, 2>(self.0, context)?;
-        compiler_llvm_context::r#return::revert(
+        compiler_llvm_context::eravm_evm_return::revert(
             context,
             arguments[0].into_int_value(),
             arguments[1].into_int_value(),

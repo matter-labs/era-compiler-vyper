@@ -60,7 +60,9 @@ impl Contract {
         let module = llvm
             .create_module_from_ir(memory_buffer)
             .map_err(|error| anyhow::anyhow!(error.to_string()))?;
-        let context = compiler_llvm_context::Context::<compiler_llvm_context::DummyDependency>::new(
+        let context = compiler_llvm_context::EraVMContext::<
+            compiler_llvm_context::EraVMDummyDependency,
+        >::new(
             &llvm,
             module,
             optimizer,

@@ -41,8 +41,11 @@ impl Compiler {
     pub const DEFAULT_EXECUTABLE_NAME: &'static str = "vyper";
 
     /// The supported versions of `vyper`.
-    pub const SUPPORTED_VERSIONS: [semver::Version; 2] =
-        [semver::Version::new(0, 3, 3), semver::Version::new(0, 3, 9)];
+    pub const SUPPORTED_VERSIONS: [semver::Version; 2 /* 3 */] = [
+        semver::Version::new(0, 3, 3),
+        semver::Version::new(0, 3, 9),
+        // semver::Version::new(0, 3, 10),
+    ];
 
     ///
     /// A shortcut constructor.
@@ -66,6 +69,9 @@ impl Compiler {
         command.arg("-f");
         command.arg("combined_json");
         command.args(paths);
+        if self.version.default >= semver::Version::new(0, 3, 10) {
+            command.arg("--no-optimize");
+        }
         let output = command.output().map_err(|error| {
             anyhow::anyhow!("{} subprocess error: {:?}", self.executable, error)
         })?;
@@ -85,12 +91,18 @@ impl Compiler {
     ///
     /// The `vyper --standard-json` mirror.
     ///
-    pub fn standard_json(&self, input: StandardJsonInput) -> anyhow::Result<StandardJsonOutput> {
+    pub fn standard_json(
+        &self,
+        mut input: StandardJsonInput,
+    ) -> anyhow::Result<StandardJsonOutput> {
         let mut command = std::process::Command::new(self.executable.as_str());
         command.stdin(std::process::Stdio::piped());
         command.stdout(std::process::Stdio::piped());
         command.arg("--standard-json");
 
+        if self.version.default >= semver::Version::new(0, 3, 10) {
+            input.settings.optimize = false;
+        }
         let input_json = serde_json::to_vec(&input).expect("Always valid");
 
         let process = command.spawn().map_err(|error| {
@@ -169,7 +181,7 @@ impl Compiler {
         let mut command = std::process::Command::new(self.executable.as_str());
         command.arg("-f");
         command.arg("ir");
-        if !optimize {
+        if !optimize || self.version.default >= semver::Version::new(0, 3, 10) {
             command.arg("--no-optimize");
         }
         command.arg(path);
@@ -205,7 +217,7 @@ impl Compiler {
         let mut command = std::process::Command::new(self.executable.as_str());
         command.arg("-f");
         command.arg("ir_json,metadata,method_identifiers");
-        if !optimize {
+        if !optimize || self.version.default >= semver::Version::new(0, 3, 10) {
             command.arg("--no-optimize");
         }
         command.args(paths.as_slice());

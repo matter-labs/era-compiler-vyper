@@ -62,11 +62,15 @@ impl Project {
         let mut project_contracts = BTreeMap::new();
         project_contracts.insert(
             path,
-            LLVMIRContract::new(compiler_llvm_context::LLVM_VERSION, source_code).into(),
+            LLVMIRContract::new(
+                compiler_llvm_context::eravm_const::LLVM_VERSION,
+                source_code,
+            )
+            .into(),
         );
 
         Ok(Self::new(
-            compiler_llvm_context::LLVM_VERSION,
+            compiler_llvm_context::eravm_const::LLVM_VERSION,
             source_code_hash,
             project_contracts,
         ))
@@ -86,11 +90,15 @@ impl Project {
         let mut project_contracts = BTreeMap::new();
         project_contracts.insert(
             path,
-            ZKASMContract::new(compiler_llvm_context::ZKEVM_VERSION, source_code).into(),
+            ZKASMContract::new(
+                compiler_llvm_context::eravm_const::ZKEVM_VERSION,
+                source_code,
+            )
+            .into(),
         );
 
         Ok(Self::new(
-            compiler_llvm_context::ZKEVM_VERSION,
+            compiler_llvm_context::eravm_const::ZKEVM_VERSION,
             source_code_hash,
             project_contracts,
         ))
@@ -141,7 +149,7 @@ impl Project {
                 .unwrap_or_default()
         });
         if is_forwarder_used {
-            let forwarder_build = compiler_llvm_context::Build::new(
+            let forwarder_build = compiler_llvm_context::EraVMBuild::new(
                 crate::r#const::FORWARDER_CONTRACT_ASSEMBLY.to_owned(),
                 None,
                 crate::r#const::FORWARDER_CONTRACT_BYTECODE.clone(),

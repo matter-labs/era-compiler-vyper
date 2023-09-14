@@ -1,5 +1,11 @@
 # The `zkvyper` changelog
 
+## [1.3.10] - 2023-09-13
+
+### Fixed
+
+- An issue with uninitialized immutable values
+
 ## [1.3.9] - 2023-07-03
 
 ### Fixed
@@ -21,7 +27,7 @@
 ### Added
 
 - The zkEVM assembly compilation mode (`--zkasm`)
-- The vyper v1.3.9 support
+- The vyper v0.3.9 support
 
 ### Fixed
 

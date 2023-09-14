@@ -36,10 +36,10 @@ impl If {
     ///
     pub fn into_llvm_value<'ctx, D>(
         mut self,
-        context: &mut compiler_llvm_context::Context<'ctx, D>,
+        context: &mut compiler_llvm_context::EraVMContext<'ctx, D>,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: compiler_llvm_context::Dependency + Clone,
+        D: compiler_llvm_context::EraVMDependency + Clone,
     {
         let main_block = context.append_basic_block("if_main");
         let join_block = context.append_basic_block("if_join");

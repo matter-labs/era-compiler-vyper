@@ -50,7 +50,7 @@ impl Contract {
             .keccak256()
         });
 
-        let build = compiler_llvm_context::build_assembly_text(
+        let build = compiler_llvm_context::eravm_build_assembly_text(
             contract_path,
             self.source_code.as_str(),
             metadata_hash,

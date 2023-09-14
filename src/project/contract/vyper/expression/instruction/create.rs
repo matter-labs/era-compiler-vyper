@@ -10,13 +10,13 @@
 /// of the forwarder's constructor.
 ///
 pub fn create<'ctx, D>(
-    context: &mut compiler_llvm_context::Context<'ctx, D>,
+    context: &mut compiler_llvm_context::EraVMContext<'ctx, D>,
     value: inkwell::values::IntValue<'ctx>,
     input_offset: inkwell::values::IntValue<'ctx>,
     salt: Option<inkwell::values::IntValue<'ctx>>,
 ) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>>
 where
-    D: compiler_llvm_context::Dependency + Clone,
+    D: compiler_llvm_context::EraVMDependency + Clone,
 {
     let success_block = context.append_basic_block("create_success_block");
     let failure_block = context.append_basic_block("create_failure_block");
@@ -27,9 +27,9 @@ where
         context.field_const(19),
         "create_address_offset",
     );
-    let address_dirty_pointer = compiler_llvm_context::Pointer::new_with_offset(
+    let address_dirty_pointer = compiler_llvm_context::EraVMPointer::new_with_offset(
         context,
-        compiler_llvm_context::AddressSpace::Heap,
+        compiler_llvm_context::EraVMAddressSpace::Heap,
         context.field_type(),
         address_offset,
         "create_address_dirty_pointer",
@@ -45,10 +45,11 @@ where
         "create_address",
     );
 
-    let calldata_offset = context.field_const(compiler_llvm_context::HEAP_AUX_OFFSET_EXTERNAL_CALL);
+    let calldata_offset =
+        context.field_const(compiler_llvm_context::eravm_const::HEAP_AUX_OFFSET_EXTERNAL_CALL);
     let calldata_length = context.field_const(
-        (compiler_llvm_context::DEPLOYER_CALL_HEADER_SIZE + compiler_common::BYTE_LENGTH_FIELD)
-            as u64,
+        (compiler_llvm_context::eravm_const::DEPLOYER_CALL_HEADER_SIZE
+            + compiler_common::BYTE_LENGTH_FIELD) as u64,
     );
 
     let hash_input_offset = context.builder().build_int_add(
@@ -58,9 +59,9 @@ where
         ),
         "create_hash_input_offset",
     );
-    let hash_input_offset_pointer = compiler_llvm_context::Pointer::new_with_offset(
+    let hash_input_offset_pointer = compiler_llvm_context::EraVMPointer::new_with_offset(
         context,
-        compiler_llvm_context::AddressSpace::HeapAuxiliary,
+        compiler_llvm_context::EraVMAddressSpace::HeapAuxiliary,
         context.field_type(),
         hash_input_offset,
         "create_hash_input_offset_pointer",
@@ -73,12 +74,12 @@ where
 
     let address_input_offset = context.builder().build_int_add(
         calldata_offset,
-        context.field_const(compiler_llvm_context::DEPLOYER_CALL_HEADER_SIZE as u64),
+        context.field_const(compiler_llvm_context::eravm_const::DEPLOYER_CALL_HEADER_SIZE as u64),
         "create_address_input_offset",
     );
-    let address_input_offset_pointer = compiler_llvm_context::Pointer::new_with_offset(
+    let address_input_offset_pointer = compiler_llvm_context::EraVMPointer::new_with_offset(
         context,
-        compiler_llvm_context::AddressSpace::HeapAuxiliary,
+        compiler_llvm_context::EraVMAddressSpace::HeapAuxiliary,
         context.field_type(),
         address_input_offset,
         "create_address_input_offset_pointer",
@@ -88,16 +89,19 @@ where
     let result_pointer = context.build_alloca(context.field_type(), "create_result_pointer");
     context.build_store(result_pointer, context.field_const(0));
     let address_or_status_code = match salt {
-        Some(salt) => compiler_llvm_context::create::create2(
+        Some(salt) => compiler_llvm_context::eravm_evm_create::create2(
             context,
             value,
             calldata_offset,
             calldata_length,
             Some(salt),
         ),
-        None => {
-            compiler_llvm_context::create::create(context, value, calldata_offset, calldata_length)
-        }
+        None => compiler_llvm_context::eravm_evm_create::create(
+            context,
+            value,
+            calldata_offset,
+            calldata_length,
+        ),
     }?;
     let address_or_status_code_is_zero = context.builder().build_int_compare(
         inkwell::IntPredicate::EQ,
@@ -112,8 +116,9 @@ where
     context.build_unconditional_branch(join_block);
 
     context.set_basic_block(failure_block);
-    let return_data_size = context.get_global(compiler_llvm_context::GLOBAL_RETURN_DATA_SIZE)?;
-    compiler_llvm_context::return_data::copy(
+    let return_data_size =
+        context.get_global(compiler_llvm_context::eravm_const::GLOBAL_RETURN_DATA_SIZE)?;
+    compiler_llvm_context::eravm_evm_return_data::copy(
         context,
         context.field_const(0),
         context.field_const(0),

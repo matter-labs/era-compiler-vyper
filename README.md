@@ -111,18 +111,20 @@ Specify the path to the `vyper` executable. By default, the one in `${PATH}` is 
 In LLVM IR mode `vyper` is unused.  
 
 #### `-f <format>`
-An extra output format string.
-See `vyper --help` for available options.
+An extra output format string.  
+See `vyper --help` for available options including combined JSON mode.
 
 #### `--llvm-ir`
 Switch to LLVM IR mode.  
 Only one input LLVM IR file is allowed.  
-Cannot be used with combined or standard JSON modes.  
+Cannot be used with combined JSON mode.  
+Use this mode at your own risk, as LLVM IR input validation is not implemented.  
 
 #### `--zkasm`
 Switch to zkEVM assembly mode.  
 Only one input zkEVM assembly file is allowed.  
-Cannot be used with combined or standard JSON modes.  
+Cannot be used with combined JSON mode.  
+Use this mode at your own risk, as EraVM assembly input validation is not implemented.  
 
 #### `--metadata-hash`
 Set metadata hash mode: `keccak256` | `none`.

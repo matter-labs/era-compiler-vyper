@@ -8,11 +8,11 @@ use inkwell::values::BasicValue;
 /// Translates the Vyper LLL-specific `ceil32` instruction.
 ///
 pub fn ceil_32<'ctx, D>(
-    context: &mut compiler_llvm_context::Context<'ctx, D>,
+    context: &mut compiler_llvm_context::EraVMContext<'ctx, D>,
     value: inkwell::values::IntValue<'ctx>,
 ) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>>
 where
-    D: compiler_llvm_context::Dependency + Clone,
+    D: compiler_llvm_context::EraVMDependency + Clone,
 {
     let remainder = context.builder().build_int_unsigned_rem(
         value,
