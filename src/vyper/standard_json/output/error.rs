@@ -11,12 +11,12 @@ use serde::Serialize;
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Error {
-    /// The formatted error message.
-    pub formatted_message: String,
+    /// The error message.
+    pub message: String,
 }
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.formatted_message)
+        write!(f, "{}", self.message)
     }
 }

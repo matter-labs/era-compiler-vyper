@@ -2,6 +2,7 @@
 //! The Vyper contract.
 //!
 
+pub mod ast;
 pub mod expression;
 pub mod function;
 
@@ -17,7 +18,9 @@ use crate::build::contract::Contract as ContractBuild;
 use crate::metadata::Metadata as SourceMetadata;
 use crate::project::contract::metadata::Metadata as ContractMetadata;
 use crate::project::dependency_data::DependencyData;
+use crate::warning_type::WarningType;
 
+use self::ast::AST;
 use self::expression::Expression;
 use self::function::Function;
 
@@ -36,13 +39,15 @@ pub struct Contract {
     pub expression: Expression,
     /// The contract ABI data.
     pub abi: BTreeMap<String, String>,
+    /// The contract AST.
+    pub ast: AST,
     /// The dependency data.
     pub dependency_data: DependencyData,
 }
 
 impl Contract {
     /// The number of vyper compiler output lines per contract.
-    pub const EXPECTED_LINES: usize = 3;
+    pub const EXPECTED_LINES: usize = 4;
 
     ///
     /// A shortcut constructor.
@@ -53,6 +58,7 @@ impl Contract {
         source_metadata: SourceMetadata,
         expression: Expression,
         abi: BTreeMap<String, String>,
+        ast: AST,
     ) -> Self {
         Self {
             version,
@@ -60,6 +66,7 @@ impl Contract {
             source_metadata,
             expression,
             abi,
+            ast,
             dependency_data: DependencyData::default(),
         }
     }
@@ -70,6 +77,7 @@ impl Contract {
     /// 1. The LLL IR JSON
     /// 2. The contract functions metadata
     /// 3. The contract ABI data
+    /// 4. The contract AST
     ///
     pub fn try_from_lines(
         version: semver::Version,
@@ -84,16 +92,19 @@ impl Contract {
             );
         }
 
-        let mut deserializer = serde_json::Deserializer::from_str(lines.remove(0));
-        deserializer.disable_recursion_limit();
-        let deserializer = serde_stacker::Deserializer::new(&mut deserializer);
-        let expression = Expression::deserialize(deserializer)?;
-
+        let expression: Expression = compiler_common::deserialize_from_str(lines.remove(0))?;
         let metadata: SourceMetadata = serde_json::from_str(lines.remove(0))?;
-
         let abi: BTreeMap<String, String> = serde_json::from_str(lines.remove(0))?;
+        let ast: AST = serde_json::from_str(lines.remove(0))?;
 
-        Ok(Self::new(version, source_code, metadata, expression, abi))
+        Ok(Self::new(
+            version,
+            source_code,
+            metadata,
+            expression,
+            abi,
+            ast,
+        ))
     }
 
     ///
@@ -104,8 +115,13 @@ impl Contract {
         contract_path: &str,
         source_code_hash: Option<[u8; compiler_common::BYTE_LENGTH_FIELD]>,
         optimizer_settings: compiler_llvm_context::OptimizerSettings,
+        suppressed_warnings: Vec<WarningType>,
         debug_config: Option<compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
+        let warnings = self
+            .ast
+            .get_messages(&self.ast.ast, suppressed_warnings.as_slice());
+
         let llvm = inkwell::context::Context::create();
         let optimizer = compiler_llvm_context::Optimizer::new(optimizer_settings);
 
@@ -154,7 +170,7 @@ impl Contract {
             );
         }
 
-        Ok(ContractBuild::new(build))
+        Ok(ContractBuild::new(build, warnings))
     }
 }
 

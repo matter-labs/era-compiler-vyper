@@ -16,9 +16,9 @@ pub struct Metadata<'a> {
     pub source_hash: &'a [u8; compiler_common::BYTE_LENGTH_FIELD],
     /// The source file upstream Vyper compiler version.
     pub source_version: &'a semver::Version,
-    /// The zkEVM compiler version.
+    /// The EraVM compiler version.
     pub zk_version: semver::Version,
-    /// The zkEVM compiler stringified optimizer settings.
+    /// The EraVM compiler stringified optimizer settings.
     pub optimizer_settings: String,
 }
 

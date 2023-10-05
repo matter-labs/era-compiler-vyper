@@ -1,12 +1,17 @@
 //!
-//! The Vyper compiler unit tests for built-in functions.
+//! The Vyper compiler unit tests for unsupported opcodes.
+//!
+//! It is not possible to reproduce:
+//! - PC
+//! - CALLCODE
+//! - EXTCODECOPY without using Vyper built-in functions forbidden on the AST level
 //!
 
 #![cfg(test)]
 
 #[test]
 #[should_panic(expected = "Built-in function `create_copy_of` is not supported")]
-fn create_copy_of() {
+fn extcodecopy() {
     let source_code = r#"
 @external
 def f():
@@ -14,11 +19,11 @@ def f():
     return
 "#;
 
-    let _ = super::build_vyper(
+    super::build_vyper(
         source_code,
         Some((
             semver::Version::new(0, 3, 9),
-            "Built-in function `create_copy_of` is not supported",
+            "The `EXTCODECOPY` instruction is not supported",
         )),
         compiler_llvm_context::OptimizerSettings::none(),
     )
@@ -26,21 +31,17 @@ def f():
 }
 
 #[test]
-#[should_panic(expected = "Built-in function `create_from_blueprint` is not supported")]
-fn create_from_blueprint() {
+#[should_panic(expected = "The `SELFDESTRUCT` instruction is not supported")]
+fn selfdestruct() {
     let source_code = r#"
 @external
 def f():
-    result: address = create_from_blueprint(convert(0x42, address))
-    return
+    selfdestruct(convert(0x42, address))
 "#;
 
-    let _ = super::build_vyper(
+    super::build_vyper(
         source_code,
-        Some((
-            semver::Version::new(0, 3, 9),
-            "Built-in function `create_from_blueprint` is not supported",
-        )),
+        None,
         compiler_llvm_context::OptimizerSettings::none(),
     )
     .expect("Test failure");

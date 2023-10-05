@@ -11,6 +11,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::build::contract::Contract as ContractBuild;
+use crate::warning_type::WarningType;
 
 use self::llvm_ir::Contract as LLVMIRContract;
 use self::vyper::Contract as VyperContract;
@@ -58,6 +59,7 @@ impl Contract {
         contract_path: &str,
         source_code_hash: Option<[u8; compiler_common::BYTE_LENGTH_FIELD]>,
         optimizer_settings: compiler_llvm_context::OptimizerSettings,
+        suppressed_warnings: Vec<WarningType>,
         debug_config: Option<compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
         match self {
@@ -65,18 +67,21 @@ impl Contract {
                 contract_path,
                 source_code_hash,
                 optimizer_settings,
+                suppressed_warnings,
                 debug_config,
             ),
             Self::LLVMIR(inner) => inner.compile(
                 contract_path,
                 source_code_hash,
                 optimizer_settings,
+                suppressed_warnings,
                 debug_config,
             ),
             Self::ZKASM(inner) => inner.compile(
                 contract_path,
                 source_code_hash,
                 optimizer_settings,
+                suppressed_warnings,
                 debug_config,
             ),
         }

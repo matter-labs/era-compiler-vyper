@@ -1,5 +1,5 @@
 //!
-//! The zkEVM assembly contract.
+//! The EraVM assembly contract.
 //!
 
 use serde::Deserialize;
@@ -7,13 +7,14 @@ use serde::Serialize;
 
 use crate::build::contract::Contract as ContractBuild;
 use crate::project::contract::metadata::Metadata as ContractMetadata;
+use crate::warning_type::WarningType;
 
 ///
-/// The zkEVM assembly contract.
+/// The EraVM assembly contract.
 ///
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Contract {
-    /// The zkEVM version.
+    /// The EraVM version.
     pub version: semver::Version,
     /// The contract source code.
     pub source_code: String,
@@ -38,6 +39,7 @@ impl Contract {
         contract_path: &str,
         source_code_hash: Option<[u8; compiler_common::BYTE_LENGTH_FIELD]>,
         optimizer_settings: compiler_llvm_context::OptimizerSettings,
+        _suppressed_warnings: Vec<WarningType>,
         debug_config: Option<compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
         let metadata_hash = source_code_hash.map(|source_code_hash| {
@@ -57,6 +59,6 @@ impl Contract {
             debug_config.as_ref(),
         )?;
 
-        Ok(ContractBuild::new(build))
+        Ok(ContractBuild::new(build, vec![]))
     }
 }

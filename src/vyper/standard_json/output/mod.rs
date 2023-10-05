@@ -12,6 +12,7 @@ use sha3::digest::FixedOutput;
 use sha3::Digest;
 
 use crate::metadata::Metadata as SourceMetadata;
+use crate::project::contract::vyper::ast::AST as VyperAST;
 use crate::project::contract::vyper::Contract as VyperContract;
 use crate::project::contract::Contract as ProjectContract;
 use crate::project::Project;
@@ -27,10 +28,12 @@ use self::error::Error;
 ///
 #[derive(Debug, Deserialize)]
 pub struct Output {
-    /// The file-contract hashmap.
-    #[serde(rename = "contracts")]
+    /// The contracts hashmap.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub files: Option<BTreeMap<String, BTreeMap<String, Contract>>>,
+    pub contracts: Option<BTreeMap<String, BTreeMap<String, Contract>>>,
+    /// The source code hashmap.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sources: Option<BTreeMap<String, serde_json::Value>>,
     /// The compilation errors and warnings.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub errors: Option<Vec<Error>>,
@@ -45,7 +48,7 @@ impl Output {
     /// Converts the `vyper` JSON output into a convenient project.
     ///
     pub fn try_into_project(mut self, version: &semver::Version) -> anyhow::Result<Project> {
-        let files = match self.files.take() {
+        let files = match self.contracts.take() {
             Some(files) => files,
             None => {
                 anyhow::bail!(
@@ -62,12 +65,21 @@ impl Output {
         for (path, file) in files.into_iter() {
             for (name, contract) in file.into_iter() {
                 let full_path = format!("{path}:{name}");
+
+                let ast = self
+                    .sources
+                    .as_ref()
+                    .and_then(|sources| sources.get(&path).cloned())
+                    .ok_or_else(|| anyhow::anyhow!("No AST for contract {}", full_path))?;
+                let ast = VyperAST::new(full_path.clone(), ast);
+
                 let project_contract = VyperContract::new(
                     version.to_owned(),
                     contract.source_code.expect("Must be set by the tester"),
                     SourceMetadata::default(),
                     contract.ir,
                     contract.evm.abi,
+                    ast,
                 );
                 project_contracts.insert(full_path, project_contract.into());
             }

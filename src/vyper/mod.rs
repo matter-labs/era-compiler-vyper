@@ -83,8 +83,8 @@ impl Compiler {
             );
         }
 
-        let combined_json = serde_json::from_slice(output.stdout.as_slice()).expect("Always valid");
-
+        let combined_json = compiler_common::deserialize_from_slice(output.stdout.as_slice())
+            .expect("Always valid");
         Ok(combined_json)
     }
 
@@ -128,17 +128,19 @@ impl Compiler {
             );
         }
 
-        let mut output: StandardJsonOutput = serde_json::from_slice(output.stdout.as_slice())
-            .map_err(|error| {
+        let mut output: StandardJsonOutput =
+            compiler_common::deserialize_from_slice(output.stdout.as_slice()).map_err(|error| {
                 anyhow::anyhow!(
                     "{} subprocess output parsing error: {}\n{}",
                     self.executable,
                     error,
-                    serde_json::from_slice::<serde_json::Value>(output.stdout.as_slice())
-                        .map(|json| serde_json::to_string_pretty(&json).expect("Always valid"))
-                        .unwrap_or_else(
-                            |_| String::from_utf8_lossy(output.stdout.as_slice()).to_string()
-                        ),
+                    compiler_common::deserialize_from_slice::<serde_json::Value>(
+                        output.stdout.as_slice()
+                    )
+                    .map(|json| serde_json::to_string_pretty(&json).expect("Always valid"))
+                    .unwrap_or_else(
+                        |_| String::from_utf8_lossy(output.stdout.as_slice()).to_string()
+                    ),
                 )
             })?;
 
@@ -152,9 +154,11 @@ impl Compiler {
                 .map_err(|error| anyhow::anyhow!("Contract `{}`: {}", full_path, error))?;
 
             output
-                .files
+                .contracts
                 .as_mut()
-                .ok_or_else(|| anyhow::anyhow!("No contracts in the standard JSON output"))?
+                .ok_or_else(|| {
+                    anyhow::anyhow!(serde_json::to_string(&output.errors).expect("Always valid"))
+                })?
                 .get_mut(full_path.as_str())
                 .ok_or_else(|| {
                     anyhow::anyhow!("File `{}` not found in the standard JSON output", full_path)
@@ -216,7 +220,7 @@ impl Compiler {
 
         let mut command = std::process::Command::new(self.executable.as_str());
         command.arg("-f");
-        command.arg("ir_json,metadata,method_identifiers");
+        command.arg("ir_json,metadata,method_identifiers,ast");
         if !optimize || self.version.default >= semver::Version::new(0, 3, 10) {
             command.arg("--no-optimize");
         }
@@ -238,7 +242,7 @@ impl Compiler {
         let lines: Vec<&str> = stdout.lines().collect();
         let results: BTreeMap<String, anyhow::Result<VyperContract>> = paths
             .into_par_iter()
-            .zip(lines.into_par_iter().chunks(3))
+            .zip(lines.into_par_iter().chunks(VyperContract::EXPECTED_LINES))
             .map(|(path, group)| {
                 let path_str = path.to_string_lossy().to_string();
                 let source_code = match std::fs::read_to_string(path).map_err(|error| {

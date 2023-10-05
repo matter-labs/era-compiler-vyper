@@ -93,7 +93,7 @@ where
             if block.get_terminator().is_none() {
                 context.set_basic_block(block);
                 context.build_exit(
-                    context.intrinsics().revert,
+                    context.llvm_runtime().revert,
                     context.field_const(0),
                     context.field_const(0),
                 );

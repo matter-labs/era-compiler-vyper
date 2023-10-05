@@ -159,7 +159,7 @@ impl Expression {
             Self::Identifier(identifier) => {
                 if identifier.as_str() == crate::r#const::DEFAULT_SEQUENCE_IDENTIFIER {
                     context.build_exit(
-                        context.intrinsics().revert,
+                        context.llvm_runtime().revert,
                         context.field_const(0),
                         context.field_const(0),
                     );

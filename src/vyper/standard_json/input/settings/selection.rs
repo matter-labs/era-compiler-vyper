@@ -14,6 +14,9 @@ use serde::Serialize;
 #[allow(non_camel_case_types)]
 #[allow(clippy::upper_case_acronyms)]
 pub enum Selection {
+    /// The AST.
+    #[serde(rename = "ast")]
+    AST,
     /// The function signature hashes JSON.
     #[serde(rename = "evm.methodIdentifiers")]
     MethodIdentifiers,
@@ -28,7 +31,10 @@ impl Selection {
     ///
     pub fn generate_default() -> BTreeMap<String, Vec<Selection>> {
         let mut map = BTreeMap::new();
-        map.insert("*".to_owned(), vec![Self::MethodIdentifiers, Self::LLL]);
+        map.insert(
+            "*".to_owned(),
+            vec![Self::MethodIdentifiers, Self::LLL, Self::AST],
+        );
         map
     }
 }
@@ -36,6 +42,7 @@ impl Selection {
 impl std::fmt::Display for Selection {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::AST => write!(f, "ast"),
             Self::MethodIdentifiers => write!(f, "evm.methodIdentifiers"),
             Self::LLL => write!(f, "ir"),
         }

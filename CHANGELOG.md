@@ -1,5 +1,21 @@
 # The `zkvyper` changelog
 
+## [1.3.11] - 2023-10-05
+
+### Added
+
+- More LLVM optimizations
+- Warnings for `ecrecover`, `extcodesize`, `tx.origin`
+
+### Changed
+
+- The `INVALID` instruction now burns all gas
+- Moved the standard library functions to LLVM
+
+### Fixed
+
+- The crash with exceeded JSON deserialization recursion limit
+
 ## [1.3.10] - 2023-09-13
 
 ### Fixed

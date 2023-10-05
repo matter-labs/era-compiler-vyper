@@ -1,5 +1,5 @@
 //!
-//! Vyper to zkEVM compiler arguments.
+//! Vyper to EraVM compiler arguments.
 //!
 
 use std::path::PathBuf;
@@ -7,12 +7,12 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 
 ///
-/// Pythonic Smart Contract Language for the zkEVM.
+/// Pythonic Smart Contract Language for the EraVM.
 ///
 /// Example: `zkvyper ERC20.vy`
 ///
 #[derive(Debug, StructOpt)]
-#[structopt(name = "The zkEVM Vyper compiler")]
+#[structopt(name = "The EraVM Vyper compiler")]
 pub struct Arguments {
     /// Print the version and exit.
     #[structopt(long = "version")]
@@ -58,8 +58,8 @@ pub struct Arguments {
     #[structopt(long = "llvm-ir")]
     pub llvm_ir: bool,
 
-    /// Switch to zkEVM assembly mode.
-    /// Only one input zkEVM assembly file is allowed.
+    /// Switch to EraVM assembly mode.
+    /// Only one input EraVM assembly file is allowed.
     /// Cannot be used with combined JSON modes.
     /// Use this mode at your own risk, as EraVM assembly input validation is not implemented.
     #[structopt(long = "zkasm")]
@@ -74,6 +74,11 @@ pub struct Arguments {
     /// Only for testing and debugging.
     #[structopt(long = "debug-output-dir")]
     pub debug_output_directory: Option<PathBuf>,
+
+    /// Suppress specified warnings.
+    /// Available arguments: `ecrecover`, `extcodesize`, `txorigin`.
+    #[structopt(long = "suppress-warnings")]
+    pub suppress_warnings: Option<Vec<String>>,
 
     /// Set the `verify-each` option in LLVM.
     /// Only for testing and debugging.

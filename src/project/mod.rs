@@ -15,6 +15,7 @@ use sha3::Digest;
 use crate::build::contract::Contract as ContractBuild;
 use crate::build::Build;
 use crate::process::input::Input as ProcessInput;
+use crate::warning_type::WarningType;
 
 use self::contract::llvm_ir::Contract as LLVMIRContract;
 use self::contract::zkasm::Contract as ZKASMContract;
@@ -77,11 +78,11 @@ impl Project {
     }
 
     ///
-    /// Parses the zkEVM assembly source code file and returns the source data.
+    /// Parses the EraVM assembly source code file and returns the source data.
     ///
     pub fn try_from_zkasm_path(path: &Path) -> anyhow::Result<Self> {
         let source_code = std::fs::read_to_string(path).map_err(|error| {
-            anyhow::anyhow!("zkEVM assembly file {:?} reading error: {}", path, error)
+            anyhow::anyhow!("EraVM assembly file {:?} reading error: {}", path, error)
         })?;
         let path = path.to_string_lossy().to_string();
 
@@ -112,6 +113,7 @@ impl Project {
         optimizer_settings: compiler_llvm_context::OptimizerSettings,
         include_metadata_hash: bool,
         bytecode_encoding: zkevm_assembly::RunningVmEncodingMode,
+        suppressed_warnings: Vec<WarningType>,
         debug_config: Option<compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<Build> {
         let mut build = Build::default();
@@ -130,6 +132,7 @@ impl Project {
                     source_code_hash,
                     bytecode_encoding == zkevm_assembly::RunningVmEncodingMode::Testing,
                     optimizer_settings.clone(),
+                    suppressed_warnings.clone(),
                     debug_config.clone(),
                 ));
 
@@ -157,7 +160,7 @@ impl Project {
             );
             build.contracts.insert(
                 crate::r#const::FORWARDER_CONTRACT_NAME.to_owned(),
-                ContractBuild::new(forwarder_build),
+                ContractBuild::new(forwarder_build, vec![]),
             );
         }
 

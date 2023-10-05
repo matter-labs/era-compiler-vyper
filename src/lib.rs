@@ -1,5 +1,5 @@
 //!
-//! Vyper to zkEVM compiler library.
+//! Vyper to EraVM compiler library.
 //!
 
 pub(crate) mod build;
@@ -8,6 +8,7 @@ pub(crate) mod metadata;
 pub(crate) mod process;
 pub(crate) mod project;
 pub(crate) mod vyper;
+pub(crate) mod warning_type;
 
 pub use self::build::contract::Contract as ContractBuild;
 pub use self::build::Build;
@@ -34,6 +35,7 @@ pub use self::vyper::standard_json::output::error::Error as VyperCompilerStandar
 pub use self::vyper::standard_json::output::Output as VyperCompilerStandardOutputJson;
 pub use self::vyper::version::Version as VyperVersion;
 pub use self::vyper::Compiler as VyperCompiler;
+pub use self::warning_type::WarningType;
 
 mod tests;
 
@@ -46,6 +48,7 @@ pub fn llvm_ir(
     mut input_files: Vec<PathBuf>,
     optimizer_settings: compiler_llvm_context::OptimizerSettings,
     include_metadata_hash: bool,
+    suppressed_warnings: Vec<WarningType>,
     debug_config: Option<compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
     let path = match input_files.len() {
@@ -63,6 +66,7 @@ pub fn llvm_ir(
         optimizer_settings,
         include_metadata_hash,
         zkevm_assembly::RunningVmEncodingMode::Production,
+        suppressed_warnings,
         debug_config,
     )?;
 
@@ -70,18 +74,19 @@ pub fn llvm_ir(
 }
 
 ///
-/// Runs the zkEVM assembly mode.
+/// Runs the EraVM assembly mode.
 ///
 pub fn zkasm(
     mut input_files: Vec<PathBuf>,
     include_metadata_hash: bool,
+    suppressed_warnings: Vec<WarningType>,
     debug_config: Option<compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
     let path = match input_files.len() {
         1 => input_files.remove(0),
         0 => anyhow::bail!("The input file is missing"),
         length => anyhow::bail!(
-            "Only one input file is allowed in zkEVM assembly mode, but found {}",
+            "Only one input file is allowed in EraVM assembly mode, but found {}",
             length
         ),
     };
@@ -93,6 +98,7 @@ pub fn zkasm(
         optimizer_settings,
         include_metadata_hash,
         zkevm_assembly::RunningVmEncodingMode::Production,
+        suppressed_warnings,
         debug_config,
     )?;
 
@@ -108,6 +114,7 @@ pub fn standard_output(
     vyper_optimizer_enabled: bool,
     optimizer_settings: compiler_llvm_context::OptimizerSettings,
     include_metadata_hash: bool,
+    suppressed_warnings: Vec<WarningType>,
     debug_config: Option<compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
     if let Some(ref debug_config) = debug_config {
@@ -123,6 +130,7 @@ pub fn standard_output(
         optimizer_settings,
         include_metadata_hash,
         zkevm_assembly::RunningVmEncodingMode::Production,
+        suppressed_warnings,
         debug_config,
     )?;
 
@@ -139,6 +147,7 @@ pub fn combined_json(
     vyper_optimizer_enabled: bool,
     optimizer_settings: compiler_llvm_context::OptimizerSettings,
     include_metadata_hash: bool,
+    suppressed_warnings: Vec<WarningType>,
     debug_config: Option<compiler_llvm_context::DebugConfig>,
     output_directory: Option<PathBuf>,
     overwrite: bool,
@@ -162,6 +171,7 @@ pub fn combined_json(
         optimizer_settings,
         include_metadata_hash,
         zkevm_assembly::RunningVmEncodingMode::Production,
+        suppressed_warnings,
         debug_config,
     )?;
 

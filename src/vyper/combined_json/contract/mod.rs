@@ -2,10 +2,14 @@
 //! The `vyper --combined-json` contract.
 //!
 
+pub mod warning;
+
 use std::collections::BTreeMap;
 
 use serde::Deserialize;
 use serde::Serialize;
+
+use self::warning::Warning;
 
 ///
 /// The contract.
@@ -24,6 +28,9 @@ pub struct Contract {
     /// The `vyper` hexadecimal binary runtime part output.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bytecode_runtime: Option<String>,
+    /// The compilation warnings.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub warnings: Option<Vec<Warning>>,
     /// The factory dependencies.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub factory_deps: Option<BTreeMap<String, String>>,
@@ -43,6 +50,7 @@ impl Contract {
             bytecode_runtime: Some(hex::encode(
                 crate::r#const::FORWARDER_CONTRACT_BYTECODE.as_slice(),
             )),
+            warnings: Some(Vec::new()),
             factory_deps: Some(BTreeMap::new()),
         }
     }

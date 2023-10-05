@@ -9,6 +9,7 @@ use std::path::Path;
 use serde::Deserialize;
 use serde::Serialize;
 
+use crate::vyper::combined_json::contract::warning::Warning as CombinedJsonContractWarning;
 use crate::vyper::combined_json::contract::Contract as CombinedJsonContract;
 
 ///
@@ -18,14 +19,19 @@ use crate::vyper::combined_json::contract::Contract as CombinedJsonContract;
 pub struct Contract {
     /// The LLVM module build.
     pub build: compiler_llvm_context::EraVMBuild,
+    /// The compilation warnings.
+    pub warnings: Vec<CombinedJsonContractWarning>,
 }
 
 impl Contract {
     ///
     /// A shortcut constructor.
     ///
-    pub fn new(build: compiler_llvm_context::EraVMBuild) -> Self {
-        Self { build }
+    pub fn new(
+        build: compiler_llvm_context::EraVMBuild,
+        warnings: Vec<CombinedJsonContractWarning>,
+    ) -> Self {
+        Self { build, warnings }
     }
 
     ///
@@ -113,6 +119,7 @@ impl Contract {
             (None, None) => {}
         }
 
+        combined_json_contract.warnings = Some(self.warnings);
         combined_json_contract.factory_deps = Some(self.build.factory_dependencies);
 
         Ok(())
@@ -122,8 +129,8 @@ impl Contract {
     /// Converts the full path to a short one.
     ///
     pub fn short_path(path: &str) -> &str {
-        path.rfind('/')
-            .map(|last_slash| &path[last_slash + 1..])
+        path.rfind(std::path::MAIN_SEPARATOR)
+            .map(|delimiter| &path[delimiter + 1..])
             .unwrap_or_else(|| path)
     }
 }

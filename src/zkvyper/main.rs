@@ -1,5 +1,5 @@
 //!
-//! Vyper to zkEVM compiler binary.
+//! Vyper to EraVM compiler binary.
 //!
 
 pub mod arguments;
@@ -71,6 +71,11 @@ fn main_inner() -> anyhow::Result<()> {
         *path = path.canonicalize()?;
     }
 
+    let suppressed_warnings = match arguments.suppress_warnings {
+        Some(warnings) => compiler_vyper::WarningType::try_from_strings(warnings.as_slice())?,
+        None => vec![],
+    };
+
     let vyper = compiler_vyper::VyperCompiler::new(
         arguments
             .vyper
@@ -98,10 +103,16 @@ fn main_inner() -> anyhow::Result<()> {
             arguments.input_files,
             optimizer_settings,
             include_metadata_hash,
+            suppressed_warnings,
             debug_config,
         )
     } else if arguments.zkasm {
-        compiler_vyper::zkasm(arguments.input_files, include_metadata_hash, debug_config)
+        compiler_vyper::zkasm(
+            arguments.input_files,
+            include_metadata_hash,
+            suppressed_warnings,
+            debug_config,
+        )
     } else {
         match arguments.format.as_deref() {
             Some("combined_json") => {
@@ -111,6 +122,7 @@ fn main_inner() -> anyhow::Result<()> {
                     !arguments.disable_vyper_optimizer,
                     optimizer_settings,
                     include_metadata_hash,
+                    suppressed_warnings,
                     debug_config,
                     arguments.output_directory,
                     arguments.overwrite,
@@ -126,6 +138,7 @@ fn main_inner() -> anyhow::Result<()> {
                 !arguments.disable_vyper_optimizer,
                 optimizer_settings,
                 include_metadata_hash,
+                suppressed_warnings,
                 debug_config,
             ),
         }
@@ -133,6 +146,12 @@ fn main_inner() -> anyhow::Result<()> {
 
     match arguments.output_directory {
         Some(output_directory) => {
+            for (_path, contract) in build.contracts.iter() {
+                for warning in contract.warnings.iter() {
+                    eprintln!("\n{}", warning);
+                }
+            }
+
             std::fs::create_dir_all(output_directory.as_path())?;
 
             build.write_to_directory(output_directory.as_path(), arguments.overwrite)?;
@@ -140,6 +159,10 @@ fn main_inner() -> anyhow::Result<()> {
         None => {
             for (path, contract) in build.contracts.into_iter() {
                 eprintln!("Contract `{path}`:");
+                for warning in contract.warnings.iter() {
+                    eprintln!("\n{}", warning);
+                }
+
                 let bytecode_string = hex::encode(contract.build.bytecode);
                 println!("0x{bytecode_string}");
 

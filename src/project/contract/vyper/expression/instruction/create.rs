@@ -3,7 +3,7 @@
 //!
 
 ///
-/// Translates the Vyper LLL `create` input layout into the one expected by zkEVM.
+/// Translates the Vyper LLL `create` input layout into the one expected by EraVM.
 ///
 /// This function extracts the address from the calldata previously assembled in the LLL by the
 /// Vyper compiler. Then the address is written to the corresponding offset as the first argument
@@ -125,7 +125,7 @@ where
         return_data_size.into_int_value(),
     )?;
     context.build_exit(
-        context.intrinsics().revert,
+        context.llvm_runtime().revert,
         context.field_const(0),
         return_data_size.into_int_value(),
     );

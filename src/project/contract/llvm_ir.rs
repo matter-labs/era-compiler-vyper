@@ -7,6 +7,7 @@ use serde::Serialize;
 
 use crate::build::contract::Contract as ContractBuild;
 use crate::project::contract::metadata::Metadata as ContractMetadata;
+use crate::warning_type::WarningType;
 
 ///
 /// The LLVM IR contract.
@@ -38,6 +39,7 @@ impl Contract {
         contract_path: &str,
         source_code_hash: Option<[u8; compiler_common::BYTE_LENGTH_FIELD]>,
         optimizer_settings: compiler_llvm_context::OptimizerSettings,
+        _suppressed_warnings: Vec<WarningType>,
         debug_config: Option<compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
         let llvm = inkwell::context::Context::create();
@@ -73,6 +75,6 @@ impl Contract {
 
         let build = context.build(contract_path, metadata_hash)?;
 
-        Ok(ContractBuild::new(build))
+        Ok(ContractBuild::new(build, vec![]))
     }
 }

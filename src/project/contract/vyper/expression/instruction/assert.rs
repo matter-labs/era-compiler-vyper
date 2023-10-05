@@ -48,7 +48,7 @@ impl Assert {
 
         context.set_basic_block(error_block);
         context.build_exit(
-            context.intrinsics().revert,
+            context.llvm_runtime().revert,
             context.field_const(0),
             context.field_const(0),
         );

@@ -11,7 +11,6 @@ use std::path::PathBuf;
 use std::process::Command;
 
 use once_cell::sync::OnceCell;
-use serde::Deserialize;
 
 use self::input::Input;
 use self::output::Output;
@@ -30,11 +29,7 @@ pub fn run() -> anyhow::Result<()> {
     let mut buffer = Vec::with_capacity(16384);
     stdin.read_to_end(&mut buffer).expect("Stdin reading error");
 
-    let mut deserializer = serde_json::Deserializer::from_slice(buffer.as_slice());
-    deserializer.disable_recursion_limit();
-    let deserializer = serde_stacker::Deserializer::new(&mut deserializer);
-    let input = Input::deserialize(deserializer)?;
-
+    let input: Input = compiler_common::deserialize_from_slice(buffer.as_slice())?;
     if input.enable_test_encoding {
         zkevm_assembly::set_encoding_mode(zkevm_assembly::RunningVmEncodingMode::Testing);
     }
@@ -42,6 +37,7 @@ pub fn run() -> anyhow::Result<()> {
         input.full_path.as_str(),
         input.source_code_hash,
         input.optimizer_settings,
+        input.suppressed_warnings,
         input.debug_config,
     );
 
@@ -100,12 +96,13 @@ pub fn call(input: Input) -> anyhow::Result<Output> {
         );
     }
 
-    let output: Output = serde_json::from_slice(output.stdout.as_slice()).map_err(|error| {
-        anyhow::anyhow!(
-            "{:?} subprocess output parsing error: {}",
-            executable,
-            error,
-        )
-    })?;
+    let output: Output = compiler_common::deserialize_from_slice(output.stdout.as_slice())
+        .map_err(|error| {
+            anyhow::anyhow!(
+                "{:?} subprocess output parsing error: {}",
+                executable,
+                error,
+            )
+        })?;
     Ok(output)
 }

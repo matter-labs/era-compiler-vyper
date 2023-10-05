@@ -862,18 +862,12 @@ impl Instruction {
 
             Self::SHA3(arguments) | Self::KECCAK256(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                let input_offset = arguments[0].into_int_value();
-                let input_length = arguments[1].into_int_value();
-
-                let function = compiler_llvm_context::EraVMRuntime::keccak256(context);
-                Ok(context.build_call(
-                    function,
-                    &[
-                        input_offset.as_basic_value_enum(),
-                        input_length.as_basic_value_enum(),
-                    ],
-                    "sha3_call",
-                ))
+                compiler_llvm_context::eravm_evm_crypto::sha3(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
+                .map(Some)
             }
             Self::SHA3_32(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
@@ -887,19 +881,12 @@ impl Instruction {
                 );
                 context.build_store(pointer_one, arguments[0]);
 
-                let function = compiler_llvm_context::EraVMRuntime::keccak256(context);
-                Ok(context.build_call(
-                    function,
-                    &[
-                        context
-                            .field_const(crate::r#const::OFFSET_FREE_VAR_SPACE as u64)
-                            .as_basic_value_enum(),
-                        context
-                            .field_const(compiler_common::BYTE_LENGTH_FIELD as u64)
-                            .as_basic_value_enum(),
-                    ],
-                    "sha3_32_call",
-                ))
+                compiler_llvm_context::eravm_evm_crypto::sha3(
+                    context,
+                    context.field_const(crate::r#const::OFFSET_FREE_VAR_SPACE as u64),
+                    context.field_const(compiler_common::BYTE_LENGTH_FIELD as u64),
+                )
+                .map(Some)
             }
             Self::SHA3_64(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
@@ -921,19 +908,12 @@ impl Instruction {
                 );
                 context.build_store(pointer_two, arguments[1]);
 
-                let function = compiler_llvm_context::EraVMRuntime::keccak256(context);
-                Ok(context.build_call(
-                    function,
-                    &[
-                        context
-                            .field_const(crate::r#const::OFFSET_FREE_VAR_SPACE as u64)
-                            .as_basic_value_enum(),
-                        context
-                            .field_const((compiler_common::BYTE_LENGTH_FIELD * 2) as u64)
-                            .as_basic_value_enum(),
-                    ],
-                    "sha3_64_call",
-                ))
+                compiler_llvm_context::eravm_evm_crypto::sha3(
+                    context,
+                    context.field_const(crate::r#const::OFFSET_FREE_VAR_SPACE as u64),
+                    context.field_const((compiler_common::BYTE_LENGTH_FIELD * 2) as u64),
+                )
+                .map(Some)
             }
 
             Self::MLOAD(arguments) => {
