@@ -17,7 +17,7 @@ def f():
     let _ = super::build_vyper(
         source_code,
         Some((
-            semver::Version::new(0, 3, 9),
+            semver::Version::new(0, 3, 10),
             "Built-in function `create_copy_of` is not supported",
         )),
         compiler_llvm_context::OptimizerSettings::none(),
@@ -38,7 +38,7 @@ def f():
     let _ = super::build_vyper(
         source_code,
         Some((
-            semver::Version::new(0, 3, 9),
+            semver::Version::new(0, 3, 10),
             "Built-in function `create_from_blueprint` is not supported",
         )),
         compiler_llvm_context::OptimizerSettings::none(),
