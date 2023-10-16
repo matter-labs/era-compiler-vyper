@@ -22,7 +22,7 @@ def f():
     super::build_vyper(
         source_code,
         Some((
-            semver::Version::new(0, 3, 9),
+            semver::Version::new(0, 3, 10),
             "The `EXTCODECOPY` instruction is not supported",
         )),
         compiler_llvm_context::OptimizerSettings::none(),

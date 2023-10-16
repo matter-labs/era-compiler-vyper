@@ -1,5 +1,11 @@
 # The `zkvyper` changelog
 
+## [Unreleased]
+
+### Added
+
+- The vyper v0.3.10 support
+
 ## [1.3.11] - 2023-10-05
 
 ### Added
