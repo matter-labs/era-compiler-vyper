@@ -26,7 +26,7 @@
 
 ### Fixed
 
-- An issue with uninitialized immutable values
+- An issue with uninitialized immutable values (see [GHSA-h8jv-969m-94r4](https://github.com/matter-labs/era-compiler-vyper/security/advisories/GHSA-h8jv-969m-94r4))
 
 ## [1.3.9] - 2023-07-03
 
