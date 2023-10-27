@@ -164,13 +164,11 @@ at your option.
 
 ## Resources
 
-[zkSync Era compiler toolchain documentation](https://era.zksync.io/docs/api/compiler-toolchain)  
-
-[Vyper v0.3.3 documentation](https://vyper.readthedocs.io/en/v0.3.3/)  
-[Vyper v0.3.9 documentation](https://vyper.readthedocs.io/en/v0.3.9/) 
-[Vyper v0.3.10 documentation](https://vyper.readthedocs.io/en/v0.3.10/)
-
-[Vyper LLL IR](https://github.com/vyperlang/vyper/blob/master/vyper/ir/README.md)  
+- [zkSync Era compiler toolchain documentation](https://era.zksync.io/docs/api/compiler-toolchain)
+- [Vyper v0.3.3 documentation](https://vyper.readthedocs.io/en/v0.3.3/)
+- [Vyper v0.3.9 documentation](https://vyper.readthedocs.io/en/v0.3.9/)
+- [Vyper v0.3.10 documentation](https://vyper.readthedocs.io/en/v0.3.10/)
+- [Vyper LLL IR](https://github.com/vyperlang/vyper/blob/master/vyper/ir/README.md)  
 
 > Some parts of the Vyper documentation may be outdated.  
 > Please contact the Vyper team for assistance.  
