@@ -34,7 +34,7 @@ We recommend at least 4 GB of RAM available for the build process.
    Also install the `musl` target if you are compiling on Linux in order to distribute the binary:  
    `rustup target add x86_64-unknown-linux-musl`  
 
-3. Download [v0.3.3 or v0.3.9 of the Vyper compiler](https://github.com/vyperlang/vyper/releases).  
+3. Download [v0.3.3, v0.3.9, or v0.3.10 of the Vyper compiler](https://github.com/vyperlang/vyper/releases).  
    If it is not named exactly `vyper` in your `$PATH`, see the `--vyper` option below.  
    
 4. Check out or clone the appropriate branch of this repository.  
@@ -70,6 +70,7 @@ A support version of the Vyper compiler must be available in `$PATH`, or its pat
 Supported versions:
 - 0.3.3
 - 0.3.9
+- 0.3.10
 
 For big projects it is more convenient to use the compiler via the Hardhat plugin. For single-file contracts, or small
 projects, the CLI suffices.
@@ -163,12 +164,11 @@ at your option.
 
 ## Resources
 
-[zkSync Era compiler toolchain documentation](https://era.zksync.io/docs/api/compiler-toolchain)  
-
-[Vyper v0.3.3 documentation](https://vyper.readthedocs.io/en/v0.3.3/)  
-[Vyper v0.3.9 documentation](https://vyper.readthedocs.io/en/v0.3.9/)  
-
-[Vyper LLL IR](https://github.com/vyperlang/vyper/blob/master/vyper/ir/README.md)  
+- [zkSync Era compiler toolchain documentation](https://era.zksync.io/docs/api/compiler-toolchain)
+- [Vyper v0.3.3 documentation](https://vyper.readthedocs.io/en/v0.3.3/)
+- [Vyper v0.3.9 documentation](https://vyper.readthedocs.io/en/v0.3.9/)
+- [Vyper v0.3.10 documentation](https://vyper.readthedocs.io/en/v0.3.10/)
+- [Vyper LLL IR](https://github.com/vyperlang/vyper/blob/master/vyper/ir/README.md)  
 
 > Some parts of the Vyper documentation may be outdated.  
 > Please contact the Vyper team for assistance.  
