@@ -117,7 +117,7 @@ where
 
     context.set_basic_block(failure_block);
     let return_data_size =
-        context.get_global(compiler_llvm_context::eravm_const::GLOBAL_RETURN_DATA_SIZE)?;
+        context.get_global_value(compiler_llvm_context::eravm_const::GLOBAL_RETURN_DATA_SIZE)?;
     compiler_llvm_context::eravm_evm_return_data::copy(
         context,
         context.field_const(0),
