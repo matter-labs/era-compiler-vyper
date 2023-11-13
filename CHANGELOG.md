@@ -1,5 +1,11 @@
 # The `zkvyper` changelog
 
+## [1.3.13] - 2023-10-30
+
+### Fixed
+
+- The incorrect behavior of complex sequences of modular operations
+
 ## [1.3.12] - 2023-10-26
 
 ### Added
@@ -48,7 +54,7 @@
 
 ### Added
 
-- The EraVM assembly compilation mode (`--zkasm`)
+- The zkEVM assembly compilation mode (`--zkasm`)
 - The vyper v0.3.9 support
 
 ### Fixed
@@ -131,7 +137,7 @@
 
 - System contract calls now use remaining ergs instead of 0
 - The LLVM optimization manager to the new one
-- The contract ABI to EraVM v1.3
+- The contract ABI to match that of zkEVM v1.3
 - Moved the event decoding to the system contracts
 - Simplified the CLI arguments used for debugging
 
