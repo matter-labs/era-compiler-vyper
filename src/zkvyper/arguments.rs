@@ -37,6 +37,10 @@ pub struct Arguments {
     #[structopt(short = "O", long = "optimization")]
     pub optimization: Option<char>,
 
+    /// Try to recompile with -Oz if the bytecode is too large.
+    #[structopt(long = "fallback-Oz")]
+    pub fallback_to_optimizing_for_size: bool,
+
     /// Disable the `vyper` LLL IR optimizer.
     #[structopt(long = "disable-vyper-optimizer")]
     pub disable_vyper_optimizer: bool,

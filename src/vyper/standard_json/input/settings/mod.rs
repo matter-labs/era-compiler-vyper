@@ -24,6 +24,9 @@ pub struct Settings {
     pub output_selection: BTreeMap<String, Vec<Selection>>,
     /// Whether the optimizer is enabled.
     pub optimize: bool,
+    /// Whether to try to recompile with -Oz if the bytecode is too large.
+    #[serde(skip_serializing)]
+    pub fallback_to_optimizing_for_size: Option<bool>,
 }
 
 impl Settings {
@@ -34,11 +37,13 @@ impl Settings {
         evm_version: EVMVersion,
         output_selection: BTreeMap<String, Vec<Selection>>,
         optimize: bool,
+        fallback_to_optimizing_for_size: bool,
     ) -> Self {
         Self {
             evm_version,
             output_selection,
             optimize,
+            fallback_to_optimizing_for_size: Some(fallback_to_optimizing_for_size),
         }
     }
 }

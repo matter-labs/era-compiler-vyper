@@ -20,6 +20,15 @@ Supported platforms:
 
 We recommend at least 4 GB of RAM available for the build process.
 
+## Delivery Methods
+
+1. **Install via npm**  
+   Use [zkSync CLI](https://era.zksync.io/docs/tools/zksync-cli/) to obtain a compiler package and prepare a project environment. After the installation you can modify a hardhat configuration file in the project and specify `zkvyper` version there. Use `npx hardhat compile` or `yarn hardhat compile` to compile. [@matterlabs/hardhat-zksync-vyper](https://era.zksync.io/docs/tools/hardhat/getting-started.html) package will be used from npm repo.
+2. **Download prebuilt binaries**  
+   Download [v0.3.3, v0.3.9, or v0.3.10 of the Vyper compiler](https://github.com/vyperlang/vyper/releases) and [zkvyper](https://github.com/matter-labs/zkvyper-bin) binaries directly from GitHub. Use the CLI or Hardhat to compile contracts.
+3. **Build binaries from sources**  
+   Build binaries using the guide below. Use the CLI or Hardhat to compile contracts.
+
 ## Building
 
 1. Install some tools system-wide:  
@@ -46,12 +55,12 @@ We recommend at least 4 GB of RAM available for the build process.
    6.b. `cargo install compiler-llvm-builder --target x86_64-unknown-linux-musl` on Linux for distribution.  
 
    The builder is not the [EraVM LLVM framework](https://github.com/matter-labs/compiler-llvm) itself; it is just a tool that clones our repository and runs the sequence of build commands.  
-   By default it is installed in `~/.cargo/bin/`, which is recommended to be added to your `$PATH`. Execute `zkevm-llvm --help` for more information.  
+   By default it is installed in `~/.cargo/bin/`, which is recommended to be added to your `$PATH`. Execute `EraVM-llvm --help` for more information.  
    If you need a specific branch of EraVM LLVM, change it in the `LLVM.lock` file at the root of this repository.  
 
 7. Run the builder to clone and build the EraVM LLVM framework at this repository root:  
-   7.1. `zkevm-llvm clone`  
-   7.2. `zkevm-llvm build`  
+   7.1. `EraVM-llvm clone`  
+   7.2. `EraVM-llvm build`  
 
 8. Build the Vyper compiler executable:  
    8.a. `cargo build --release` on MacOS or Linux for personal use.  
@@ -103,6 +112,9 @@ Overwrite existing files (used together with -o).
 #### `-O`, `--optimization <level>`
 Set the LLVM optimization parameter `-O[0 | 1 | 2 | 3 | s | z]`.  
 Use `3` for best performance and `z` for minimal size.  
+
+#### `--fallback-Oz`
+Try to recompile with `-Oz` if the bytecode is too large.  
 
 #### `--disable-vyper-optimizer`
 Disable the `vyper` LLL IR optimizer.  

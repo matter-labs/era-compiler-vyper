@@ -1,5 +1,21 @@
 # The `zkvyper` changelog
 
+## [1.3.15] - 2024-01-05
+
+### Added
+
+- An option to fallback to optimizing for size if the bytecode is too large
+
+## [1.3.14] - 2023-12-16
+
+### Added
+
+- More LLVM optimizations
+
+### Fixed
+
+- The incorrect behavior of complex sequences of overflow flags
+
 ## [1.3.13] - 2023-10-30
 
 ### Fixed

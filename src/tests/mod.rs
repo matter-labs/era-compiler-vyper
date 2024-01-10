@@ -70,6 +70,7 @@ pub fn build_vyper(
         evm_version,
         VyperStandardJsonInputSettingsSelection::generate_default(),
         true,
+        false,
     )?;
 
     let output = vyper.standard_json(input)?;

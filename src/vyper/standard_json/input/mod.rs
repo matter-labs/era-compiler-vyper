@@ -43,6 +43,7 @@ impl Input {
         evm_version: EVMVersion,
         output_selection: BTreeMap<String, Vec<Selection>>,
         optimize: bool,
+        fallback_to_optimizing_for_size: bool,
     ) -> anyhow::Result<Self> {
         let sources = paths
             .into_par_iter()
@@ -57,7 +58,12 @@ impl Input {
         Ok(Self {
             language,
             sources,
-            settings: Settings::new(evm_version, output_selection, optimize),
+            settings: Settings::new(
+                evm_version,
+                output_selection,
+                optimize,
+                fallback_to_optimizing_for_size,
+            ),
         })
     }
 
@@ -71,6 +77,7 @@ impl Input {
         evm_version: EVMVersion,
         output_selection: BTreeMap<String, Vec<Selection>>,
         optimize: bool,
+        fallback_to_optimizing_for_size: bool,
     ) -> anyhow::Result<Self> {
         let sources = sources
             .into_iter()
@@ -80,7 +87,12 @@ impl Input {
         Ok(Self {
             language: Language::Vyper,
             sources,
-            settings: Settings::new(evm_version, output_selection, optimize),
+            settings: Settings::new(
+                evm_version,
+                output_selection,
+                optimize,
+                fallback_to_optimizing_for_size,
+            ),
         })
     }
 }
