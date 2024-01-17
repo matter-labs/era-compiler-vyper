@@ -52,7 +52,7 @@ impl Label {
     /// The cleanup block cannot be ignored in deploy code, because `vyper` generates jumps to them.
     ///
     pub fn can_block_be_ignored(&self) -> bool {
-        let label_name = match self.0.get(0).expect("Always exists").try_into_identifier() {
+        let label_name = match self.0.first().expect("Always exists").try_into_identifier() {
             Ok(identifier) => identifier,
             Err(_) => return true,
         };
@@ -92,7 +92,7 @@ impl Label {
     /// Returns the label name.
     ///
     pub fn name(&self) -> anyhow::Result<String> {
-        self.0.get(0).expect("Always exists").try_into_identifier()
+        self.0.first().expect("Always exists").try_into_identifier()
     }
 
     ///
@@ -111,7 +111,7 @@ impl Label {
 
         let label_name = self
             .0
-            .get(0)
+            .first()
             .expect("Always exists")
             .try_into_identifier()?;
         context.append_basic_block(label_name.as_str());

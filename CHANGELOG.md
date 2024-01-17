@@ -1,5 +1,11 @@
 # The `zkvyper` changelog
 
+## [1.3.16] - 2024-01-12
+
+### Fixed
+
+- Incorrect handling of input paths on Windows
+
 ## [1.3.15] - 2024-01-05
 
 ### Added

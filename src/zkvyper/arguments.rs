@@ -2,8 +2,10 @@
 //! Vyper to EraVM compiler arguments.
 //!
 
+use std::path::Path;
 use std::path::PathBuf;
 
+use path_slash::PathExt;
 use structopt::StructOpt;
 
 ///
@@ -126,10 +128,52 @@ impl Arguments {
             anyhow::bail!("No other options are allowed in recursive mode.");
         }
 
-        if self.llvm_ir && self.zkasm {
-            anyhow::bail!("Either LLVM IR or assembly mode can be used, but not both.");
+        let modes_count = [self.llvm_ir, self.zkasm, self.format.is_some()]
+            .iter()
+            .filter(|&&x| x)
+            .count();
+        if modes_count > 1 {
+            anyhow::bail!(
+                "Only one modes is allowed at the same time: Vyper, LLVM IR, EraVM assembly."
+            );
+        }
+
+        if (self.llvm_ir || self.zkasm) && self.vyper.is_some() {
+            anyhow::bail!("`vyper` is not used in LLVM IR and EraVM assembly modes.");
+        }
+
+        if self.zkasm {
+            if self.optimization.is_some() {
+                anyhow::bail!("LLVM optimizations are not supported in EraVM assembly mode.");
+            }
+
+            if self.fallback_to_optimizing_for_size {
+                anyhow::bail!("Falling back to -Oz is not supported in EraVM assembly mode.");
+            }
         }
 
         Ok(())
+    }
+
+    ///
+    /// Normalizes input paths by converting it to POSIX format.
+    ///
+    pub fn normalize_input_paths(&mut self) -> anyhow::Result<()> {
+        for input_path in self.input_files.iter_mut() {
+            *input_path = Self::path_to_posix(input_path.as_path())?;
+        }
+        Ok(())
+    }
+
+    ///
+    /// Normalizes an input path by converting it to POSIX format.
+    ///
+    fn path_to_posix(path: &Path) -> anyhow::Result<PathBuf> {
+        let path = path
+            .to_slash()
+            .ok_or_else(|| anyhow::anyhow!("Input path {:?} POSIX conversion error", path))?
+            .to_string();
+        let path = PathBuf::from(path.as_str());
+        Ok(path)
     }
 }

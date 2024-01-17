@@ -33,7 +33,7 @@ impl Seq {
             return false;
         }
 
-        match self.0.get(0) {
+        match self.0.first() {
             Some(Expression::Instruction(Instruction::Pass)) => true,
             Some(_) => false,
             None => true,
@@ -97,7 +97,7 @@ impl Seq {
     pub fn normalize_deploy_code(&mut self) {
         if self.0.is_empty()
             || matches!(
-                self.0.get(0),
+                self.0.first(),
                 Some(Expression::Instruction(Instruction::Deploy(_)))
             )
         {

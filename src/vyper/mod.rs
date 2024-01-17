@@ -53,12 +53,18 @@ impl Compiler {
     /// Different tools may use different `executable` names. For example, the integration tester
     /// uses `vyper-<version>` format.
     ///
-    pub fn new(executable: String) -> Self {
-        let version = Self::version(&executable).expect("Version getting error");
-        Self {
+    pub fn new(executable: String) -> anyhow::Result<Self> {
+        if let Err(error) = which::which(executable.as_str()) {
+            anyhow::bail!(
+                "The `{executable}` executable not found in ${{PATH}}: {}",
+                error
+            );
+        }
+        let version = Self::version(&executable)?;
+        Ok(Self {
             executable,
             version,
-        }
+        })
     }
 
     ///
@@ -83,8 +89,22 @@ impl Compiler {
             );
         }
 
-        let combined_json = compiler_common::deserialize_from_slice(output.stdout.as_slice())
-            .expect("Always valid");
+        let mut combined_json: CombinedJson =
+            compiler_common::deserialize_from_slice(output.stdout.as_slice()).map_err(|error| {
+                anyhow::anyhow!(
+                    "{} subprocess output parsing error: {}\n{}",
+                    self.executable,
+                    error,
+                    compiler_common::deserialize_from_slice::<serde_json::Value>(
+                        output.stdout.as_slice()
+                    )
+                    .map(|json| serde_json::to_string_pretty(&json).expect("Always valid"))
+                    .unwrap_or_else(
+                        |_| String::from_utf8_lossy(output.stdout.as_slice()).to_string()
+                    ),
+                )
+            })?;
+        combined_json.remove_evm();
         Ok(combined_json)
     }
 

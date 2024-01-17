@@ -35,6 +35,7 @@ fn main() {
 fn main_inner() -> anyhow::Result<()> {
     let mut arguments = Arguments::new();
     arguments.validate()?;
+    arguments.normalize_input_paths()?;
 
     rayon::ThreadPoolBuilder::new()
         .stack_size(RAYON_WORKER_STACK_SIZE)
@@ -67,10 +68,6 @@ fn main_inner() -> anyhow::Result<()> {
         None => None,
     };
 
-    for path in arguments.input_files.iter_mut() {
-        *path = path.canonicalize()?;
-    }
-
     let suppressed_warnings = match arguments.suppress_warnings {
         Some(warnings) => compiler_vyper::WarningType::try_from_strings(warnings.as_slice())?,
         None => vec![],
@@ -80,7 +77,7 @@ fn main_inner() -> anyhow::Result<()> {
         arguments
             .vyper
             .unwrap_or_else(|| compiler_vyper::VyperCompiler::DEFAULT_EXECUTABLE_NAME.to_owned()),
-    );
+    )?;
 
     let mut optimizer_settings = match arguments.optimization {
         Some(mode) => compiler_llvm_context::OptimizerSettings::try_from_cli(mode)?,
@@ -133,7 +130,7 @@ fn main_inner() -> anyhow::Result<()> {
                 return Ok(());
             }
             Some(format) if format.split(',').any(|format| format == "combined_json") => {
-                anyhow::bail!("If using combined_json it must be the only output format requested");
+                anyhow::bail!("`combined_json` must be the only output format requested");
             }
             Some(_) | None => compiler_vyper::standard_output(
                 arguments.input_files,

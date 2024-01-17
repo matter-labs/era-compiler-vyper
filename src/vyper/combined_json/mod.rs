@@ -31,6 +31,16 @@ pub struct CombinedJson {
 
 impl CombinedJson {
     ///
+    /// Removes EVM artifacts to prevent their accidental usage.
+    ///
+    pub fn remove_evm(&mut self) {
+        for (_, contract) in self.contracts.iter_mut() {
+            contract.bytecode = None;
+            contract.bytecode_runtime = None;
+        }
+    }
+
+    ///
     /// Writes the JSON to the specified directory.
     ///
     pub fn write_to_directory(

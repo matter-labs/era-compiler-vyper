@@ -102,22 +102,8 @@ impl Contract {
         combined_json_contract: &mut CombinedJsonContract,
     ) -> anyhow::Result<()> {
         let hexadecimal_bytecode = hex::encode(self.build.bytecode);
-        match (
-            combined_json_contract.bytecode.as_mut(),
-            combined_json_contract.bytecode_runtime.as_mut(),
-        ) {
-            (Some(bytecode), Some(bytecode_runtime)) => {
-                *bytecode = hexadecimal_bytecode;
-                *bytecode_runtime = bytecode.clone();
-            }
-            (Some(bytecode), None) => {
-                *bytecode = hexadecimal_bytecode;
-            }
-            (None, Some(bytecode_runtime)) => {
-                *bytecode_runtime = hexadecimal_bytecode;
-            }
-            (None, None) => {}
-        }
+        combined_json_contract.bytecode = Some(hexadecimal_bytecode);
+        combined_json_contract.bytecode_runtime = combined_json_contract.bytecode.clone();
 
         combined_json_contract.warnings = Some(self.warnings);
         combined_json_contract.factory_deps = Some(self.build.factory_dependencies);
