@@ -245,37 +245,25 @@ where
         let mut function_expressions = deploy_code
             .extract_functions()?
             .into_iter()
-            .map(|(label, expression)| {
-                (
-                    label,
-                    expression,
-                    compiler_llvm_context::EraVMCodeType::Deploy,
-                )
-            })
-            .collect::<Vec<(String, Expression, compiler_llvm_context::EraVMCodeType)>>();
+            .map(|(label, expression)| (label, expression, compiler_llvm_context::CodeType::Deploy))
+            .collect::<Vec<(String, Expression, compiler_llvm_context::CodeType)>>();
         function_expressions.extend(
             runtime_code
                 .extract_functions()?
                 .into_iter()
                 .map(|(label, expression)| {
-                    (
-                        label,
-                        expression,
-                        compiler_llvm_context::EraVMCodeType::Runtime,
-                    )
+                    (label, expression, compiler_llvm_context::CodeType::Runtime)
                 })
-                .collect::<Vec<(String, Expression, compiler_llvm_context::EraVMCodeType)>>(),
+                .collect::<Vec<(String, Expression, compiler_llvm_context::CodeType)>>(),
         );
 
         let mut functions = Vec::with_capacity(function_expressions.capacity());
         for (label, expression, code_type) in function_expressions.into_iter() {
             let mut metadata_label = label
-                .strip_suffix(format!("_{}", compiler_llvm_context::EraVMCodeType::Deploy).as_str())
+                .strip_suffix(format!("_{}", compiler_llvm_context::CodeType::Deploy).as_str())
                 .unwrap_or(label.as_str());
             metadata_label = label
-                .strip_suffix(
-                    format!("_{}", compiler_llvm_context::EraVMCodeType::Runtime).as_str(),
-                )
+                .strip_suffix(format!("_{}", compiler_llvm_context::CodeType::Runtime).as_str())
                 .unwrap_or(metadata_label);
             metadata_label = label
                 .strip_suffix(format!("_{}", crate::r#const::LABEL_SUFFIX_COMMON).as_str())
