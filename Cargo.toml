@@ -31,8 +31,8 @@ once_cell = "1.19"
 hex = "0.4"
 sha3 = "0.10"
 
-zkevm_opcode_defs = { git = "https://github.com/matter-labs/era-zkevm_opcode_defs", branch = "v1.3.2" }
-zkevm-assembly = { git = "https://github.com/matter-labs/era-zkEVM-assembly", branch = "v1.3.2" }
+zkevm_opcode_defs = { git = "https://github.com/matter-labs/era-zkevm_opcode_defs", branch = "v1.5.0" }
+zkevm-assembly = { git = "https://github.com/matter-labs/era-zkEVM-assembly", branch = "v1.5.0" }
 
 compiler-common = { git = "https://github.com/matter-labs/era-compiler-common", branch = "main" }
 compiler-llvm-context = { git = "https://github.com/matter-labs/era-compiler-llvm-context", branch = "main" }
