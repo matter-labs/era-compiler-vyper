@@ -11,7 +11,6 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: false # for now, false (put jobs in queue) allowing multiple PR testing consequently
-# https://github.com/vyperlang/vyper/releases/download/v0.3.10/vyper.0.3.10+commit.91361694.darwin
 env:
   VYPER_VERSION: "v0.3.10"
   VYPER_DOWNLOAD_URL: "https://github.com/vyperlang/vyper/releases/download"
@@ -50,31 +49,24 @@ jobs:
       - name: Prepare environment
         run: |
           brew install cmake ninja
-          echo "CMake version: \`$(cmake --version | head -1 | cut -d ' ' -f3)\`" >> "${GITHUB_STEP_SUMMARY}"
-          echo "Ninja version: \`$(ninja --version)\`" >> "${GITHUB_STEP_SUMMARY}"
       - name: Build LLVM framework
         run: |
           cargo install compiler-llvm-builder
           zkevm-llvm clone
           zkevm-llvm build
-      - name: Install solc compiler
+      - name: Install vyper compiler
         run: |
           curl --verbose \
             --location -o "${PWD}/vyper" "${VYPER_DOWNLOAD_URL}/${VYPER_VERSION}/${VYPER_DOWNLOAD_FILENAME}" && \
             chmod a+x "${PWD}/vyper"
           echo "${PWD}" >> "${GITHUB_PATH}"
-          echo "Vyper version: \`$(vyper --version)\`" >> "${GITHUB_STEP_SUMMARY}"
       - name: Build zkvyper
         run: |
           cargo build -vv --release
           echo "${PWD}/target/release" >> "${GITHUB_PATH}"
-          echo "$(zkvyper --version)" >> "${GITHUB_STEP_SUMMARY}"
       - name: Run unit tests
         run: |
-          set -x
           cargo install cargo2junit
-          which vyper
-          which zkvyper
           cargo test -- -Z unstable-options --format json | cargo2junit > "${UNIT_TESTS_RESULTS_XML}"
       - name: Upload test results
         if: always()
@@ -85,114 +77,114 @@ jobs:
           files: ${{ env.UNIT_TESTS_RESULTS_XML }}
           action_fail_on_inconclusive: true
 
-#  unit-tests-linux:
-#    strategy:
-#      matrix:
-#        include:
-#          - name: "Linux x86"
-#            runner: matterlabs-ci-runner
-#            solc-name: "solc-linux-amd64"
-#            target: "x86_64-unknown-linux-musl"
-#          - name: "Linux arm64"
-#            runner: matterlabs-ci-runner-arm
-#            solc-name: "solc-linux-arm64"
-#            target: "aarch64-unknown-linux-musl"
-#            rustflags: "-C link-arg=-Wl,-Bstatic -C link-arg=-lc -C link-arg=-L/usr/lib/llvm-15/lib/clang/15.0.7/lib/linux/ -C link-arg=-lclang_rt.builtins-aarch64"
-#    runs-on: ${{ matrix.runner }}
-#    name: ${{ matrix.name }}
-#    container:
-#      image: matterlabs/llvm_runner_jammy:latest
-#      credentials:
-#        username: ${{ secrets.DOCKERHUB_USER }}
-#        password: ${{ secrets.DOCKERHUB_TOKEN }}
-#    env:
-#      RUSTFLAGS: ${{ matrix.rustflags }}
-#    steps:
-#      - name: Checkout source
-#        uses: actions/checkout@v4
-#      - name: Prepare environment
-#        run: |
-#          rustup target add ${{ matrix.target }}
-#      - name: Install solc compiler
-#        run: |
-#          curl --verbose \
-#            --location -o "${PWD}/solc" "${SOLC_URL}/${SOLC_VERSION}/${{ matrix.solc-name }}-${SOLC_VERSION}" && \
-#            chmod a+x "${PWD}/solc"
-#          echo "${PWD}" >> "${GITHUB_PATH}"
-#      - name: Build LLVM framework
-#        run: |
-#          cargo install compiler-llvm-builder --target ${{ matrix.target }}
-#          zkevm-llvm clone
-#          zkevm-llvm build
-#      - name: Build zksolc
-#        run: |
-#          cargo build -vv --release --target ${{ matrix.target }}
-#          echo "${PWD}/target/${{ matrix.target }}/release" >> "${GITHUB_PATH}"
-#      - name: Run unit tests
-#        run: |
-#          cargo install cargo2junit
-#          cargo test --verbose --target ${{ matrix.target }} -- -Z unstable-options --format json | cargo2junit > "${UNIT_TESTS_RESULTS_XML}"
-#          cat "${UNIT_TESTS_RESULTS_XML}"
-#      - name: Upload test results
-#        if: always()
-#        uses: EnricoMi/publish-unit-test-result-action@v2
-#        with:
-#          check_name: ${{ matrix.name }} Unit Tests Results
-#          github_token: ${{ secrets.GITHUB_TOKEN }}
-#          files: ${{ env.UNIT_TESTS_RESULTS_XML }}
-#          action_fail_on_inconclusive: true
+  unit-tests-linux:
+    strategy:
+      matrix:
+        include:
+          - name: "Linux x86"
+            runner: matterlabs-ci-runner
+            target: "x86_64-unknown-linux-musl"
+          - name: "Linux arm64"
+            runner: matterlabs-ci-runner-arm
+            target: "aarch64-unknown-linux-musl"
+            rustflags: "-C link-arg=-Wl,-Bstatic -C link-arg=-lc -C link-arg=-L/usr/lib/llvm-15/lib/clang/15.0.7/lib/linux/ -C link-arg=-lclang_rt.builtins-aarch64"
+    runs-on: ${{ matrix.runner }}
+    name: ${{ matrix.name }}
+    container:
+      image: matterlabs/llvm_runner_jammy:latest
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USER }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    env:
+      RUSTFLAGS: ${{ matrix.rustflags }}
+      VYPER_DOWNLOAD_FILENAME: "vyper.0.3.10+commit.91361694.linux"
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Prepare environment
+        run: |
+          rustup target add ${{ matrix.target }}
+      - name: Install vyper compiler
+        run: |
+          curl --verbose \
+            --location -o "${PWD}/vyper" "${VYPER_DOWNLOAD_URL}/${VYPER_VERSION}/${VYPER_DOWNLOAD_FILENAME}" && \
+            chmod a+x "${PWD}/vyper"
+          echo "${PWD}" >> "${GITHUB_PATH}"
+      - name: Build LLVM framework
+        run: |
+          cargo install compiler-llvm-builder --target ${{ matrix.target }}
+          zkevm-llvm clone
+          zkevm-llvm build
+      - name: Build zkvyper
+        run: |
+          cargo build -vv --release --target ${{ matrix.target }}
+          echo "${PWD}/target/${{ matrix.target }}/release" >> "${GITHUB_PATH}"
+      - name: Run unit tests
+        run: |
+          cargo install cargo2junit
+          cargo test --verbose --target ${{ matrix.target }} -- -Z unstable-options --format json | cargo2junit > "${UNIT_TESTS_RESULTS_XML}"
+          cat "${UNIT_TESTS_RESULTS_XML}"
+      - name: Upload test results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          check_name: ${{ matrix.name }} Unit Tests Results
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          files: ${{ env.UNIT_TESTS_RESULTS_XML }}
+          action_fail_on_inconclusive: true
 
-#  unit-tests-windows:
-#    name: "Windows"
-#    runs-on: windows-2022-github-hosted-16core
-#    env:
-#      LIBSTDCPP_SOURCE_PATH: "C:/a/_temp/msys64/mingw64/lib/libstdc++.a"
-#    defaults:
-#      run:
-#        shell: msys2 {0}
-#    steps:
-#      - name: Checkout source
-#        uses: actions/checkout@v4
-#      - name: Prepare msys2
-#        uses: msys2/setup-msys2@v2
-#      - name: Prepare env
-#        run: |
-#          pacman-key --refresh
-#          pacman -Sy
-#          curl -LO https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-cmake-3.27.7-3-any.pkg.tar.zst
-#          pacman --noconfirm -U mingw-w64-x86_64-cmake-3.27.7-3-any.pkg.tar.zst
-#          pacman --noconfirm -S --needed --overwrite \
-#          base-devel \
-#          git \
-#          ninja \
-#          mingw-w64-x86_64-clang \
-#          mingw-w64-x86_64-lld \
-#          mingw-w64-x86_64-rust \
-#          mingw-w64-x86_64-gcc-libs \
-#          mingw-w64-x86_64-gcc
-#      - name: Install solc compiler
-#        run: |
-#          curl --verbose --location -o solc.exe "${SOLC_URL}/${SOLC_VERSION}/solc-windows-amd64-${SOLC_VERSION}.exe"
-#      - name: Build LLVM framework
-#        run: |
-#          cargo install compiler-llvm-builder
-#          export PATH="${PATH}:/c/Users/runneradmin/.cargo/bin/"
-#          zkevm-llvm clone
-#          zkevm-llvm build
-#      - name: Build compiler
-#        run: |
-#          cargo build -vv --release
-#      - name: Run unit tests
-#        run: |
-#          cargo install cargo2junit
-#          export PATH="$PWD/target/release:$PWD:$PATH:/c/Users/runneradmin/.cargo/bin/"
-#          cargo test --verbose -- -Z unstable-options --format json | cargo2junit > "${UNIT_TESTS_RESULTS_XML}"
-#          cat "${UNIT_TESTS_RESULTS_XML}"
-#      - name: Upload test results
-#        if: always()
-#        uses: EnricoMi/publish-unit-test-result-action/composite@v2
-#        with:
-#          check_name: Windows Unit Tests Results
-#          github_token: ${{ secrets.GITHUB_TOKEN }}
-#          files: ${{ env.UNIT_TESTS_RESULTS_XML }}
-#          action_fail_on_inconclusive: true
+  unit-tests-windows:
+    name: "Windows"
+    runs-on: windows-2022-github-hosted-16core
+    env:
+      LIBSTDCPP_SOURCE_PATH: "C:/a/_temp/msys64/mingw64/lib/libstdc++.a"
+      VYPER_DOWNLOAD_FILENAME: "vyper.0.3.10+commit.91361694.windows.exe"
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Prepare msys2
+        uses: msys2/setup-msys2@v2
+      - name: Prepare env
+        run: |
+          pacman-key --refresh
+          pacman -Sy
+          curl -LO https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-cmake-3.27.7-3-any.pkg.tar.zst
+          pacman --noconfirm -U mingw-w64-x86_64-cmake-3.27.7-3-any.pkg.tar.zst
+          pacman --noconfirm -S --needed --overwrite \
+          base-devel \
+          git \
+          ninja \
+          mingw-w64-x86_64-clang \
+          mingw-w64-x86_64-lld \
+          mingw-w64-x86_64-rust \
+          mingw-w64-x86_64-gcc-libs \
+          mingw-w64-x86_64-gcc
+      - name: Install vyper compiler
+        run: |
+          curl --verbose --location -o vyper.exe "${VYPER_DOWNLOAD_URL}/${VYPER_VERSION}/${VYPER_DOWNLOAD_FILENAME}"
+      - name: Build LLVM framework
+        run: |
+          cargo install compiler-llvm-builder
+          export PATH="${PATH}:/c/Users/runneradmin/.cargo/bin/"
+          zkevm-llvm clone
+          zkevm-llvm build
+      - name: Build compiler
+        run: |
+          cargo build -vv --release
+      - name: Run unit tests
+        run: |
+          cargo install cargo2junit
+          export PATH="$PWD/target/release:$PWD:$PATH:/c/Users/runneradmin/.cargo/bin/"
+          cargo test --verbose -- -Z unstable-options --format json | cargo2junit > "${UNIT_TESTS_RESULTS_XML}"
+          cat "${UNIT_TESTS_RESULTS_XML}"
+      - name: Upload test results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action/composite@v2
+        with:
+          check_name: Windows Unit Tests Results
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          files: ${{ env.UNIT_TESTS_RESULTS_XML }}
+          action_fail_on_inconclusive: true
