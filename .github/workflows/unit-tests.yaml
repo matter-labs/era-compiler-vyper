@@ -113,6 +113,7 @@ jobs:
       - name: Build LLVM framework
         uses: nick-fields/retry@v2
         with:
+          timeout_minutes: 60
           max_attempts: 2
           command: |
             cargo install compiler-llvm-builder --target ${{ matrix.target }}
