@@ -51,16 +51,15 @@ jobs:
       - name: Prepare environment
         run: |
           brew install cmake ninja
-      - name: Clone LLVM framework
-        run: |
-          cargo install compiler-llvm-builder
-          zkevm-llvm clone
       - name: Build LLVM framework
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 60
           max_attempts: 2 # protection mechanism for sporadic dependencies download failure
-          command: zkevm-llvm build
+          command: |
+            cargo install compiler-llvm-builder
+            zkevm-llvm clone
+            zkevm-llvm build
       - name: Install vyper compiler
         run: |
           curl --location -o "${PWD}/vyper" \
@@ -169,8 +168,8 @@ jobs:
         run: |
           pacman-key --refresh
           pacman -Sy
-          curl --location -o "${MINGW64_DOWNLOAD_LINK}/${MINGW64_DOWNLOAD_FILENAME}"
-          pacman --noconfirm -U ${MINGW64_DOWNLOAD_FILENAME}
+          curl --location -o "${MINGW64_DOWNLOAD_URL}/${MINGW64_DOWNLOAD_FILENAME}"
+          pacman --noconfirm -U "${MINGW64_DOWNLOAD_FILENAME}"
           pacman --noconfirm -S --needed --overwrite \
             base-devel \
             git \
