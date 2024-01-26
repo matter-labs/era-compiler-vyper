@@ -2,6 +2,7 @@ name: Unit Tests
 
 # Execute workflow for each PR and with each merge to the trunk
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches:
@@ -42,7 +43,7 @@ jobs:
       - name: Cleanup workspace
         if: ${{ matrix.name }} == "MacOS ARM64"
         run: |
-          setopt rmstarsilent
+          setopt rmstarsilent # Do not query the user before executing rm * or rm path/*.
           setopt +o nomatch
           rm -rf ${{ github.workspace }}/*
       - name: Checkout source
@@ -50,26 +51,32 @@ jobs:
       - name: Prepare environment
         run: |
           brew install cmake ninja
-      - name: Build LLVM framework
+      - name: Clone LLVM framework
         run: |
           cargo install compiler-llvm-builder
           zkevm-llvm clone
-          zkevm-llvm build
+      - name: Build LLVM framework
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 60
+          max_attempts: 2 # protection mechanism for sporadic dependencies download failure
+          command: zkevm-llvm build
       - name: Install vyper compiler
         run: |
           curl --verbose \
             --location -o "${PWD}/vyper" \
-            "${VYPER_DOWNLOAD_URL}/${VYPER_VERSION}/${VYPER_DOWNLOAD_FILENAME}${VYPER_DOWNLOAD_EXTENSION}" && \
-            chmod a+x "${PWD}/vyper"
+            "${VYPER_DOWNLOAD_URL}/${VYPER_VERSION}/${VYPER_DOWNLOAD_FILENAME}${VYPER_DOWNLOAD_EXTENSION}"
+          chmod a+x "${PWD}/vyper"
           echo "${PWD}" >> "${GITHUB_PATH}"
       - name: Build zkvyper
         run: |
-          cargo build -vv --release
+          cargo build --release
           echo "${PWD}/target/release" >> "${GITHUB_PATH}"
+      - name: Install junit converter
+        run: cargo install cargo2junit
       - name: Run unit tests
         run: |
-          cargo install cargo2junit
-          cargo test -- -Z unstable-options --format json | cargo2junit > "${UNIT_TESTS_RESULTS_XML}"
+          cargo test --verbose -- -Z unstable-options --format json | cargo2junit | tee "${UNIT_TESTS_RESULTS_XML}"
       - name: Upload test results
         if: always()
         uses: EnricoMi/publish-unit-test-result-action/composite@v2
@@ -86,6 +93,7 @@ jobs:
           - name: "Linux x86"
             runner: matterlabs-ci-runner
             target: "x86_64-unknown-linux-musl"
+#          TODO: uncomment and parametrize VYPER_DOWNLOAD_EXTENSION when arm64 linux vyper executable is available
 #          Linux ARM64 is not supported yet due to lack of Vyper executable for Linux arm64
 #          - name: "Linux arm64"
 #            runner: matterlabs-ci-runner-arm
@@ -109,10 +117,10 @@ jobs:
           rustup target add ${{ matrix.target }}
       - name: Install vyper compiler
         run: |
-          curl --verbose \
+          curl \
             --location -o "${PWD}/vyper" \
-            "${VYPER_DOWNLOAD_URL}/${VYPER_VERSION}/${VYPER_DOWNLOAD_FILENAME}${VYPER_DOWNLOAD_EXTENSION}" && \
-            chmod a+x "${PWD}/vyper"
+            "${VYPER_DOWNLOAD_URL}/${VYPER_VERSION}/${VYPER_DOWNLOAD_FILENAME}${VYPER_DOWNLOAD_EXTENSION}"
+          chmod a+x "${PWD}/vyper"
           echo "${PWD}" >> "${GITHUB_PATH}"
       - name: Clone LLVM framework
         run: |
@@ -122,17 +130,18 @@ jobs:
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 60
-          max_attempts: 2 # protection mechanism for MUSL sporadic download failure
+          max_attempts: 2 # protection mechanism for sporadic dependencies download failure
           command: zkevm-llvm build
       - name: Build zkvyper
         run: |
-          cargo build -vv --release --target ${{ matrix.target }}
+          cargo build --release --target ${{ matrix.target }}
           echo "${PWD}/target/${{ matrix.target }}/release" >> "${GITHUB_PATH}"
+      - name: Install junit converter
+        run: cargo install cargo2junit
       - name: Run unit tests
         run: |
-          cargo install cargo2junit
-          cargo test --verbose --target ${{ matrix.target }} -- -Z unstable-options --format json | cargo2junit > "${UNIT_TESTS_RESULTS_XML}"
-          cat "${UNIT_TESTS_RESULTS_XML}"
+          cargo test --verbose --target ${{ matrix.target }} -- -Z unstable-options --format json | \
+            cargo2junit | tee "${UNIT_TESTS_RESULTS_XML}"
       - name: Upload test results
         if: always()
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -148,6 +157,8 @@ jobs:
     env:
       LIBSTDCPP_SOURCE_PATH: "C:/a/_temp/msys64/mingw64/lib/libstdc++.a"
       VYPER_DOWNLOAD_EXTENSION: ".windows.exe"
+      MINGW64_DOWNLOAD_URL: "https://repo.msys2.org/mingw/mingw64"
+      MINGW64_DOWNLOAD_FILENAME: "mingw-w64-x86_64-cmake-3.27.7-3-any.pkg.tar.zst"
     defaults:
       run:
         shell: msys2 {0}
@@ -160,17 +171,17 @@ jobs:
         run: |
           pacman-key --refresh
           pacman -Sy
-          curl -LO https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-cmake-3.27.7-3-any.pkg.tar.zst
-          pacman --noconfirm -U mingw-w64-x86_64-cmake-3.27.7-3-any.pkg.tar.zst
+          curl -LO "${MINGW64_DOWNLOAD_LINK}/${MINGW64_DOWNLOAD_FILENAME}"
+          pacman --noconfirm -U "${MINGW64_DOWNLOAD_FILENAME}"
           pacman --noconfirm -S --needed --overwrite \
-          base-devel \
-          git \
-          ninja \
-          mingw-w64-x86_64-clang \
-          mingw-w64-x86_64-lld \
-          mingw-w64-x86_64-rust \
-          mingw-w64-x86_64-gcc-libs \
-          mingw-w64-x86_64-gcc
+            base-devel \
+            git \
+            ninja \
+            mingw-w64-x86_64-clang \
+            mingw-w64-x86_64-lld \
+            mingw-w64-x86_64-rust \
+            mingw-w64-x86_64-gcc-libs \
+            mingw-w64-x86_64-gcc
       - name: Install vyper compiler
         run: |
           curl --verbose --location -o vyper.exe \
@@ -183,13 +194,13 @@ jobs:
           zkevm-llvm build
       - name: Build compiler
         run: |
-          cargo build -vv --release
+          cargo build --release
+      - name: Install junit converter
+        run: cargo install cargo2junit
       - name: Run unit tests
         run: |
-          cargo install cargo2junit
           export PATH="$PWD/target/release:$PWD:$PATH:/c/Users/runneradmin/.cargo/bin/"
-          cargo test --verbose -- -Z unstable-options --format json | cargo2junit > "${UNIT_TESTS_RESULTS_XML}"
-          cat "${UNIT_TESTS_RESULTS_XML}"
+          cargo test --verbose -- -Z unstable-options --format json | cargo2junit | tee "${UNIT_TESTS_RESULTS_XML}"
       - name: Upload test results
         if: always()
         uses: EnricoMi/publish-unit-test-result-action/composite@v2
