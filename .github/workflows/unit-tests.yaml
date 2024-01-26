@@ -63,8 +63,7 @@ jobs:
           command: zkevm-llvm build
       - name: Install vyper compiler
         run: |
-          curl --verbose \
-            --location -o "${PWD}/vyper" \
+          curl --location -o "${PWD}/vyper" \
             "${VYPER_DOWNLOAD_URL}/${VYPER_VERSION}/${VYPER_DOWNLOAD_FILENAME}${VYPER_DOWNLOAD_EXTENSION}"
           chmod a+x "${PWD}/vyper"
           echo "${PWD}" >> "${GITHUB_PATH}"
@@ -117,8 +116,7 @@ jobs:
           rustup target add ${{ matrix.target }}
       - name: Install vyper compiler
         run: |
-          curl \
-            --location -o "${PWD}/vyper" \
+          curl --location -o "${PWD}/vyper" \
             "${VYPER_DOWNLOAD_URL}/${VYPER_VERSION}/${VYPER_DOWNLOAD_FILENAME}${VYPER_DOWNLOAD_EXTENSION}"
           chmod a+x "${PWD}/vyper"
           echo "${PWD}" >> "${GITHUB_PATH}"
@@ -171,8 +169,8 @@ jobs:
         run: |
           pacman-key --refresh
           pacman -Sy
-          curl -LO "${MINGW64_DOWNLOAD_LINK}/${MINGW64_DOWNLOAD_FILENAME}"
-          pacman --noconfirm -U "${MINGW64_DOWNLOAD_FILENAME}"
+          curl --location -o "${MINGW64_DOWNLOAD_LINK}/${MINGW64_DOWNLOAD_FILENAME}"
+          pacman --noconfirm -U ${MINGW64_DOWNLOAD_FILENAME}
           pacman --noconfirm -S --needed --overwrite \
             base-devel \
             git \
@@ -184,7 +182,7 @@ jobs:
             mingw-w64-x86_64-gcc
       - name: Install vyper compiler
         run: |
-          curl --verbose --location -o vyper.exe \
+          curl --location -o vyper.exe \
             "${VYPER_DOWNLOAD_URL}/${VYPER_VERSION}/${VYPER_DOWNLOAD_FILENAME}${VYPER_DOWNLOAD_EXTENSION}"
       - name: Build LLVM framework
         run: |
