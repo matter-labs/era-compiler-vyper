@@ -1,5 +1,7 @@
 # The `zkvyper` changelog
 
+## [Unreleased]
+
 ## [1.3.16] - 2024-01-12
 
 ### Fixed
