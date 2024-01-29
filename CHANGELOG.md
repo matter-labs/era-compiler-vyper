@@ -1,5 +1,11 @@
 # The `zkvyper` changelog
 
+## [1.3.17] - 2024-01-30
+
+### Added
+
+- More LLVM optimizations
+
 ## [1.3.16] - 2024-01-12
 
 ### Fixed
