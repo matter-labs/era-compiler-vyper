@@ -15,7 +15,7 @@ use once_cell::sync::OnceCell;
 use self::input::Input;
 use self::output::Output;
 
-/// The overriden executable name used when the compiler is run as a library.
+/// The overridden executable name used when the compiler is run as a library.
 pub static EXECUTABLE: OnceCell<PathBuf> = OnceCell::new();
 
 ///
