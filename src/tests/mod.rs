@@ -14,7 +14,6 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use crate::build::Build;
-use crate::vyper::standard_json::input::settings::evm_version::EVMVersion as VyperStandardJsonInputSettingsEVMVersion;
 use crate::vyper::standard_json::input::settings::selection::Selection as VyperStandardJsonInputSettingsSelection;
 use crate::vyper::standard_json::input::Input as VyperStandardJsonInput;
 use crate::vyper::Compiler as VyperCompiler;
@@ -54,9 +53,9 @@ pub fn build_vyper(
     }
 
     let evm_version = if vyper.version.default == semver::Version::new(0, 3, 3) {
-        VyperStandardJsonInputSettingsEVMVersion::Berlin
+        compiler_llvm_context::EVMVersion::Berlin
     } else {
-        VyperStandardJsonInputSettingsEVMVersion::Paris
+        compiler_llvm_context::EVMVersion::Shanghai
     };
 
     inkwell::support::enable_llvm_pretty_stack_trace();

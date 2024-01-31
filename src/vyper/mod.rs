@@ -70,8 +70,16 @@ impl Compiler {
     ///
     /// The `vyper -f combined_json input_files...` mirror.
     ///
-    pub fn combined_json(&self, paths: &[PathBuf]) -> anyhow::Result<CombinedJson> {
+    pub fn combined_json(
+        &self,
+        paths: &[PathBuf],
+        evm_version: Option<compiler_llvm_context::EVMVersion>,
+    ) -> anyhow::Result<CombinedJson> {
         let mut command = std::process::Command::new(self.executable.as_str());
+        if let Some(evm_version) = evm_version {
+            command.arg("--evm-version");
+            command.arg(evm_version.to_string());
+        }
         command.arg("-f");
         command.arg("combined_json");
         command.args(paths);
@@ -201,8 +209,17 @@ impl Compiler {
     ///
     /// Is used to print the IR for debugging.
     ///
-    pub fn lll_debug(&self, path: &Path, optimize: bool) -> anyhow::Result<String> {
+    pub fn lll_debug(
+        &self,
+        path: &Path,
+        evm_version: Option<compiler_llvm_context::EVMVersion>,
+        optimize: bool,
+    ) -> anyhow::Result<String> {
         let mut command = std::process::Command::new(self.executable.as_str());
+        if let Some(evm_version) = evm_version {
+            command.arg("--evm-version");
+            command.arg(evm_version.to_string());
+        }
         command.arg("-f");
         command.arg("ir");
         if !optimize || self.version.default >= semver::Version::new(0, 3, 10) {
@@ -234,11 +251,16 @@ impl Compiler {
         &self,
         version: &semver::Version,
         mut paths: Vec<PathBuf>,
+        evm_version: Option<compiler_llvm_context::EVMVersion>,
         optimize: bool,
     ) -> anyhow::Result<Project> {
         paths.sort();
 
         let mut command = std::process::Command::new(self.executable.as_str());
+        if let Some(evm_version) = evm_version {
+            command.arg("--evm-version");
+            command.arg(evm_version.to_string());
+        }
         command.arg("-f");
         command.arg("ir_json,metadata,method_identifiers,ast");
         if !optimize || self.version.default >= semver::Version::new(0, 3, 10) {
@@ -313,8 +335,17 @@ impl Compiler {
     ///
     /// The `vyper -f <identifiers> ...` mirror.
     ///
-    pub fn extra_output(&self, path: &Path, extra_output: &str) -> anyhow::Result<String> {
+    pub fn extra_output(
+        &self,
+        path: &Path,
+        evm_version: Option<compiler_llvm_context::EVMVersion>,
+        extra_output: &str,
+    ) -> anyhow::Result<String> {
         let mut command = std::process::Command::new(self.executable.as_str());
+        if let Some(evm_version) = evm_version {
+            command.arg("--evm-version");
+            command.arg(evm_version.to_string());
+        }
         command.arg("-f");
         command.arg(extra_output);
         command.arg(path);

@@ -201,11 +201,17 @@ pub enum Instruction {
     MSTORE([Box<Expression>; 2]),
     /// The LLL IR EVM opcode.
     MSTORE8([Box<Expression>; 2]),
+    /// The LLL IR EVM opcode.
+    MCOPY([Box<Expression>; 3]),
 
     /// The LLL IR EVM opcode.
     SLOAD([Box<Expression>; 1]),
     /// The LLL IR EVM opcode.
     SSTORE([Box<Expression>; 2]),
+    /// The LLL IR EVM opcode.
+    TLOAD([Box<Expression>; 1]),
+    /// The LLL IR EVM opcode.
+    TSTORE([Box<Expression>; 2]),
 
     /// The LLL IR EVM opcode.
     ILOAD([Box<Expression>; 1]),
@@ -942,6 +948,32 @@ impl Instruction {
                 )
                 .map(|_| None)
             }
+            Self::MCOPY(arguments) => {
+                let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;
+                let destination = compiler_llvm_context::EraVMPointer::new_with_offset(
+                    context,
+                    compiler_llvm_context::EraVMAddressSpace::Heap,
+                    context.byte_type(),
+                    arguments[0].into_int_value(),
+                    "mcopy_destination",
+                );
+                let source = compiler_llvm_context::EraVMPointer::new_with_offset(
+                    context,
+                    compiler_llvm_context::EraVMAddressSpace::Heap,
+                    context.byte_type(),
+                    arguments[1].into_int_value(),
+                    "mcopy_source",
+                );
+
+                context.build_memcpy(
+                    context.intrinsics().memory_copy,
+                    destination,
+                    source,
+                    arguments[2].into_int_value(),
+                    "mcopy_size",
+                );
+                Ok(None)
+            }
 
             Self::SLOAD(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
@@ -959,6 +991,14 @@ impl Instruction {
                     arguments[1].into_int_value(),
                 )
                 .map(|_| None)
+            }
+            Self::TLOAD(arguments) => {
+                let _arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
+                anyhow::bail!("The `TLOAD` instruction is not supported until zkVM v1.5.0")
+            }
+            Self::TSTORE(arguments) => {
+                let _arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                anyhow::bail!("The `TSTORE` instruction is not supported until zkVM v1.5.0")
             }
 
             Self::ILOAD(arguments) => {

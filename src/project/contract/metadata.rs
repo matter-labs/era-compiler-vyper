@@ -16,6 +16,8 @@ pub struct Metadata<'a> {
     pub source_hash: &'a [u8; compiler_common::BYTE_LENGTH_FIELD],
     /// The source file upstream Vyper compiler version.
     pub source_version: &'a semver::Version,
+    /// The EVM target version.
+    pub evm_version: Option<compiler_llvm_context::EVMVersion>,
     /// The EraVM compiler version.
     pub zk_version: semver::Version,
     /// The EraVM compiler stringified optimizer settings.
@@ -29,12 +31,14 @@ impl<'a> Metadata<'a> {
     pub fn new(
         source_hash: &'a [u8; compiler_common::BYTE_LENGTH_FIELD],
         source_version: &'a semver::Version,
+        evm_version: Option<compiler_llvm_context::EVMVersion>,
         zk_version: semver::Version,
         optimizer_settings: compiler_llvm_context::OptimizerSettings,
     ) -> Self {
         Self {
             source_hash,
             source_version,
+            evm_version,
             zk_version,
             optimizer_settings: optimizer_settings.to_string(),
         }

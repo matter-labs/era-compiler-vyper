@@ -125,10 +125,17 @@ impl Contract {
         let llvm = inkwell::context::Context::create();
         let optimizer = compiler_llvm_context::Optimizer::new(optimizer_settings);
 
+        let evm_version = if self.version == semver::Version::new(0, 3, 3) {
+            compiler_llvm_context::EVMVersion::Berlin
+        } else {
+            compiler_llvm_context::EVMVersion::Shanghai
+        };
+
         let metadata_hash = source_code_hash.map(|source_code_hash| {
             ContractMetadata::new(
                 &source_code_hash,
                 &self.version,
+                Some(evm_version),
                 semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
                 optimizer.settings().to_owned(),
             )

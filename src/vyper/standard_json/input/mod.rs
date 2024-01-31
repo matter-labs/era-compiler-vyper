@@ -14,7 +14,6 @@ use rayon::iter::ParallelIterator;
 use serde::Serialize;
 
 use self::language::Language;
-use self::settings::evm_version::EVMVersion;
 use self::settings::selection::Selection;
 use self::settings::Settings;
 use self::source::Source;
@@ -40,7 +39,7 @@ impl Input {
     pub fn try_from_paths(
         language: Language,
         paths: &[PathBuf],
-        evm_version: EVMVersion,
+        evm_version: compiler_llvm_context::EVMVersion,
         output_selection: BTreeMap<String, Vec<Selection>>,
         optimize: bool,
         fallback_to_optimizing_for_size: bool,
@@ -74,7 +73,7 @@ impl Input {
     ///
     pub fn try_from_sources(
         sources: BTreeMap<String, String>,
-        evm_version: EVMVersion,
+        evm_version: compiler_llvm_context::EVMVersion,
         output_selection: BTreeMap<String, Vec<Selection>>,
         optimize: bool,
         fallback_to_optimizing_for_size: bool,

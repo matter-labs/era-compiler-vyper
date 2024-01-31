@@ -123,6 +123,10 @@ Disable the `vyper` LLL IR optimizer.
 Specify the path to the `vyper` executable. By default, the one in `${PATH}` is used.  
 In LLVM IR mode `vyper` is unused.  
 
+#### `--evm-version <version>`
+The EVM version to generate LLL IR for.  
+See [the source code](https://github.com/matter-labs/era-compiler-llvm-context/blob/main/src/evm_version.rs) for reference.  
+
 #### `-f <format>`
 An extra output format string.  
 See `vyper --help` for available options including combined JSON mode.
