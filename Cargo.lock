@@ -161,7 +161,7 @@ dependencies = [
 [[package]]
 name = "compiler-llvm-context"
 version = "1.3.3"
-source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=main#1bc74598266af3961650602e66aa81a2a67bb980"
+source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=az-cpr-1523-add-a-flag-to-disable-the-custom-eravm-cse-pass#e451ae151cd0a5311580a2059d9220ad7916045c"
 dependencies = [
  "anyhow",
  "compiler-common",
