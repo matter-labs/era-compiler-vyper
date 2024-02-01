@@ -154,6 +154,11 @@ impl Arguments {
             if self.fallback_to_optimizing_for_size {
                 anyhow::bail!("Falling back to -Oz is not supported in EraVM assembly mode.");
             }
+            if self.disable_system_request_memoization {
+                anyhow::bail!(
+                    "Disabling the system request memoization is not supported in EraVM assembly mode."
+                );
+            }
         }
 
         Ok(())
