@@ -20,15 +20,15 @@ pub struct Input {
     /// The contract representation.
     pub contract: Contract,
     /// The source code hash.
-    pub source_code_hash: Option<[u8; compiler_common::BYTE_LENGTH_FIELD]>,
+    pub source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
     /// Enables the test bytecode encoding.
     pub enable_test_encoding: bool,
     /// The optimizer settings.
-    pub optimizer_settings: compiler_llvm_context::OptimizerSettings,
+    pub optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     /// The suppressed warnings.
     pub suppressed_warnings: Vec<WarningType>,
     /// The debug output config.
-    pub debug_config: Option<compiler_llvm_context::DebugConfig>,
+    pub debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 }
 
 impl Input {
@@ -38,11 +38,11 @@ impl Input {
     pub fn new(
         full_path: String,
         contract: Contract,
-        source_code_hash: Option<[u8; compiler_common::BYTE_LENGTH_FIELD]>,
+        source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
         enable_test_encoding: bool,
-        optimizer_settings: compiler_llvm_context::OptimizerSettings,
+        optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         suppressed_warnings: Vec<WarningType>,
-        debug_config: Option<compiler_llvm_context::DebugConfig>,
+        debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> Self {
         Self {
             full_path,

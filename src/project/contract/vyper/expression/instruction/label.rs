@@ -100,10 +100,10 @@ impl Label {
     ///
     pub fn declare<D>(
         &self,
-        context: &mut compiler_llvm_context::EraVMContext<D>,
+        context: &mut era_compiler_llvm_context::EraVMContext<D>,
     ) -> anyhow::Result<()>
     where
-        D: compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::EraVMDependency + Clone,
     {
         if self.is_empty() || self.can_block_be_ignored() {
             return Ok(());
@@ -159,10 +159,10 @@ impl Label {
     ///
     pub fn into_llvm_value<D>(
         mut self,
-        context: &mut compiler_llvm_context::EraVMContext<D>,
+        context: &mut era_compiler_llvm_context::EraVMContext<D>,
     ) -> anyhow::Result<()>
     where
-        D: compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::EraVMDependency + Clone,
     {
         if self.is_empty() || self.can_block_be_ignored() {
             return Ok(());
@@ -197,7 +197,7 @@ impl Label {
             && label_name.ends_with(crate::r#const::LABEL_SUFFIX_CLEANUP)
             && is_block_empty_sequence
         {
-            compiler_llvm_context::eravm_evm_return::stop(context)?;
+            era_compiler_llvm_context::eravm_evm_return::stop(context)?;
         }
 
         context.set_basic_block(current_block);

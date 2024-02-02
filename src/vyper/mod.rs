@@ -89,21 +89,21 @@ impl Compiler {
             );
         }
 
-        let mut combined_json: CombinedJson =
-            compiler_common::deserialize_from_slice(output.stdout.as_slice()).map_err(|error| {
-                anyhow::anyhow!(
-                    "{} subprocess output parsing error: {}\n{}",
-                    self.executable,
-                    error,
-                    compiler_common::deserialize_from_slice::<serde_json::Value>(
-                        output.stdout.as_slice()
-                    )
-                    .map(|json| serde_json::to_string_pretty(&json).expect("Always valid"))
-                    .unwrap_or_else(
-                        |_| String::from_utf8_lossy(output.stdout.as_slice()).to_string()
-                    ),
+        let mut combined_json: CombinedJson = era_compiler_common::deserialize_from_slice(
+            output.stdout.as_slice(),
+        )
+        .map_err(|error| {
+            anyhow::anyhow!(
+                "{} subprocess output parsing error: {}\n{}",
+                self.executable,
+                error,
+                era_compiler_common::deserialize_from_slice::<serde_json::Value>(
+                    output.stdout.as_slice()
                 )
-            })?;
+                .map(|json| serde_json::to_string_pretty(&json).expect("Always valid"))
+                .unwrap_or_else(|_| String::from_utf8_lossy(output.stdout.as_slice()).to_string()),
+            )
+        })?;
         combined_json.remove_evm();
         Ok(combined_json)
     }
@@ -148,21 +148,21 @@ impl Compiler {
             );
         }
 
-        let mut output: StandardJsonOutput =
-            compiler_common::deserialize_from_slice(output.stdout.as_slice()).map_err(|error| {
-                anyhow::anyhow!(
-                    "{} subprocess output parsing error: {}\n{}",
-                    self.executable,
-                    error,
-                    compiler_common::deserialize_from_slice::<serde_json::Value>(
-                        output.stdout.as_slice()
-                    )
-                    .map(|json| serde_json::to_string_pretty(&json).expect("Always valid"))
-                    .unwrap_or_else(
-                        |_| String::from_utf8_lossy(output.stdout.as_slice()).to_string()
-                    ),
+        let mut output: StandardJsonOutput = era_compiler_common::deserialize_from_slice(
+            output.stdout.as_slice(),
+        )
+        .map_err(|error| {
+            anyhow::anyhow!(
+                "{} subprocess output parsing error: {}\n{}",
+                self.executable,
+                error,
+                era_compiler_common::deserialize_from_slice::<serde_json::Value>(
+                    output.stdout.as_slice()
                 )
-            })?;
+                .map(|json| serde_json::to_string_pretty(&json).expect("Always valid"))
+                .unwrap_or_else(|_| String::from_utf8_lossy(output.stdout.as_slice()).to_string()),
+            )
+        })?;
 
         for (full_path, source) in input.sources.into_iter() {
             let last_slash_position = full_path.rfind('/');
@@ -302,7 +302,7 @@ impl Compiler {
         for (_path, contract) in contracts.iter() {
             source_code_hasher.update(contract.source_code().as_bytes());
         }
-        let source_code_hash: [u8; compiler_common::BYTE_LENGTH_FIELD] =
+        let source_code_hash: [u8; era_compiler_common::BYTE_LENGTH_FIELD] =
             source_code_hasher.finalize_fixed().into();
 
         let project = Project::new(version.to_owned(), source_code_hash, contracts);
