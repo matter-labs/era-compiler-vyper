@@ -20,7 +20,7 @@ def f():
             semver::Version::new(0, 3, 10),
             "Built-in function `create_copy_of` is not supported",
         )),
-        compiler_llvm_context::OptimizerSettings::none(),
+        era_compiler_llvm_context::OptimizerSettings::none(),
     )
     .expect("Test failure");
 }
@@ -41,7 +41,7 @@ def f():
             semver::Version::new(0, 3, 10),
             "Built-in function `create_from_blueprint` is not supported",
         )),
-        compiler_llvm_context::OptimizerSettings::none(),
+        era_compiler_llvm_context::OptimizerSettings::none(),
     )
     .expect("Test failure");
 }

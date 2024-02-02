@@ -149,39 +149,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "compiler-common"
-version = "1.5.0"
-source = "git+https://github.com/matter-labs/era-compiler-common?branch=main#e1cb77aebf7006faf1a413099d1b9b241e571ce1"
-dependencies = [
- "anyhow",
- "serde",
- "serde_json",
- "serde_stacker",
-]
-
-[[package]]
-name = "compiler-llvm-context"
-version = "1.4.1"
-source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=v1.4.1#5a804298a5f2bb03c9c8a5a1f4f95ed0d56d3084"
-dependencies = [
- "anyhow",
- "compiler-common",
- "hex",
- "inkwell",
- "itertools",
- "md5",
- "num",
- "once_cell",
- "regex",
- "semver",
- "serde",
- "sha2",
- "sha3",
- "zkevm-assembly",
- "zkevm_opcode_defs",
-]
-
-[[package]]
 name = "const-oid"
 version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -330,13 +297,46 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5443807d6dff69373d433ab9ef5378ad8df50ca6298caf15de6e52e24aaf54d5"
 
 [[package]]
+name = "era-compiler-common"
+version = "1.5.0"
+source = "git+https://github.com/matter-labs/era-compiler-common?branch=main#c947120df4f41dcaca17d307cb974d2ca1995a03"
+dependencies = [
+ "anyhow",
+ "serde",
+ "serde_json",
+ "serde_stacker",
+]
+
+[[package]]
+name = "era-compiler-llvm-context"
+version = "1.4.1"
+source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=v1.4.1#d7d98addc8ceee6c337150264aa4e5830450f2b2"
+dependencies = [
+ "anyhow",
+ "era-compiler-common",
+ "hex",
+ "inkwell",
+ "itertools",
+ "md5",
+ "num",
+ "once_cell",
+ "regex",
+ "semver",
+ "serde",
+ "sha2",
+ "sha3",
+ "zkevm-assembly",
+ "zkevm_opcode_defs",
+]
+
+[[package]]
 name = "era-compiler-vyper"
 version = "1.4.0"
 dependencies = [
  "anyhow",
  "colored",
- "compiler-common",
- "compiler-llvm-context",
+ "era-compiler-common",
+ "era-compiler-llvm-context",
  "hex",
  "inkwell",
  "lazy_static",

@@ -8,25 +8,25 @@ use inkwell::values::BasicValue;
 /// Translates the Vyper LLL-specific `ceil32` instruction.
 ///
 pub fn ceil_32<'ctx, D>(
-    context: &mut compiler_llvm_context::EraVMContext<'ctx, D>,
+    context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
     value: inkwell::values::IntValue<'ctx>,
 ) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>>
 where
-    D: compiler_llvm_context::EraVMDependency + Clone,
+    D: era_compiler_llvm_context::EraVMDependency + Clone,
 {
     let remainder = context.builder().build_int_unsigned_rem(
         value,
-        context.field_const(compiler_common::BYTE_LENGTH_FIELD as u64),
+        context.field_const(era_compiler_common::BYTE_LENGTH_FIELD as u64),
         "ceil32_remainder",
     );
     let shift = context.builder().build_int_sub(
-        context.field_const(compiler_common::BYTE_LENGTH_FIELD as u64),
+        context.field_const(era_compiler_common::BYTE_LENGTH_FIELD as u64),
         remainder,
         "ceil32_shift",
     );
     let shift_remainder = context.builder().build_int_unsigned_rem(
         shift,
-        context.field_const(compiler_common::BYTE_LENGTH_FIELD as u64),
+        context.field_const(era_compiler_common::BYTE_LENGTH_FIELD as u64),
         "ceil32_shift_remainder",
     );
     let result = context

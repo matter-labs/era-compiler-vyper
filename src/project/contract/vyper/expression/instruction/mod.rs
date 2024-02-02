@@ -323,10 +323,10 @@ impl Instruction {
     ///
     fn translate_arguments_llvm<'ctx, D, const N: usize>(
         arguments: [Box<Expression>; N],
-        context: &mut compiler_llvm_context::EraVMContext<'ctx, D>,
+        context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
     ) -> anyhow::Result<[inkwell::values::BasicValueEnum<'ctx>; N]>
     where
-        D: compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::EraVMDependency + Clone,
     {
         let debug_string = format!("`{arguments:?}`");
 
@@ -393,10 +393,10 @@ impl Instruction {
     ///
     pub fn into_llvm_value<'ctx, D>(
         self,
-        context: &mut compiler_llvm_context::EraVMContext<'ctx, D>,
+        context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::EraVMDependency + Clone,
     {
         match self {
             Self::With(inner) => inner.into_llvm_value(context),
@@ -575,7 +575,7 @@ impl Instruction {
 
             Self::ADD(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_arithmetic::addition(
+                era_compiler_llvm_context::eravm_evm_arithmetic::addition(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -584,7 +584,7 @@ impl Instruction {
             }
             Self::SUB(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_arithmetic::subtraction(
+                era_compiler_llvm_context::eravm_evm_arithmetic::subtraction(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -593,7 +593,7 @@ impl Instruction {
             }
             Self::MUL(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_arithmetic::multiplication(
+                era_compiler_llvm_context::eravm_evm_arithmetic::multiplication(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -602,7 +602,7 @@ impl Instruction {
             }
             Self::DIV(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_arithmetic::division(
+                era_compiler_llvm_context::eravm_evm_arithmetic::division(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -611,7 +611,7 @@ impl Instruction {
             }
             Self::MOD(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_arithmetic::remainder(
+                era_compiler_llvm_context::eravm_evm_arithmetic::remainder(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -620,7 +620,7 @@ impl Instruction {
             }
             Self::SDIV(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_arithmetic::division_signed(
+                era_compiler_llvm_context::eravm_evm_arithmetic::division_signed(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -629,7 +629,7 @@ impl Instruction {
             }
             Self::SMOD(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_arithmetic::remainder_signed(
+                era_compiler_llvm_context::eravm_evm_arithmetic::remainder_signed(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -639,7 +639,7 @@ impl Instruction {
 
             Self::LT(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_comparison::compare(
+                era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -649,7 +649,7 @@ impl Instruction {
             }
             Self::LE(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_comparison::compare(
+                era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -659,7 +659,7 @@ impl Instruction {
             }
             Self::GT(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_comparison::compare(
+                era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -669,7 +669,7 @@ impl Instruction {
             }
             Self::GE(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_comparison::compare(
+                era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -679,7 +679,7 @@ impl Instruction {
             }
             Self::EQ(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_comparison::compare(
+                era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -689,7 +689,7 @@ impl Instruction {
             }
             Self::NE(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_comparison::compare(
+                era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -699,7 +699,7 @@ impl Instruction {
             }
             Self::ISZERO(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_comparison::compare(
+                era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
                     context.field_const(0),
@@ -709,7 +709,7 @@ impl Instruction {
             }
             Self::SLT(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_comparison::compare(
+                era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -719,7 +719,7 @@ impl Instruction {
             }
             Self::SLE(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_comparison::compare(
+                era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -729,7 +729,7 @@ impl Instruction {
             }
             Self::SGT(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_comparison::compare(
+                era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -739,7 +739,7 @@ impl Instruction {
             }
             Self::SGE(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_comparison::compare(
+                era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -750,7 +750,7 @@ impl Instruction {
 
             Self::OR(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_bitwise::or(
+                era_compiler_llvm_context::eravm_evm_bitwise::or(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -759,7 +759,7 @@ impl Instruction {
             }
             Self::XOR(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_bitwise::xor(
+                era_compiler_llvm_context::eravm_evm_bitwise::xor(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -768,7 +768,7 @@ impl Instruction {
             }
             Self::NOT(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_bitwise::xor(
+                era_compiler_llvm_context::eravm_evm_bitwise::xor(
                     context,
                     arguments[0].into_int_value(),
                     context.field_type().const_all_ones(),
@@ -777,7 +777,7 @@ impl Instruction {
             }
             Self::AND(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_bitwise::and(
+                era_compiler_llvm_context::eravm_evm_bitwise::and(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -786,7 +786,7 @@ impl Instruction {
             }
             Self::SHL(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_bitwise::shift_left(
+                era_compiler_llvm_context::eravm_evm_bitwise::shift_left(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -795,7 +795,7 @@ impl Instruction {
             }
             Self::SHR(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_bitwise::shift_right(
+                era_compiler_llvm_context::eravm_evm_bitwise::shift_right(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -804,7 +804,7 @@ impl Instruction {
             }
             Self::SAR(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_bitwise::shift_right_arithmetic(
+                era_compiler_llvm_context::eravm_evm_bitwise::shift_right_arithmetic(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -813,7 +813,7 @@ impl Instruction {
             }
             Self::BYTE(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_bitwise::byte(
+                era_compiler_llvm_context::eravm_evm_bitwise::byte(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -823,7 +823,7 @@ impl Instruction {
 
             Self::ADDMOD(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_math::add_mod(
+                era_compiler_llvm_context::eravm_evm_math::add_mod(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -833,7 +833,7 @@ impl Instruction {
             }
             Self::MULMOD(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_math::mul_mod(
+                era_compiler_llvm_context::eravm_evm_math::mul_mod(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -843,7 +843,7 @@ impl Instruction {
             }
             Self::EXP(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_math::exponent(
+                era_compiler_llvm_context::eravm_evm_math::exponent(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -852,7 +852,7 @@ impl Instruction {
             }
             Self::SIGNEXTEND(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_math::sign_extend(
+                era_compiler_llvm_context::eravm_evm_math::sign_extend(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -862,7 +862,7 @@ impl Instruction {
 
             Self::SHA3(arguments) | Self::KECCAK256(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_crypto::sha3(
+                era_compiler_llvm_context::eravm_evm_crypto::sha3(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -872,53 +872,53 @@ impl Instruction {
             Self::SHA3_32(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
 
-                let pointer_one = compiler_llvm_context::EraVMPointer::new_with_offset(
+                let pointer_one = era_compiler_llvm_context::EraVMPointer::new_with_offset(
                     context,
-                    compiler_llvm_context::EraVMAddressSpace::Heap,
+                    era_compiler_llvm_context::EraVMAddressSpace::Heap,
                     context.field_type(),
                     context.field_const(crate::r#const::OFFSET_FREE_VAR_SPACE as u64),
                     "sha3_pointer_one",
                 );
                 context.build_store(pointer_one, arguments[0]);
 
-                compiler_llvm_context::eravm_evm_crypto::sha3(
+                era_compiler_llvm_context::eravm_evm_crypto::sha3(
                     context,
                     context.field_const(crate::r#const::OFFSET_FREE_VAR_SPACE as u64),
-                    context.field_const(compiler_common::BYTE_LENGTH_FIELD as u64),
+                    context.field_const(era_compiler_common::BYTE_LENGTH_FIELD as u64),
                 )
                 .map(Some)
             }
             Self::SHA3_64(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
 
-                let pointer_one = compiler_llvm_context::EraVMPointer::new_with_offset(
+                let pointer_one = era_compiler_llvm_context::EraVMPointer::new_with_offset(
                     context,
-                    compiler_llvm_context::EraVMAddressSpace::Heap,
+                    era_compiler_llvm_context::EraVMAddressSpace::Heap,
                     context.field_type(),
                     context.field_const(crate::r#const::OFFSET_FREE_VAR_SPACE as u64),
                     "sha3_pointer_one",
                 );
                 context.build_store(pointer_one, arguments[0]);
-                let pointer_two = compiler_llvm_context::EraVMPointer::new_with_offset(
+                let pointer_two = era_compiler_llvm_context::EraVMPointer::new_with_offset(
                     context,
-                    compiler_llvm_context::EraVMAddressSpace::Heap,
+                    era_compiler_llvm_context::EraVMAddressSpace::Heap,
                     context.field_type(),
                     context.field_const(crate::r#const::OFFSET_FREE_VAR_SPACE2 as u64),
                     "sha3_pointer_two",
                 );
                 context.build_store(pointer_two, arguments[1]);
 
-                compiler_llvm_context::eravm_evm_crypto::sha3(
+                era_compiler_llvm_context::eravm_evm_crypto::sha3(
                     context,
                     context.field_const(crate::r#const::OFFSET_FREE_VAR_SPACE as u64),
-                    context.field_const((compiler_common::BYTE_LENGTH_FIELD * 2) as u64),
+                    context.field_const((era_compiler_common::BYTE_LENGTH_FIELD * 2) as u64),
                 )
                 .map(Some)
             }
 
             Self::MLOAD(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_memory::load(
+                era_compiler_llvm_context::eravm_evm_memory::load(
                     context,
                     arguments[0].into_int_value(),
                 )
@@ -926,7 +926,7 @@ impl Instruction {
             }
             Self::MSTORE(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_memory::store(
+                era_compiler_llvm_context::eravm_evm_memory::store(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -935,7 +935,7 @@ impl Instruction {
             }
             Self::MSTORE8(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_memory::store_byte(
+                era_compiler_llvm_context::eravm_evm_memory::store_byte(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -945,7 +945,7 @@ impl Instruction {
 
             Self::SLOAD(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_storage::load(
+                era_compiler_llvm_context::eravm_evm_storage::load(
                     context,
                     arguments[0].into_int_value(),
                 )
@@ -953,7 +953,7 @@ impl Instruction {
             }
             Self::SSTORE(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_storage::store(
+                era_compiler_llvm_context::eravm_evm_storage::store(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -963,7 +963,7 @@ impl Instruction {
 
             Self::ILOAD(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_immutable::load(
+                era_compiler_llvm_context::eravm_evm_immutable::load(
                     context,
                     arguments[0].into_int_value(),
                 )
@@ -971,7 +971,7 @@ impl Instruction {
             }
             Self::ISTORE(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_immutable::store(
+                era_compiler_llvm_context::eravm_evm_immutable::store(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -986,11 +986,11 @@ impl Instruction {
                     .code_type()
                     .ok_or_else(|| anyhow::anyhow!("The contract code part type is undefined"))?
                 {
-                    compiler_llvm_context::EraVMCodeType::Deploy => {
+                    era_compiler_llvm_context::EraVMCodeType::Deploy => {
                         Ok(Some(context.field_const(0).as_basic_value_enum()))
                     }
-                    compiler_llvm_context::EraVMCodeType::Runtime => {
-                        compiler_llvm_context::eravm_evm_calldata::load(
+                    era_compiler_llvm_context::EraVMCodeType::Runtime => {
+                        era_compiler_llvm_context::eravm_evm_calldata::load(
                             context,
                             arguments[0].into_int_value(),
                         )
@@ -1003,11 +1003,11 @@ impl Instruction {
                     .code_type()
                     .ok_or_else(|| anyhow::anyhow!("The contract code part type is undefined"))?
                 {
-                    compiler_llvm_context::EraVMCodeType::Deploy => {
+                    era_compiler_llvm_context::EraVMCodeType::Deploy => {
                         Ok(Some(context.field_const(0).as_basic_value_enum()))
                     }
-                    compiler_llvm_context::EraVMCodeType::Runtime => {
-                        compiler_llvm_context::eravm_evm_calldata::size(context).map(Some)
+                    era_compiler_llvm_context::EraVMCodeType::Runtime => {
+                        era_compiler_llvm_context::eravm_evm_calldata::size(context).map(Some)
                     }
                 }
             }
@@ -1018,16 +1018,16 @@ impl Instruction {
                     .code_type()
                     .ok_or_else(|| anyhow::anyhow!("The contract code part type is undefined"))?
                 {
-                    compiler_llvm_context::EraVMCodeType::Deploy => {
-                        compiler_llvm_context::eravm_evm_calldata::size(context)?
+                    era_compiler_llvm_context::EraVMCodeType::Deploy => {
+                        era_compiler_llvm_context::eravm_evm_calldata::size(context)?
                     }
-                    compiler_llvm_context::EraVMCodeType::Runtime => {
+                    era_compiler_llvm_context::EraVMCodeType::Runtime => {
                         arguments[1].into_int_value().as_basic_value_enum()
                     }
                 }
                 .into_int_value();
 
-                compiler_llvm_context::eravm_evm_calldata::copy(
+                era_compiler_llvm_context::eravm_evm_calldata::copy(
                     context,
                     arguments[0].into_int_value(),
                     source_offset,
@@ -1044,14 +1044,14 @@ impl Instruction {
                             "Immutables are not available if the contract part is undefined"
                         );
                     }
-                    Some(compiler_llvm_context::EraVMCodeType::Deploy) => {
-                        compiler_llvm_context::eravm_evm_calldata::load(
+                    Some(era_compiler_llvm_context::EraVMCodeType::Deploy) => {
+                        era_compiler_llvm_context::eravm_evm_calldata::load(
                             context,
                             arguments[0].into_int_value(),
                         )
                     }
-                    Some(compiler_llvm_context::EraVMCodeType::Runtime) => {
-                        compiler_llvm_context::eravm_evm_immutable::load(
+                    Some(era_compiler_llvm_context::EraVMCodeType::Runtime) => {
+                        era_compiler_llvm_context::eravm_evm_immutable::load(
                             context,
                             arguments[0].into_int_value(),
                         )
@@ -1068,20 +1068,22 @@ impl Instruction {
                             "Immutables are not available if the contract part is undefined"
                         );
                     }
-                    Some(compiler_llvm_context::EraVMCodeType::Deploy) => {
-                        compiler_llvm_context::eravm_evm_calldata::copy(
+                    Some(era_compiler_llvm_context::EraVMCodeType::Deploy) => {
+                        era_compiler_llvm_context::eravm_evm_calldata::copy(
                             context,
                             arguments[0].into_int_value(),
                             arguments[1].into_int_value(),
                             arguments[2].into_int_value(),
                         )
                     }
-                    Some(compiler_llvm_context::EraVMCodeType::Runtime) => immutable::load_bytes(
-                        context,
-                        arguments[0].into_int_value(),
-                        arguments[1].into_int_value(),
-                        arguments[2].into_int_value(),
-                    ),
+                    Some(era_compiler_llvm_context::EraVMCodeType::Runtime) => {
+                        immutable::load_bytes(
+                            context,
+                            arguments[0].into_int_value(),
+                            arguments[1].into_int_value(),
+                            arguments[2].into_int_value(),
+                        )
+                    }
                 }
                 .map(|_| None)
             }
@@ -1090,13 +1092,13 @@ impl Instruction {
                     .code_type()
                     .ok_or_else(|| anyhow::anyhow!("The contract code part type is undefined"))?
                 {
-                    compiler_llvm_context::EraVMCodeType::Deploy => {
-                        compiler_llvm_context::eravm_evm_calldata::size(context).map(Some)
+                    era_compiler_llvm_context::EraVMCodeType::Deploy => {
+                        era_compiler_llvm_context::eravm_evm_calldata::size(context).map(Some)
                     }
-                    compiler_llvm_context::EraVMCodeType::Runtime => {
+                    era_compiler_llvm_context::EraVMCodeType::Runtime => {
                         let code_source =
-                            compiler_llvm_context::eravm_general::code_source(context)?;
-                        compiler_llvm_context::eravm_evm_ext_code::size(
+                            era_compiler_llvm_context::eravm_general::code_source(context)?;
+                        era_compiler_llvm_context::eravm_evm_ext_code::size(
                             context,
                             code_source.into_int_value(),
                         )
@@ -1105,7 +1107,7 @@ impl Instruction {
                 }
             }
             Self::CODECOPY(arguments) => {
-                if let compiler_llvm_context::EraVMCodeType::Runtime = context
+                if let era_compiler_llvm_context::EraVMCodeType::Runtime = context
                     .code_type()
                     .ok_or_else(|| anyhow::anyhow!("The contract code part type is undefined"))?
                 {
@@ -1115,7 +1117,7 @@ impl Instruction {
                 }
 
                 let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_calldata::copy(
+                era_compiler_llvm_context::eravm_evm_calldata::copy(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -1124,11 +1126,11 @@ impl Instruction {
                 .map(|_| None)
             }
             Self::RETURNDATASIZE => {
-                compiler_llvm_context::eravm_evm_return_data::size(context).map(Some)
+                era_compiler_llvm_context::eravm_evm_return_data::size(context).map(Some)
             }
             Self::RETURNDATACOPY(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_return_data::copy(
+                era_compiler_llvm_context::eravm_evm_return_data::copy(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -1138,7 +1140,7 @@ impl Instruction {
             }
             Self::EXTCODESIZE(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_ext_code::size(
+                era_compiler_llvm_context::eravm_evm_ext_code::size(
                     context,
                     arguments[0].into_int_value(),
                 )
@@ -1146,7 +1148,7 @@ impl Instruction {
             }
             Self::EXTCODEHASH(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_ext_code::hash(
+                era_compiler_llvm_context::eravm_evm_ext_code::hash(
                     context,
                     arguments[0].into_int_value(),
                 )
@@ -1155,14 +1157,14 @@ impl Instruction {
 
             Self::RETURN(inner) => inner.into_llvm_value(context).map(|_| None),
             Self::REVERT(inner) => inner.into_llvm_value(context).map(|_| None),
-            Self::STOP => compiler_llvm_context::eravm_evm_return::stop(context).map(|_| None),
+            Self::STOP => era_compiler_llvm_context::eravm_evm_return::stop(context).map(|_| None),
             Self::INVALID => {
-                compiler_llvm_context::eravm_evm_return::invalid(context).map(|_| None)
+                era_compiler_llvm_context::eravm_evm_return::invalid(context).map(|_| None)
             }
 
             Self::LOG0(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_event::log(
+                era_compiler_llvm_context::eravm_evm_event::log(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -1172,7 +1174,7 @@ impl Instruction {
             }
             Self::LOG1(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_event::log(
+                era_compiler_llvm_context::eravm_evm_event::log(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -1185,7 +1187,7 @@ impl Instruction {
             }
             Self::LOG2(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 4>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_event::log(
+                era_compiler_llvm_context::eravm_evm_event::log(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -1198,7 +1200,7 @@ impl Instruction {
             }
             Self::LOG3(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 5>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_event::log(
+                era_compiler_llvm_context::eravm_evm_event::log(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -1211,7 +1213,7 @@ impl Instruction {
             }
             Self::LOG4(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 6>(arguments, context)?;
-                compiler_llvm_context::eravm_evm_event::log(
+                era_compiler_llvm_context::eravm_evm_event::log(
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
@@ -1234,7 +1236,7 @@ impl Instruction {
                 let output_offset = arguments[5].into_int_value();
                 let output_size = arguments[6].into_int_value();
 
-                compiler_llvm_context::eravm_evm_call::default(
+                era_compiler_llvm_context::eravm_evm_call::default(
                     context,
                     context.llvm_runtime().far_call,
                     gas,
@@ -1258,7 +1260,7 @@ impl Instruction {
                 let output_offset = arguments[4].into_int_value();
                 let output_size = arguments[5].into_int_value();
 
-                compiler_llvm_context::eravm_evm_call::default(
+                era_compiler_llvm_context::eravm_evm_call::default(
                     context,
                     context.llvm_runtime().static_call,
                     gas,
@@ -1282,7 +1284,7 @@ impl Instruction {
                 let output_offset = arguments[4].into_int_value();
                 let output_size = arguments[5].into_int_value();
 
-                compiler_llvm_context::eravm_evm_call::default(
+                era_compiler_llvm_context::eravm_evm_call::default(
                     context,
                     context.llvm_runtime().delegate_call,
                     gas,
@@ -1323,13 +1325,15 @@ impl Instruction {
             Self::ADDRESS => Ok(context.build_call(context.intrinsics().address, &[], "address")),
             Self::CALLER => Ok(context.build_call(context.intrinsics().caller, &[], "caller")),
 
-            Self::CALLVALUE => compiler_llvm_context::eravm_evm_ether_gas::value(context).map(Some),
-            Self::GAS => compiler_llvm_context::eravm_evm_ether_gas::gas(context).map(Some),
+            Self::CALLVALUE => {
+                era_compiler_llvm_context::eravm_evm_ether_gas::value(context).map(Some)
+            }
+            Self::GAS => era_compiler_llvm_context::eravm_evm_ether_gas::gas(context).map(Some),
             Self::BALANCE(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
 
                 let address = arguments[0].into_int_value();
-                compiler_llvm_context::eravm_evm_ether_gas::balance(context, address).map(Some)
+                era_compiler_llvm_context::eravm_evm_ether_gas::balance(context, address).map(Some)
             }
             Self::SELFBALANCE => {
                 let address = context
@@ -1337,46 +1341,47 @@ impl Instruction {
                     .expect("Always exists")
                     .into_int_value();
 
-                compiler_llvm_context::eravm_evm_ether_gas::balance(context, address).map(Some)
+                era_compiler_llvm_context::eravm_evm_ether_gas::balance(context, address).map(Some)
             }
 
             Self::GASLIMIT => {
-                compiler_llvm_context::eravm_evm_contract_context::gas_limit(context).map(Some)
+                era_compiler_llvm_context::eravm_evm_contract_context::gas_limit(context).map(Some)
             }
             Self::GASPRICE => {
-                compiler_llvm_context::eravm_evm_contract_context::gas_price(context).map(Some)
+                era_compiler_llvm_context::eravm_evm_contract_context::gas_price(context).map(Some)
             }
             Self::ORIGIN => {
-                compiler_llvm_context::eravm_evm_contract_context::origin(context).map(Some)
+                era_compiler_llvm_context::eravm_evm_contract_context::origin(context).map(Some)
             }
             Self::CHAINID => {
-                compiler_llvm_context::eravm_evm_contract_context::chain_id(context).map(Some)
+                era_compiler_llvm_context::eravm_evm_contract_context::chain_id(context).map(Some)
             }
             Self::NUMBER => {
-                compiler_llvm_context::eravm_evm_contract_context::block_number(context).map(Some)
+                era_compiler_llvm_context::eravm_evm_contract_context::block_number(context)
+                    .map(Some)
             }
             Self::TIMESTAMP => {
-                compiler_llvm_context::eravm_evm_contract_context::block_timestamp(context)
+                era_compiler_llvm_context::eravm_evm_contract_context::block_timestamp(context)
                     .map(Some)
             }
             Self::BLOCKHASH(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
                 let index = arguments[0].into_int_value();
 
-                compiler_llvm_context::eravm_evm_contract_context::block_hash(context, index)
+                era_compiler_llvm_context::eravm_evm_contract_context::block_hash(context, index)
                     .map(Some)
             }
             Self::DIFFICULTY => {
-                compiler_llvm_context::eravm_evm_contract_context::difficulty(context).map(Some)
+                era_compiler_llvm_context::eravm_evm_contract_context::difficulty(context).map(Some)
             }
             Self::COINBASE => {
-                compiler_llvm_context::eravm_evm_contract_context::coinbase(context).map(Some)
+                era_compiler_llvm_context::eravm_evm_contract_context::coinbase(context).map(Some)
             }
             Self::BASEFEE => {
-                compiler_llvm_context::eravm_evm_contract_context::basefee(context).map(Some)
+                era_compiler_llvm_context::eravm_evm_contract_context::basefee(context).map(Some)
             }
             Self::MSIZE => {
-                compiler_llvm_context::eravm_evm_contract_context::msize(context).map(Some)
+                era_compiler_llvm_context::eravm_evm_contract_context::msize(context).map(Some)
             }
 
             Self::CALLCODE(arguments) => {

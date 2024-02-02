@@ -13,7 +13,7 @@ use sha3::Digest;
 #[derive(Debug, Serialize)]
 pub struct Metadata<'a> {
     /// The source code hash.
-    pub source_hash: &'a [u8; compiler_common::BYTE_LENGTH_FIELD],
+    pub source_hash: &'a [u8; era_compiler_common::BYTE_LENGTH_FIELD],
     /// The source file upstream Vyper compiler version.
     pub source_version: &'a semver::Version,
     /// The EraVM compiler version.
@@ -27,10 +27,10 @@ impl<'a> Metadata<'a> {
     /// A shortcut constructor.
     ///
     pub fn new(
-        source_hash: &'a [u8; compiler_common::BYTE_LENGTH_FIELD],
+        source_hash: &'a [u8; era_compiler_common::BYTE_LENGTH_FIELD],
         source_version: &'a semver::Version,
         zk_version: semver::Version,
-        optimizer_settings: compiler_llvm_context::OptimizerSettings,
+        optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     ) -> Self {
         Self {
             source_hash,
@@ -43,7 +43,7 @@ impl<'a> Metadata<'a> {
     ///
     /// Returns the `keccak256` hash of the metadata.
     ///
-    pub fn keccak256(&self) -> [u8; compiler_common::BYTE_LENGTH_FIELD] {
+    pub fn keccak256(&self) -> [u8; era_compiler_common::BYTE_LENGTH_FIELD] {
         let json = serde_json::to_vec(self).expect("Always valid");
         let hash = sha3::Keccak256::digest(json.as_slice());
         hash.into()

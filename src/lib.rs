@@ -46,10 +46,10 @@ use std::path::PathBuf;
 ///
 pub fn llvm_ir(
     mut input_files: Vec<PathBuf>,
-    optimizer_settings: compiler_llvm_context::OptimizerSettings,
+    optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     include_metadata_hash: bool,
     suppressed_warnings: Vec<WarningType>,
-    debug_config: Option<compiler_llvm_context::DebugConfig>,
+    debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
     let path = match input_files.len() {
         1 => input_files.remove(0),
@@ -80,7 +80,7 @@ pub fn zkasm(
     mut input_files: Vec<PathBuf>,
     include_metadata_hash: bool,
     suppressed_warnings: Vec<WarningType>,
-    debug_config: Option<compiler_llvm_context::DebugConfig>,
+    debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
     let path = match input_files.len() {
         1 => input_files.remove(0),
@@ -93,7 +93,7 @@ pub fn zkasm(
 
     let project = Project::try_from_zkasm_path(&path)?;
 
-    let optimizer_settings = compiler_llvm_context::OptimizerSettings::none();
+    let optimizer_settings = era_compiler_llvm_context::OptimizerSettings::none();
     let build = project.compile(
         optimizer_settings,
         include_metadata_hash,
@@ -112,10 +112,10 @@ pub fn standard_output(
     input_files: Vec<PathBuf>,
     vyper: &VyperCompiler,
     vyper_optimizer_enabled: bool,
-    optimizer_settings: compiler_llvm_context::OptimizerSettings,
+    optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     include_metadata_hash: bool,
     suppressed_warnings: Vec<WarningType>,
-    debug_config: Option<compiler_llvm_context::DebugConfig>,
+    debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
     if let Some(ref debug_config) = debug_config {
         for path in input_files.iter() {
@@ -145,10 +145,10 @@ pub fn combined_json(
     input_files: Vec<PathBuf>,
     vyper: &VyperCompiler,
     vyper_optimizer_enabled: bool,
-    optimizer_settings: compiler_llvm_context::OptimizerSettings,
+    optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     include_metadata_hash: bool,
     suppressed_warnings: Vec<WarningType>,
-    debug_config: Option<compiler_llvm_context::DebugConfig>,
+    debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     output_directory: Option<PathBuf>,
     overwrite: bool,
 ) -> anyhow::Result<()> {

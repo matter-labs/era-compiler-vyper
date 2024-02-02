@@ -25,7 +25,7 @@ def f():
             semver::Version::new(0, 3, 10),
             "The `EXTCODECOPY` instruction is not supported",
         )),
-        compiler_llvm_context::OptimizerSettings::none(),
+        era_compiler_llvm_context::OptimizerSettings::none(),
     )
     .expect("Test failure");
 }
@@ -42,7 +42,7 @@ def f():
     super::build_vyper(
         source_code,
         None,
-        compiler_llvm_context::OptimizerSettings::none(),
+        era_compiler_llvm_context::OptimizerSettings::none(),
     )
     .expect("Test failure");
 }
