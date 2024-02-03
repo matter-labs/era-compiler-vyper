@@ -4,6 +4,9 @@
 
 ### Added
 
+- The `Cancun` EVM version support with temporarily unsupported transient storage
+- The `MCOPY` instruction support
+- The `--evm-version` parameter to the CLI
 - An option to disable the system request memoization
 
 ## [1.3.17] - 2024-01-30

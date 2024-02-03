@@ -49,6 +49,7 @@ impl Contract {
             ContractMetadata::new(
                 &source_code_hash,
                 &self.version,
+                None,
                 semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
                 optimizer.settings().to_owned(),
             )

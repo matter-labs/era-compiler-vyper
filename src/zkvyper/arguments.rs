@@ -56,6 +56,11 @@ pub struct Arguments {
     #[structopt(long = "vyper")]
     pub vyper: Option<String>,
 
+    /// The EVM version to generate IR for.
+    /// See https://github.com/matter-labs/era-compiler-common/blob/main/src/evm_version.rs for reference.
+    #[structopt(long = "evm-version")]
+    pub evm_version: Option<String>,
+
     /// An extra output format string.
     /// See `vyper --help` for available options including combined JSON mode.
     #[structopt(short = "f")]
@@ -142,8 +147,14 @@ impl Arguments {
             );
         }
 
-        if (self.llvm_ir || self.zkasm) && self.vyper.is_some() {
-            anyhow::bail!("`vyper` is not used in LLVM IR and EraVM assembly modes.");
+        if self.llvm_ir || self.zkasm {
+            if self.vyper.is_some() {
+                anyhow::bail!("`vyper` is not used in LLVM IR and EraVM assembly modes.");
+            }
+
+            if self.evm_version.is_some() {
+                anyhow::bail!("EVM version is not used in LLVM IR and EraVM assembly modes.");
+            }
         }
 
         if self.zkasm {

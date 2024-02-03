@@ -2,14 +2,12 @@
 //! The `vyper --standard-json` input settings.
 //!
 
-pub mod evm_version;
 pub mod selection;
 
 use std::collections::BTreeMap;
 
 use serde::Serialize;
 
-use self::evm_version::EVMVersion;
 use self::selection::Selection;
 
 ///
@@ -19,7 +17,7 @@ use self::selection::Selection;
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
     /// The EVM version. The latest is the most lightweight, but must be ignored by `vyper`.
-    pub evm_version: EVMVersion,
+    pub evm_version: Option<era_compiler_common::EVMVersion>,
     /// The output selection filters.
     pub output_selection: BTreeMap<String, Vec<Selection>>,
     /// Whether the optimizer is enabled.
@@ -37,7 +35,7 @@ impl Settings {
     /// A shortcut constructor.
     ///
     pub fn new(
-        evm_version: EVMVersion,
+        evm_version: Option<era_compiler_common::EVMVersion>,
         output_selection: BTreeMap<String, Vec<Selection>>,
         optimize: bool,
         fallback_to_optimizing_for_size: bool,

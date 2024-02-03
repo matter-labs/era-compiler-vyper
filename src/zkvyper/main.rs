@@ -78,6 +78,13 @@ fn main_inner() -> anyhow::Result<()> {
             era_compiler_vyper::VyperCompiler::DEFAULT_EXECUTABLE_NAME.to_owned()
         }))?;
 
+    let evm_version = match arguments.evm_version {
+        Some(evm_version) => Some(era_compiler_common::EVMVersion::try_from(
+            evm_version.as_str(),
+        )?),
+        None => None,
+    };
+
     let mut optimizer_settings = match arguments.optimization {
         Some(mode) => era_compiler_llvm_context::OptimizerSettings::try_from_cli(mode)?,
         None => era_compiler_llvm_context::OptimizerSettings::cycles(),
@@ -121,6 +128,7 @@ fn main_inner() -> anyhow::Result<()> {
                 era_compiler_vyper::combined_json(
                     arguments.input_files,
                     &vyper,
+                    evm_version,
                     !arguments.disable_vyper_optimizer,
                     optimizer_settings,
                     include_metadata_hash,
@@ -137,6 +145,7 @@ fn main_inner() -> anyhow::Result<()> {
             Some(_) | None => era_compiler_vyper::standard_output(
                 arguments.input_files,
                 &vyper,
+                evm_version,
                 !arguments.disable_vyper_optimizer,
                 optimizer_settings,
                 include_metadata_hash,
@@ -169,7 +178,8 @@ fn main_inner() -> anyhow::Result<()> {
                 println!("0x{bytecode_string}");
 
                 if let Some(format) = arguments.format.as_deref() {
-                    let extra_output = vyper.extra_output(PathBuf::from(path).as_path(), format)?;
+                    let extra_output =
+                        vyper.extra_output(PathBuf::from(path).as_path(), evm_version, format)?;
                     println!();
                     println!("{extra_output}");
                 }

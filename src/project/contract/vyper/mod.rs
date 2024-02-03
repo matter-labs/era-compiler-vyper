@@ -114,6 +114,7 @@ impl Contract {
         mut self,
         contract_path: &str,
         source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
+        evm_version: Option<era_compiler_common::EVMVersion>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
@@ -129,6 +130,7 @@ impl Contract {
             ContractMetadata::new(
                 &source_code_hash,
                 &self.version,
+                evm_version,
                 semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
                 optimizer.settings().to_owned(),
             )
