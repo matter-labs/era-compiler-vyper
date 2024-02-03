@@ -35,7 +35,7 @@ zkevm_opcode_defs = { git = "https://github.com/matter-labs/era-zkevm_opcode_def
 zkevm-assembly = { git = "https://github.com/matter-labs/era-zkEVM-assembly", branch = "v1.4.1" }
 
 era-compiler-common = { git = "https://github.com/matter-labs/era-compiler-common", branch = "main" }
-era-compiler-llvm-context = { git = "https://github.com/matter-labs/era-compiler-llvm-context", branch = "v1.4.1" }
+era-compiler-llvm-context = { git = "https://github.com/matter-labs/era-compiler-llvm-context", branch = "main" }
 
 [dependencies.inkwell]
 git = "https://github.com/matter-labs-forks/inkwell"
