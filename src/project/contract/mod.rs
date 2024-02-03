@@ -57,10 +57,10 @@ impl Contract {
     pub fn compile(
         self,
         contract_path: &str,
-        source_code_hash: Option<[u8; compiler_common::BYTE_LENGTH_FIELD]>,
-        optimizer_settings: compiler_llvm_context::OptimizerSettings,
+        source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
+        optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         suppressed_warnings: Vec<WarningType>,
-        debug_config: Option<compiler_llvm_context::DebugConfig>,
+        debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
         match self {
             Self::Vyper(inner) => inner.compile(

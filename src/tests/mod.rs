@@ -41,7 +41,7 @@ fn check_dependencies() {
 pub fn build_vyper(
     source_code: &str,
     version_filter: Option<(semver::Version, &str)>,
-    optimizer_settings: compiler_llvm_context::OptimizerSettings,
+    optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
 ) -> anyhow::Result<Build> {
     check_dependencies();
 
@@ -53,13 +53,13 @@ pub fn build_vyper(
     }
 
     let evm_version = if vyper.version.default == semver::Version::new(0, 3, 3) {
-        compiler_llvm_context::EVMVersion::Berlin
+        era_compiler_common::EVMVersion::Berlin
     } else {
-        compiler_llvm_context::EVMVersion::Shanghai
+        era_compiler_common::EVMVersion::Shanghai
     };
 
     inkwell::support::enable_llvm_pretty_stack_trace();
-    compiler_llvm_context::initialize_target(compiler_llvm_context::Target::EraVM);
+    era_compiler_llvm_context::initialize_target(era_compiler_llvm_context::Target::EraVM);
     let _ = crate::process::EXECUTABLE.set(PathBuf::from(crate::r#const::DEFAULT_EXECUTABLE_NAME));
 
     let mut sources = BTreeMap::new();
@@ -69,6 +69,7 @@ pub fn build_vyper(
         evm_version,
         VyperStandardJsonInputSettingsSelection::generate_default(),
         true,
+        false,
         false,
     )?;
 
@@ -93,7 +94,7 @@ pub fn check_warning(source_code: &str, warning: &str) -> anyhow::Result<bool> {
     let build = build_vyper(
         source_code,
         None,
-        compiler_llvm_context::OptimizerSettings::none(),
+        era_compiler_llvm_context::OptimizerSettings::none(),
     )?;
     for (_path, contract) in build.contracts.iter() {
         for contract_warning in contract.warnings.iter() {

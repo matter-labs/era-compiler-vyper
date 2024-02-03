@@ -14,10 +14,11 @@ pub const OFFSET_FREE_VAR_SPACE: usize = 0;
 
 /// The `FREE_VAR_SPACE2` offset.
 pub const OFFSET_FREE_VAR_SPACE2: usize =
-    OFFSET_FREE_VAR_SPACE + compiler_common::BYTE_LENGTH_FIELD;
+    OFFSET_FREE_VAR_SPACE + era_compiler_common::BYTE_LENGTH_FIELD;
 
 /// The non-reserved memory offset.
-pub const OFFSET_NON_RESERVED: usize = OFFSET_FREE_VAR_SPACE2 + compiler_common::BYTE_LENGTH_FIELD;
+pub const OFFSET_NON_RESERVED: usize =
+    OFFSET_FREE_VAR_SPACE2 + era_compiler_common::BYTE_LENGTH_FIELD;
 
 /// The default label destination prefix.
 pub const LABEL_DESTINATION_PREFIX: &str = "_sym_";
@@ -62,7 +63,7 @@ lazy_static! {
     ///
     /// The Vyper forwarder bytecode in bytes.
     ///
-    pub static ref FORWARDER_CONTRACT_BYTECODE_WORDS: Vec<[u8; compiler_common::BYTE_LENGTH_FIELD]> = {
+    pub static ref FORWARDER_CONTRACT_BYTECODE_WORDS: Vec<[u8; era_compiler_common::BYTE_LENGTH_FIELD]> = {
         let mut assembly =
             zkevm_assembly::Assembly::from_string(FORWARDER_CONTRACT_ASSEMBLY.to_owned(), None).expect("Always valid");
         assembly

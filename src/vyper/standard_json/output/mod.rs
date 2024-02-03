@@ -89,7 +89,7 @@ impl Output {
         for (_path, contract) in project_contracts.iter() {
             source_code_hasher.update(contract.source_code().as_bytes());
         }
-        let source_code_hash: [u8; compiler_common::BYTE_LENGTH_FIELD] =
+        let source_code_hash: [u8; era_compiler_common::BYTE_LENGTH_FIELD] =
             source_code_hasher.finalize_fixed().into();
 
         Ok(Project::new(

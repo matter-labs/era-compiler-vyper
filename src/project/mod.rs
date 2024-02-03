@@ -29,7 +29,7 @@ pub struct Project {
     /// The Vyper compiler version.
     pub version: semver::Version,
     /// The project source code hash.
-    pub source_code_hash: [u8; compiler_common::BYTE_LENGTH_FIELD],
+    pub source_code_hash: [u8; era_compiler_common::BYTE_LENGTH_FIELD],
     /// The contract data,
     pub contracts: BTreeMap<String, Contract>,
 }
@@ -40,7 +40,7 @@ impl Project {
     ///
     pub fn new(
         version: semver::Version,
-        source_code_hash: [u8; compiler_common::BYTE_LENGTH_FIELD],
+        source_code_hash: [u8; era_compiler_common::BYTE_LENGTH_FIELD],
         contracts: BTreeMap<String, Contract>,
     ) -> Self {
         Self {
@@ -64,14 +64,14 @@ impl Project {
         project_contracts.insert(
             path,
             LLVMIRContract::new(
-                compiler_llvm_context::eravm_const::LLVM_VERSION,
+                era_compiler_llvm_context::eravm_const::LLVM_VERSION,
                 source_code,
             )
             .into(),
         );
 
         Ok(Self::new(
-            compiler_llvm_context::eravm_const::LLVM_VERSION,
+            era_compiler_llvm_context::eravm_const::LLVM_VERSION,
             source_code_hash,
             project_contracts,
         ))
@@ -92,14 +92,14 @@ impl Project {
         project_contracts.insert(
             path,
             ZKASMContract::new(
-                compiler_llvm_context::eravm_const::ZKEVM_VERSION,
+                era_compiler_llvm_context::eravm_const::ZKEVM_VERSION,
                 source_code,
             )
             .into(),
         );
 
         Ok(Self::new(
-            compiler_llvm_context::eravm_const::ZKEVM_VERSION,
+            era_compiler_llvm_context::eravm_const::ZKEVM_VERSION,
             source_code_hash,
             project_contracts,
         ))
@@ -110,11 +110,11 @@ impl Project {
     ///
     pub fn compile(
         self,
-        optimizer_settings: compiler_llvm_context::OptimizerSettings,
+        optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         include_metadata_hash: bool,
         bytecode_encoding: zkevm_assembly::RunningVmEncodingMode,
         suppressed_warnings: Vec<WarningType>,
-        debug_config: Option<compiler_llvm_context::DebugConfig>,
+        debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<Build> {
         let mut build = Build::default();
         let source_code_hash = if include_metadata_hash {
@@ -152,7 +152,7 @@ impl Project {
                 .unwrap_or_default()
         });
         if is_forwarder_used {
-            let forwarder_build = compiler_llvm_context::EraVMBuild::new(
+            let forwarder_build = era_compiler_llvm_context::EraVMBuild::new(
                 crate::r#const::FORWARDER_CONTRACT_ASSEMBLY.to_owned(),
                 None,
                 crate::r#const::FORWARDER_CONTRACT_BYTECODE.clone(),

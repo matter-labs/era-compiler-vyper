@@ -47,19 +47,19 @@ fn default() {
     let build_unoptimized = super::build_vyper(
         SOURCE_CODE,
         None,
-        compiler_llvm_context::OptimizerSettings::none(),
+        era_compiler_llvm_context::OptimizerSettings::none(),
     )
     .expect("Build failure");
     let build_optimized_for_cycles = super::build_vyper(
         SOURCE_CODE,
         None,
-        compiler_llvm_context::OptimizerSettings::cycles(),
+        era_compiler_llvm_context::OptimizerSettings::cycles(),
     )
     .expect("Build failure");
     let build_optimized_for_size = super::build_vyper(
         SOURCE_CODE,
         None,
-        compiler_llvm_context::OptimizerSettings::size(),
+        era_compiler_llvm_context::OptimizerSettings::size(),
     )
     .expect("Build failure");
 

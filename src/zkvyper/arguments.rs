@@ -43,6 +43,10 @@ pub struct Arguments {
     #[structopt(long = "fallback-Oz")]
     pub fallback_to_optimizing_for_size: bool,
 
+    /// Disable the system request memoization.
+    #[structopt(long = "disable-system-request-memoization")]
+    pub disable_system_request_memoization: bool,
+
     /// Disable the `vyper` LLL IR optimizer.
     #[structopt(long = "disable-vyper-optimizer")]
     pub disable_vyper_optimizer: bool,
@@ -160,6 +164,11 @@ impl Arguments {
 
             if self.fallback_to_optimizing_for_size {
                 anyhow::bail!("Falling back to -Oz is not supported in EraVM assembly mode.");
+            }
+            if self.disable_system_request_memoization {
+                anyhow::bail!(
+                    "Disabling the system request memoization is not supported in EraVM assembly mode."
+                );
             }
         }
 

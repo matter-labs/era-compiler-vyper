@@ -39,10 +39,11 @@ impl Input {
     pub fn try_from_paths(
         language: Language,
         paths: &[PathBuf],
-        evm_version: compiler_llvm_context::EVMVersion,
+        evm_version: era_compiler_common::EVMVersion,
         output_selection: BTreeMap<String, Vec<Selection>>,
         optimize: bool,
         fallback_to_optimizing_for_size: bool,
+        disable_system_request_memoization: bool,
     ) -> anyhow::Result<Self> {
         let sources = paths
             .into_par_iter()
@@ -62,6 +63,7 @@ impl Input {
                 output_selection,
                 optimize,
                 fallback_to_optimizing_for_size,
+                disable_system_request_memoization,
             ),
         })
     }
@@ -73,10 +75,11 @@ impl Input {
     ///
     pub fn try_from_sources(
         sources: BTreeMap<String, String>,
-        evm_version: compiler_llvm_context::EVMVersion,
+        evm_version: era_compiler_common::EVMVersion,
         output_selection: BTreeMap<String, Vec<Selection>>,
         optimize: bool,
         fallback_to_optimizing_for_size: bool,
+        disable_system_request_memoization: bool,
     ) -> anyhow::Result<Self> {
         let sources = sources
             .into_iter()
@@ -91,6 +94,7 @@ impl Input {
                 output_selection,
                 optimize,
                 fallback_to_optimizing_for_size,
+                disable_system_request_memoization,
             ),
         })
     }

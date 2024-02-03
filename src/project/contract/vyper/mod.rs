@@ -11,8 +11,8 @@ use std::collections::BTreeMap;
 use serde::Deserialize;
 use serde::Serialize;
 
-use compiler_llvm_context::EraVMDependency;
-use compiler_llvm_context::EraVMWriteLLVM;
+use era_compiler_llvm_context::EraVMDependency;
+use era_compiler_llvm_context::EraVMWriteLLVM;
 
 use crate::build::contract::Contract as ContractBuild;
 use crate::metadata::Metadata as SourceMetadata;
@@ -92,7 +92,7 @@ impl Contract {
             );
         }
 
-        let expression: Expression = compiler_common::deserialize_from_str(lines.remove(0))?;
+        let expression: Expression = era_compiler_common::deserialize_from_str(lines.remove(0))?;
         let metadata: SourceMetadata = serde_json::from_str(lines.remove(0))?;
         let abi: BTreeMap<String, String> = serde_json::from_str(lines.remove(0))?;
         let ast: AST = serde_json::from_str(lines.remove(0))?;
@@ -113,22 +113,22 @@ impl Contract {
     pub fn compile(
         mut self,
         contract_path: &str,
-        source_code_hash: Option<[u8; compiler_common::BYTE_LENGTH_FIELD]>,
-        optimizer_settings: compiler_llvm_context::OptimizerSettings,
+        source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
+        optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         suppressed_warnings: Vec<WarningType>,
-        debug_config: Option<compiler_llvm_context::DebugConfig>,
+        debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
         let warnings = self
             .ast
             .get_messages(&self.ast.ast, suppressed_warnings.as_slice());
 
         let llvm = inkwell::context::Context::create();
-        let optimizer = compiler_llvm_context::Optimizer::new(optimizer_settings);
+        let optimizer = era_compiler_llvm_context::Optimizer::new(optimizer_settings);
 
         let evm_version = if self.version == semver::Version::new(0, 3, 3) {
-            compiler_llvm_context::EVMVersion::Berlin
+            era_compiler_common::EVMVersion::Berlin
         } else {
-            compiler_llvm_context::EVMVersion::Shanghai
+            era_compiler_common::EVMVersion::Shanghai
         };
 
         let metadata_hash = source_code_hash.map(|source_code_hash| {
@@ -143,7 +143,7 @@ impl Contract {
         });
 
         let dependency_data = DependencyData::default();
-        let mut context = compiler_llvm_context::EraVMContext::<DependencyData>::new(
+        let mut context = era_compiler_llvm_context::EraVMContext::<DependencyData>::new(
             &llvm,
             llvm.create_module(contract_path),
             optimizer,
@@ -187,29 +187,29 @@ where
 {
     fn declare(
         &mut self,
-        context: &mut compiler_llvm_context::EraVMContext<D>,
+        context: &mut era_compiler_llvm_context::EraVMContext<D>,
     ) -> anyhow::Result<()> {
-        let mut entry = compiler_llvm_context::EraVMEntryFunction::default();
+        let mut entry = era_compiler_llvm_context::EraVMEntryFunction::default();
         entry.declare(context)?;
 
-        let mut runtime = compiler_llvm_context::EraVMRuntime::new(
-            compiler_llvm_context::EraVMAddressSpace::HeapAuxiliary,
+        let mut runtime = era_compiler_llvm_context::EraVMRuntime::new(
+            era_compiler_llvm_context::EraVMAddressSpace::HeapAuxiliary,
         );
         runtime.declare(context)?;
 
-        compiler_llvm_context::EraVMDeployCodeFunction::new(
-            compiler_llvm_context::EraVMDummyLLVMWritable::default(),
+        era_compiler_llvm_context::EraVMDeployCodeFunction::new(
+            era_compiler_llvm_context::EraVMDummyLLVMWritable::default(),
         )
         .declare(context)?;
-        compiler_llvm_context::EraVMRuntimeCodeFunction::new(
-            compiler_llvm_context::EraVMDummyLLVMWritable::default(),
+        era_compiler_llvm_context::EraVMRuntimeCodeFunction::new(
+            era_compiler_llvm_context::EraVMDummyLLVMWritable::default(),
         )
         .declare(context)?;
 
         for name in [
-            compiler_llvm_context::EraVMRuntime::FUNCTION_DEPLOY_CODE,
-            compiler_llvm_context::EraVMRuntime::FUNCTION_RUNTIME_CODE,
-            compiler_llvm_context::EraVMRuntime::FUNCTION_ENTRY,
+            era_compiler_llvm_context::EraVMRuntime::FUNCTION_DEPLOY_CODE,
+            era_compiler_llvm_context::EraVMRuntime::FUNCTION_RUNTIME_CODE,
+            era_compiler_llvm_context::EraVMRuntime::FUNCTION_ENTRY,
         ]
         .into_iter()
         {
@@ -217,7 +217,7 @@ where
                 .get_function(name)
                 .expect("Always exists")
                 .borrow_mut()
-                .set_vyper_data(compiler_llvm_context::EraVMFunctionVyperData::default());
+                .set_vyper_data(era_compiler_llvm_context::EraVMFunctionVyperData::default());
         }
 
         entry.into_llvm(context)?;
@@ -229,7 +229,7 @@ where
 
     fn into_llvm(
         mut self,
-        context: &mut compiler_llvm_context::EraVMContext<D>,
+        context: &mut era_compiler_llvm_context::EraVMContext<D>,
     ) -> anyhow::Result<()> {
         let (mut runtime_code, immutables_size) =
             self.expression.extract_runtime_code()?.unwrap_or_default();
@@ -240,7 +240,7 @@ where
                 let immutables_size = number
                     .as_u64()
                     .ok_or_else(|| anyhow::anyhow!("Immutable size `{}` parsing error", number))?;
-                let vyper_data = compiler_llvm_context::EraVMContextVyperData::new(
+                let vyper_data = era_compiler_llvm_context::EraVMContextVyperData::new(
                     immutables_size as usize,
                     false,
                 );
@@ -256,10 +256,10 @@ where
                 (
                     label,
                     expression,
-                    compiler_llvm_context::EraVMCodeType::Deploy,
+                    era_compiler_llvm_context::EraVMCodeType::Deploy,
                 )
             })
-            .collect::<Vec<(String, Expression, compiler_llvm_context::EraVMCodeType)>>();
+            .collect::<Vec<(String, Expression, era_compiler_llvm_context::EraVMCodeType)>>();
         function_expressions.extend(
             runtime_code
                 .extract_functions()?
@@ -268,20 +268,22 @@ where
                     (
                         label,
                         expression,
-                        compiler_llvm_context::EraVMCodeType::Runtime,
+                        era_compiler_llvm_context::EraVMCodeType::Runtime,
                     )
                 })
-                .collect::<Vec<(String, Expression, compiler_llvm_context::EraVMCodeType)>>(),
+                .collect::<Vec<(String, Expression, era_compiler_llvm_context::EraVMCodeType)>>(),
         );
 
         let mut functions = Vec::with_capacity(function_expressions.capacity());
         for (label, expression, code_type) in function_expressions.into_iter() {
             let mut metadata_label = label
-                .strip_suffix(format!("_{}", compiler_llvm_context::EraVMCodeType::Deploy).as_str())
+                .strip_suffix(
+                    format!("_{}", era_compiler_llvm_context::EraVMCodeType::Deploy).as_str(),
+                )
                 .unwrap_or(label.as_str());
             metadata_label = label
                 .strip_suffix(
-                    format!("_{}", compiler_llvm_context::EraVMCodeType::Runtime).as_str(),
+                    format!("_{}", era_compiler_llvm_context::EraVMCodeType::Runtime).as_str(),
                 )
                 .unwrap_or(metadata_label);
             metadata_label = label
@@ -317,8 +319,9 @@ where
             function.into_llvm(context)?;
         }
 
-        compiler_llvm_context::EraVMDeployCodeFunction::new(deploy_code).into_llvm(context)?;
-        compiler_llvm_context::EraVMRuntimeCodeFunction::new(runtime_code).into_llvm(context)?;
+        era_compiler_llvm_context::EraVMDeployCodeFunction::new(deploy_code).into_llvm(context)?;
+        era_compiler_llvm_context::EraVMRuntimeCodeFunction::new(runtime_code)
+            .into_llvm(context)?;
 
         Ok(())
     }
@@ -328,10 +331,10 @@ impl EraVMDependency for DependencyData {
     fn compile(
         _contract: Self,
         _name: &str,
-        _optimizer_settings: compiler_llvm_context::OptimizerSettings,
+        _optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         _is_system_mode: bool,
         _include_metadata_hash: bool,
-        _debug_config: Option<compiler_llvm_context::DebugConfig>,
+        _debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<String> {
         Ok(crate::r#const::FORWARDER_CONTRACT_HASH.clone())
     }
