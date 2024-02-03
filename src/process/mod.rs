@@ -36,6 +36,7 @@ pub fn run() -> anyhow::Result<()> {
     let result = input.contract.compile(
         input.full_path.as_str(),
         input.source_code_hash,
+        input.evm_version,
         input.optimizer_settings,
         input.suppressed_warnings,
         input.debug_config,

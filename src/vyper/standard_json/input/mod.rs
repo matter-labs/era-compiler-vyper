@@ -39,7 +39,7 @@ impl Input {
     pub fn try_from_paths(
         language: Language,
         paths: &[PathBuf],
-        evm_version: era_compiler_common::EVMVersion,
+        evm_version: Option<era_compiler_common::EVMVersion>,
         output_selection: BTreeMap<String, Vec<Selection>>,
         optimize: bool,
         fallback_to_optimizing_for_size: bool,
@@ -75,7 +75,7 @@ impl Input {
     ///
     pub fn try_from_sources(
         sources: BTreeMap<String, String>,
-        evm_version: era_compiler_common::EVMVersion,
+        evm_version: Option<era_compiler_common::EVMVersion>,
         output_selection: BTreeMap<String, Vec<Selection>>,
         optimize: bool,
         fallback_to_optimizing_for_size: bool,

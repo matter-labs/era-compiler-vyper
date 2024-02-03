@@ -110,6 +110,7 @@ impl Project {
     ///
     pub fn compile(
         self,
+        evm_version: Option<era_compiler_common::EVMVersion>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         include_metadata_hash: bool,
         bytecode_encoding: zkevm_assembly::RunningVmEncodingMode,
@@ -131,6 +132,7 @@ impl Project {
                     contract,
                     source_code_hash,
                     bytecode_encoding == zkevm_assembly::RunningVmEncodingMode::Testing,
+                    evm_version,
                     optimizer_settings.clone(),
                     suppressed_warnings.clone(),
                     debug_config.clone(),

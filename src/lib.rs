@@ -62,6 +62,7 @@ pub fn llvm_ir(
     let project = Project::try_from_llvm_ir_path(&path)?;
 
     let build = project.compile(
+        None,
         optimizer_settings,
         include_metadata_hash,
         zkevm_assembly::RunningVmEncodingMode::Production,
@@ -94,6 +95,7 @@ pub fn zkasm(
 
     let optimizer_settings = era_compiler_llvm_context::OptimizerSettings::none();
     let build = project.compile(
+        None,
         optimizer_settings,
         include_metadata_hash,
         zkevm_assembly::RunningVmEncodingMode::Production,
@@ -133,6 +135,7 @@ pub fn standard_output(
     )?;
 
     let build = project.compile(
+        evm_version,
         optimizer_settings,
         include_metadata_hash,
         zkevm_assembly::RunningVmEncodingMode::Production,
@@ -177,6 +180,7 @@ pub fn combined_json(
     )?;
 
     let build = project.compile(
+        evm_version,
         optimizer_settings,
         include_metadata_hash,
         zkevm_assembly::RunningVmEncodingMode::Production,

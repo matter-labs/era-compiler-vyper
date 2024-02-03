@@ -114,6 +114,7 @@ impl Contract {
         mut self,
         contract_path: &str,
         source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
+        evm_version: Option<era_compiler_common::EVMVersion>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
@@ -125,17 +126,11 @@ impl Contract {
         let llvm = inkwell::context::Context::create();
         let optimizer = era_compiler_llvm_context::Optimizer::new(optimizer_settings);
 
-        let evm_version = if self.version == semver::Version::new(0, 3, 3) {
-            era_compiler_common::EVMVersion::Berlin
-        } else {
-            era_compiler_common::EVMVersion::Shanghai
-        };
-
         let metadata_hash = source_code_hash.map(|source_code_hash| {
             ContractMetadata::new(
                 &source_code_hash,
                 &self.version,
-                Some(evm_version),
+                evm_version,
                 semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
                 optimizer.settings().to_owned(),
             )

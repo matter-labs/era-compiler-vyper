@@ -58,6 +58,7 @@ impl Contract {
         self,
         contract_path: &str,
         source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
+        evm_version: Option<era_compiler_common::EVMVersion>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
@@ -66,6 +67,7 @@ impl Contract {
             Self::Vyper(inner) => inner.compile(
                 contract_path,
                 source_code_hash,
+                evm_version,
                 optimizer_settings,
                 suppressed_warnings,
                 debug_config,
