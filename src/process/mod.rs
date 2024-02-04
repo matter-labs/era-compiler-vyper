@@ -15,7 +15,7 @@ use once_cell::sync::OnceCell;
 use self::input::Input;
 use self::output::Output;
 
-/// The overriden executable name used when the compiler is run as a library.
+/// The overridden executable name used when the compiler is run as a library.
 pub static EXECUTABLE: OnceCell<PathBuf> = OnceCell::new();
 
 ///
@@ -29,13 +29,14 @@ pub fn run() -> anyhow::Result<()> {
     let mut buffer = Vec::with_capacity(16384);
     stdin.read_to_end(&mut buffer).expect("Stdin reading error");
 
-    let input: Input = compiler_common::deserialize_from_slice(buffer.as_slice())?;
+    let input: Input = era_compiler_common::deserialize_from_slice(buffer.as_slice())?;
     if input.enable_test_encoding {
         zkevm_assembly::set_encoding_mode(zkevm_assembly::RunningVmEncodingMode::Testing);
     }
     let result = input.contract.compile(
         input.full_path.as_str(),
         input.source_code_hash,
+        input.evm_version,
         input.optimizer_settings,
         input.suppressed_warnings,
         input.debug_config,
@@ -96,7 +97,7 @@ pub fn call(input: Input) -> anyhow::Result<Output> {
         );
     }
 
-    let output: Output = compiler_common::deserialize_from_slice(output.stdout.as_slice())
+    let output: Output = era_compiler_common::deserialize_from_slice(output.stdout.as_slice())
         .map_err(|error| {
             anyhow::anyhow!(
                 "{:?} subprocess output parsing error: {}",
