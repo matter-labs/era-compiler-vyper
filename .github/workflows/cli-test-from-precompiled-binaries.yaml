@@ -39,6 +39,7 @@ jobs:
         run: |
           mkdir -p releases/build_macos_amd64
           wget https://github.com/matter-labs/era-compiler-vyper/releases/download/${{ env.ZKVYPER_VERSION }}/zkvyper-macosx-amd64-v${{ env.ZKVYPER_VERSION }} -O releases/build_macos_amd64/zkvyper
+          releases/build_macos_amd64/zkvyper --version
       - name: Save artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -56,6 +57,7 @@ jobs:
         run: |
             mkdir -p releases/build_linux_amd64
             wget https://github.com/matter-labs/era-compiler-vyper/releases/download/${{ env.ZKVYPER_VERSION }}/zkvyper-linux-amd64-musl-v${{ env.ZKVYPER_VERSION }} -O releases/build_linux_amd64/zkvyper
+            releases/build_linux_amd64/zkvyper --version
       - name: Save artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -73,7 +75,7 @@ jobs:
         run: |
           mkdir -p releases/build_windows_amd64
           wget https://github.com/matter-labs/era-compiler-vyper/releases/download/${{ env.ZKVYPER_VERSION }}/zkvyper-windows-amd64-gnu-v${{ env.ZKVYPER_VERSION }}.exe -O releases/build_windows_amd64/zkvyper.exe
-
+          releases/build_windows_amd64/zkvyper.exe --version
       - name: Save artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -92,7 +94,7 @@ jobs:
         name: build_linux_amd64
         path: releases
         runner: matterlabs-ci-runner
-        vyper_url: https://github.com/vyperlang/vyper/releases/download/${{ needs.build_linux_amd64.outputs.VYPER_VERSION }}/vyper.${{ needs.build_linux_amd64.outputs.VYPER_VERSION }}+commit.${{ needs.build_linux_amd64.outputs.VYPER_COMMIT }}.linux
+        vyper_url: https://github.com/vyperlang/vyper/releases/download/v${{ needs.build_linux_amd64.outputs.VYPER_VERSION }}/vyper.${{ needs.build_linux_amd64.outputs.VYPER_VERSION }}+commit.${{ needs.build_linux_amd64.outputs.VYPER_COMMIT }}.linux
         
 
   cli_test_windows:
