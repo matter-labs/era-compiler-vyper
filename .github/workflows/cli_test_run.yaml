@@ -78,8 +78,15 @@ jobs:
           ls
           echo "./${{ inputs.path }}/${{ inputs.name }}" >> $GITHUB_PATH
  
-      - name: Run tests
+      - if: runner.os == 'Windows' 
+        name: Run tests
         shell: sh
         run: |
           cd src/tests/cli-tests
+          npx jest --verbose --testPathPattern=${{ matrix.test-pattern }}
+      
+      - if: runner.os == 'Linux' || runner.os == 'macOS'
+        name: Run tests
+        run: |
+          cd src/tests/cli-tests 
           npx jest --verbose --testPathPattern=${{ matrix.test-pattern }}
