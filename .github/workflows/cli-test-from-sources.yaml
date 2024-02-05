@@ -206,7 +206,7 @@ jobs:
         name: build_linux_amd64
         path: releases
         runner: matterlabs-ci-runner
-        vyper_url: https://github.com/vyperlang/vyper/releases/download/${{ needs.build_linux_amd64.outputs.VYPER_VERSION }}/vyper.${{ needs.build_linux_amd64.outputs.VYPER_VERSION }}+commit.${{ needs.build_linux_amd64.outputs.VYPER_COMMIT }}.linux
+        vyper_url: https://github.com/vyperlang/vyper/releases/download/v${{ needs.build_linux_amd64.outputs.VYPER_VERSION }}/vyper.${{ needs.build_linux_amd64.outputs.VYPER_VERSION }}+commit.${{ needs.build_linux_amd64.outputs.VYPER_COMMIT }}.linux
         
 
   cli_test_windows:
