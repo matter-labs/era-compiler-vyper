@@ -93,6 +93,15 @@ compiling each contract in a separate process. To successfully run unit tests:
 2. Move the binary from `./target/release/zkvyper` to a directory from `$PATH`, or add the target directory itself to `$PATH`.
 3. Run `cargo test`.
 
+## CLI testing
+
+For running command line interface tests, `zkvyper` itself and `vyper` must also be available in `$PATH`, because it calls itself recursively to allow compiling each contract in a separate processes. To successfully run CLI tests:
+
+1. Go to `src/tests/cli-tests`.
+2. Make `npm i`.
+3. Add `vyper` and `zkvyper` to `$PATH`.
+4. Run `npm test`. 
+
 ## Troubleshooting
 
 - If you get a “failed to authenticate when downloading repository… if the git CLI succeeds then net.git-fetch-with-cli may help here” error, then prepending the `cargo` command with `CARGO_NET_GIT_FETCH_WITH_CLI=true` may help.

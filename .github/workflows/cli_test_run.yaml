@@ -1,0 +1,85 @@
+name: Test CLI
+
+on:
+  workflow_call:
+    inputs:
+      name:
+        type: string
+        default: 'build_linux_amd64'
+        required: true
+      path:
+        type: string
+        default: 'releases'
+        required: true
+      runner:
+          type: string
+          default: 'matterlabs-ci-runner'
+          required: true
+      vyper_url:
+          type: string
+          default: 'https://github.com/vyperlang/vyper/releases/download/v0.3.10/vyper.0.3.10+commit.91361694.linux'
+          required: true
+
+
+jobs:
+  preparation_and_running_tests:
+    runs-on: ${{inputs.runner}}
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        test-pattern: [
+                "common.test.ts"
+              ]
+
+    name: '${{ matrix.test-pattern }}'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install npm packages
+        run: |
+          cd src/tests/cli-tests 
+          npm ci
+
+      - name: Download '${{ inputs.name }}' artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.name }}
+          path: ${{ inputs.path }}
+
+      - if: runner.os == 'Windows'
+        name: Download vyper for '${{ inputs.name }}'
+        run: |
+          New-Item -ItemType Directory -Force -Path ${{ inputs.path }}\${{ inputs.name }}
+          Invoke-WebRequest -Uri ${{ inputs.vyper_url }} -OutFile ${{ inputs.path }}\${{ inputs.name }}\vyper.exe
+        shell: powershell
+      
+      - if: runner.os == 'Linux' || runner.os == 'macOS'
+        name: Download vyper for '${{ inputs.name }}'
+        run: |
+            wget ${{ inputs.vyper_url }} -O ${{ inputs.path }}/${{ inputs.name }}/vyper
+      
+      - if: runner.os == 'Windows'      
+        name: Add File to PATH
+        run: |
+          echo "$pwd\${{ inputs.path }}\${{ inputs.name }}" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        shell: powershell
+
+      - if: runner.os == 'Linux' || runner.os == 'macOS'
+        name: Change permission and add files to a PATH
+        run: |
+          chmod +x ./${{ inputs.path }}/${{ inputs.name }}/vyper
+          chmod +x ./${{ inputs.path }}/${{ inputs.name }}/zkvyper
+          ls
+          echo "./${{ inputs.path }}/${{ inputs.name }}" >> $GITHUB_PATH
+ 
+      - name: Run tests
+        shell: sh
+        run: |
+          cd src/tests/cli-tests
+          npx jest --verbose --testPathPattern=${{ matrix.test-pattern }}
