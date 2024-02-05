@@ -64,7 +64,6 @@ jobs:
         run: |
             wget ${{ inputs.vyper_url }} -O ${{ inputs.path }}/${{ inputs.name }}/vyper
             ls -al ${{ inputs.path }}/${{ inputs.name }}/
-            ${{ inputs.path }}/${{ inputs.name }}/vyper --version
       
       - if: runner.os == 'Windows'      
         name: Add File to PATH
@@ -77,8 +76,7 @@ jobs:
         run: |
           chmod +x ./${{ inputs.path }}/${{ inputs.name }}/vyper
           chmod +x ./${{ inputs.path }}/${{ inputs.name }}/zkvyper
-          ls ./${{ inputs.path }}/${{ inputs.name }}
-          echo "./${{ inputs.path }}/${{ inputs.name }}" >> $GITHUB_PATH
+          echo "$(pwd)/${{ inputs.path }}/${{ inputs.name }}/" >> $GITHUB_PATH
  
       - if: runner.os == 'Windows' 
         name: Run tests
