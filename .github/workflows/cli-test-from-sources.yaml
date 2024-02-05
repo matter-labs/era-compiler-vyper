@@ -23,31 +23,29 @@ env:
   VYPER_VERSION: ${{ github.event.inputs.vyper || '0.3.10' }}
   VYPER_COMMIT: ${{ github.event.inputs.commit || '91361694' }}
 
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-  
+
 jobs:
   build_macos_amd64:
     runs-on: macos-12-large
     outputs:
-       VYPER_VERSION: ${{ env.VYPER_VERSION }}
-       VYPER_COMMIT: ${{ env.VYPER_COMMIT }}
+      VYPER_VERSION: ${{ env.VYPER_VERSION }}
+      VYPER_COMMIT: ${{ env.VYPER_COMMIT }}
     env:
       CARGO_NET_GIT_FETCH_WITH_CLI: true
     steps:
       - name: Checkout source
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3
+        uses: actions/checkout@v3
         with:
-          token: ${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}
           fetch-depth: 0
 
       - name: Prepare environment
         shell: zsh {0}
         run: |
           brew install cmake ninja
-          git config --global --add url."https://${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}:x-oauth-basic@github.com/".insteadOf ssh://git@github.com/
-          git config --global --add url."https://${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}:x-oauth-basic@github.com/".insteadOf https://github.com/
 
       - name: Build LLVM framework
         shell: zsh {0}
@@ -70,7 +68,7 @@ jobs:
         run: |
           mkdir -p ./releases/build_macos_amd64
           mv ./target/release/zkvyper ./releases/build_macos_amd64/zkvyper
-
+    
       - name: Save artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -84,9 +82,6 @@ jobs:
       VYPER_COMMIT: ${{ env.VYPER_COMMIT }}
     container:
       image: matterlabs/llvm_runner:latest
-      credentials:
-        username: ${{ secrets.DOCKERHUB_USER }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
     strategy:
       fail-fast: false
       matrix:
@@ -96,15 +91,12 @@ jobs:
       CARGO_NET_GIT_FETCH_WITH_CLI: true
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
         with:
-          token: ${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}
           fetch-depth: 0
 
       - name: Prepare environment
         run: |
-          git config --global --add url."https://${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}:x-oauth-basic@github.com/".insteadOf ssh://git@github.com/
-          git config --global --add url."https://${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}:x-oauth-basic@github.com/".insteadOf https://github.com/
           rustup target add x86_64-unknown-linux-${{ matrix.target }}
 
       - name: Build LLVM framework
@@ -125,7 +117,7 @@ jobs:
       - name: Prepare binary file name
         run: |
           mkdir -p releases/build_linux_amd64
-          mv ./target/x86_64-unknown-linux-${{ matrix.target }}/release/zkvyper releases/build_linux_amd64/zkvyper
+          mv ./target/x86_64-unknown-linux-${{ matrix.target }}/release/zkvyper ./releases/build_linux_amd64/zkvyper
 
       - name: Save artifacts
         uses: actions/upload-artifact@v3
@@ -146,9 +138,8 @@ jobs:
         shell: msys2 {0}
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
         with:
-          token: ${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}
           fetch-depth: 0
 
       - name: Prepare msys2
@@ -178,12 +169,6 @@ jobs:
           mingw-w64-x86_64-rust \
           mingw-w64-x86_64-gcc-libs \
           mingw-w64-x86_64-gcc
-
-      - name: Prepare environment
-        shell: msys2 {0}
-        run: |
-          git config --global --add url."https://${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}:x-oauth-basic@github.com/".insteadOf ssh://git@github.com/
-          git config --global --add url."https://${{ secrets.ZKSYNC_ADMIN_BOT_ORG_REPO_WRITE }}:x-oauth-basic@github.com/".insteadOf https://github.com/
 
       - name: Build LLVM framework
         shell: msys2 {0}
