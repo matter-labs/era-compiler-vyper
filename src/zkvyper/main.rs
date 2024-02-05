@@ -42,7 +42,7 @@ fn main_inner() -> anyhow::Result<()> {
         .build_global()
         .expect("Thread pool configuration failure");
     inkwell::support::enable_llvm_pretty_stack_trace();
-    compiler_llvm_context::initialize_target(compiler_llvm_context::Target::EraVM); // TODO: pass from CLI
+    era_compiler_llvm_context::initialize_target(era_compiler_llvm_context::Target::EraVM); // TODO: pass from CLI
 
     if arguments.version {
         println!(
@@ -55,13 +55,13 @@ fn main_inner() -> anyhow::Result<()> {
     }
 
     if arguments.recursive_process {
-        return compiler_vyper::run_process();
+        return era_compiler_vyper::run_process();
     }
 
     let debug_config = match arguments.debug_output_directory {
         Some(debug_output_directory) => {
             std::fs::create_dir_all(debug_output_directory.as_path())?;
-            Some(compiler_llvm_context::DebugConfig::new(
+            Some(era_compiler_llvm_context::DebugConfig::new(
                 debug_output_directory,
             ))
         }
@@ -69,22 +69,31 @@ fn main_inner() -> anyhow::Result<()> {
     };
 
     let suppressed_warnings = match arguments.suppress_warnings {
-        Some(warnings) => compiler_vyper::WarningType::try_from_strings(warnings.as_slice())?,
+        Some(warnings) => era_compiler_vyper::WarningType::try_from_strings(warnings.as_slice())?,
         None => vec![],
     };
 
-    let vyper = compiler_vyper::VyperCompiler::new(
-        arguments
-            .vyper
-            .unwrap_or_else(|| compiler_vyper::VyperCompiler::DEFAULT_EXECUTABLE_NAME.to_owned()),
-    )?;
+    let vyper =
+        era_compiler_vyper::VyperCompiler::new(arguments.vyper.unwrap_or_else(|| {
+            era_compiler_vyper::VyperCompiler::DEFAULT_EXECUTABLE_NAME.to_owned()
+        }))?;
+
+    let evm_version = match arguments.evm_version {
+        Some(evm_version) => Some(era_compiler_common::EVMVersion::try_from(
+            evm_version.as_str(),
+        )?),
+        None => None,
+    };
 
     let mut optimizer_settings = match arguments.optimization {
-        Some(mode) => compiler_llvm_context::OptimizerSettings::try_from_cli(mode)?,
-        None => compiler_llvm_context::OptimizerSettings::cycles(),
+        Some(mode) => era_compiler_llvm_context::OptimizerSettings::try_from_cli(mode)?,
+        None => era_compiler_llvm_context::OptimizerSettings::cycles(),
     };
     if arguments.fallback_to_optimizing_for_size {
-        optimizer_settings.set_fallback_to_size();
+        optimizer_settings.enable_fallback_to_size();
+    }
+    if arguments.disable_system_request_memoization {
+        optimizer_settings.disable_system_request_memoization();
     }
     optimizer_settings.is_verify_each_enabled = arguments.llvm_verify_each;
     optimizer_settings.is_debug_logging_enabled = arguments.llvm_debug_logging;
@@ -92,14 +101,14 @@ fn main_inner() -> anyhow::Result<()> {
     let include_metadata_hash = match arguments.metadata_hash {
         Some(metadata_hash) => {
             let metadata =
-                compiler_llvm_context::EraVMMetadataHash::from_str(metadata_hash.as_str())?;
-            metadata != compiler_llvm_context::EraVMMetadataHash::None
+                era_compiler_llvm_context::EraVMMetadataHash::from_str(metadata_hash.as_str())?;
+            metadata != era_compiler_llvm_context::EraVMMetadataHash::None
         }
         None => true,
     };
 
     let build = if arguments.llvm_ir {
-        compiler_vyper::llvm_ir(
+        era_compiler_vyper::llvm_ir(
             arguments.input_files,
             optimizer_settings,
             include_metadata_hash,
@@ -107,7 +116,7 @@ fn main_inner() -> anyhow::Result<()> {
             debug_config,
         )
     } else if arguments.zkasm {
-        compiler_vyper::zkasm(
+        era_compiler_vyper::zkasm(
             arguments.input_files,
             include_metadata_hash,
             suppressed_warnings,
@@ -116,9 +125,10 @@ fn main_inner() -> anyhow::Result<()> {
     } else {
         match arguments.format.as_deref() {
             Some("combined_json") => {
-                compiler_vyper::combined_json(
+                era_compiler_vyper::combined_json(
                     arguments.input_files,
                     &vyper,
+                    evm_version,
                     !arguments.disable_vyper_optimizer,
                     optimizer_settings,
                     include_metadata_hash,
@@ -132,9 +142,10 @@ fn main_inner() -> anyhow::Result<()> {
             Some(format) if format.split(',').any(|format| format == "combined_json") => {
                 anyhow::bail!("`combined_json` must be the only output format requested");
             }
-            Some(_) | None => compiler_vyper::standard_output(
+            Some(_) | None => era_compiler_vyper::standard_output(
                 arguments.input_files,
                 &vyper,
+                evm_version,
                 !arguments.disable_vyper_optimizer,
                 optimizer_settings,
                 include_metadata_hash,
@@ -167,7 +178,8 @@ fn main_inner() -> anyhow::Result<()> {
                 println!("0x{bytecode_string}");
 
                 if let Some(format) = arguments.format.as_deref() {
-                    let extra_output = vyper.extra_output(PathBuf::from(path).as_path(), format)?;
+                    let extra_output =
+                        vyper.extra_output(PathBuf::from(path).as_path(), evm_version, format)?;
                     println!();
                     println!("{extra_output}");
                 }

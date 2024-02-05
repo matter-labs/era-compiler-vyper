@@ -9,13 +9,13 @@
 /// from the immutable storage system contract to the heap.
 ///
 pub fn load_bytes<'ctx, D>(
-    context: &mut compiler_llvm_context::EraVMContext<'ctx, D>,
+    context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
     heap_offset: inkwell::values::IntValue<'ctx>,
     immutable_offset: inkwell::values::IntValue<'ctx>,
     length: inkwell::values::IntValue<'ctx>,
 ) -> anyhow::Result<()>
 where
-    D: compiler_llvm_context::EraVMDependency + Clone,
+    D: era_compiler_llvm_context::EraVMDependency + Clone,
 {
     let condition_block = context.append_basic_block("immutable_load_bytes_repeat_condition");
     let body_block = context.append_basic_block("immutable_load_bytes_repeat_body");
@@ -57,7 +57,7 @@ where
         immutable_offset_pointer,
         "immutable_load_bytes_immutable_offset_value",
     );
-    let immutable_value = compiler_llvm_context::eravm_evm_immutable::load(
+    let immutable_value = era_compiler_llvm_context::eravm_evm_immutable::load(
         context,
         immutable_offset_value.into_int_value(),
     )?;
@@ -66,9 +66,9 @@ where
         heap_offset_pointer,
         "immutable_load_bytes_heap_offset_value",
     );
-    let heap_pointer = compiler_llvm_context::EraVMPointer::new_with_offset(
+    let heap_pointer = era_compiler_llvm_context::EraVMPointer::new_with_offset(
         context,
-        compiler_llvm_context::EraVMAddressSpace::Heap,
+        era_compiler_llvm_context::EraVMAddressSpace::Heap,
         context.field_type(),
         heap_offset_value.into_int_value(),
         "immutable_load_bytes_heap_pointer",
@@ -83,7 +83,7 @@ where
     );
     let heap_offset_value_incremented = context.builder().build_int_add(
         heap_offset_value.into_int_value(),
-        context.field_const(compiler_common::BYTE_LENGTH_FIELD as u64),
+        context.field_const(era_compiler_common::BYTE_LENGTH_FIELD as u64),
         "immutable_load_bytes_heap_offset_value_incremented",
     );
     context.build_store(heap_offset_pointer, heap_offset_value_incremented);
@@ -94,7 +94,7 @@ where
     );
     let immutable_offset_value_incremented = context.builder().build_int_add(
         immutable_offset_value.into_int_value(),
-        context.field_const(compiler_common::BYTE_LENGTH_FIELD as u64),
+        context.field_const(era_compiler_common::BYTE_LENGTH_FIELD as u64),
         "immutable_load_bytes_immutable_offset_value_incremented",
     );
     context.build_store(immutable_offset_pointer, immutable_offset_value_incremented);
@@ -105,7 +105,7 @@ where
     );
     let index_offset_value_incremented = context.builder().build_int_add(
         index_offset_value.into_int_value(),
-        context.field_const(compiler_common::BYTE_LENGTH_FIELD as u64),
+        context.field_const(era_compiler_common::BYTE_LENGTH_FIELD as u64),
         "immutable_load_bytes_increment_index_offset_value_incremented",
     );
     context.build_store(index_offset_pointer, index_offset_value_incremented);

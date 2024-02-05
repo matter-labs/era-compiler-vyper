@@ -37,18 +37,19 @@ impl Contract {
     pub fn compile(
         self,
         contract_path: &str,
-        source_code_hash: Option<[u8; compiler_common::BYTE_LENGTH_FIELD]>,
-        optimizer_settings: compiler_llvm_context::OptimizerSettings,
+        source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
+        optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         _suppressed_warnings: Vec<WarningType>,
-        debug_config: Option<compiler_llvm_context::DebugConfig>,
+        debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
         let llvm = inkwell::context::Context::create();
-        let optimizer = compiler_llvm_context::Optimizer::new(optimizer_settings);
+        let optimizer = era_compiler_llvm_context::Optimizer::new(optimizer_settings);
 
         let metadata_hash = source_code_hash.map(|source_code_hash| {
             ContractMetadata::new(
                 &source_code_hash,
                 &self.version,
+                None,
                 semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
                 optimizer.settings().to_owned(),
             )
@@ -62,8 +63,8 @@ impl Contract {
         let module = llvm
             .create_module_from_ir(memory_buffer)
             .map_err(|error| anyhow::anyhow!(error.to_string()))?;
-        let context = compiler_llvm_context::EraVMContext::<
-            compiler_llvm_context::EraVMDummyDependency,
+        let context = era_compiler_llvm_context::EraVMContext::<
+            era_compiler_llvm_context::EraVMDummyDependency,
         >::new(
             &llvm,
             module,
