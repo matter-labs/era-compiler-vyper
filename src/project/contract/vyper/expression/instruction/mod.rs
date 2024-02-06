@@ -879,7 +879,7 @@ impl Instruction {
             Self::SHA3_32(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
 
-                let pointer_one = era_compiler_llvm_context::EraVMPointer::new_with_offset(
+                let pointer_one = era_compiler_llvm_context::Pointer::new_with_offset(
                     context,
                     era_compiler_llvm_context::EraVMAddressSpace::Heap,
                     context.field_type(),
@@ -898,7 +898,7 @@ impl Instruction {
             Self::SHA3_64(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
 
-                let pointer_one = era_compiler_llvm_context::EraVMPointer::new_with_offset(
+                let pointer_one = era_compiler_llvm_context::Pointer::new_with_offset(
                     context,
                     era_compiler_llvm_context::EraVMAddressSpace::Heap,
                     context.field_type(),
@@ -906,7 +906,7 @@ impl Instruction {
                     "sha3_pointer_one",
                 );
                 context.build_store(pointer_one, arguments[0]);
-                let pointer_two = era_compiler_llvm_context::EraVMPointer::new_with_offset(
+                let pointer_two = era_compiler_llvm_context::Pointer::new_with_offset(
                     context,
                     era_compiler_llvm_context::EraVMAddressSpace::Heap,
                     context.field_type(),
@@ -951,14 +951,14 @@ impl Instruction {
             }
             Self::MCOPY(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;
-                let destination = era_compiler_llvm_context::EraVMPointer::new_with_offset(
+                let destination = era_compiler_llvm_context::Pointer::new_with_offset(
                     context,
                     era_compiler_llvm_context::EraVMAddressSpace::Heap,
                     context.byte_type(),
                     arguments[0].into_int_value(),
                     "mcopy_destination",
                 );
-                let source = era_compiler_llvm_context::EraVMPointer::new_with_offset(
+                let source = era_compiler_llvm_context::Pointer::new_with_offset(
                     context,
                     era_compiler_llvm_context::EraVMAddressSpace::Heap,
                     context.byte_type(),
