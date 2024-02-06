@@ -4,6 +4,8 @@
 
 use inkwell::values::BasicValue;
 
+use era_compiler_llvm_context::IContext;
+
 ///
 /// Translates the two-sides bounded clamp.
 ///

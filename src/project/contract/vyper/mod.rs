@@ -13,6 +13,7 @@ use serde::Serialize;
 
 use era_compiler_llvm_context::EraVMDependency;
 use era_compiler_llvm_context::EraVMWriteLLVM;
+use era_compiler_llvm_context::IContext;
 
 use crate::build::contract::Contract as ContractBuild;
 use crate::metadata::Metadata as SourceMetadata;

@@ -2,6 +2,8 @@
 //! The immutable instructions.
 //!
 
+use era_compiler_llvm_context::IContext;
+
 ///
 /// Translates the immutable load sequence.
 ///

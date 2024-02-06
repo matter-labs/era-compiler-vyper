@@ -2,6 +2,8 @@
 //! The `create` instruction adapter.
 //!
 
+use era_compiler_llvm_context::IContext;
+
 ///
 /// Translates the Vyper LLL `create` input layout into the one expected by EraVM.
 ///

@@ -6,6 +6,7 @@ use inkwell::types::BasicType;
 
 use era_compiler_llvm_context::EraVMDependency;
 use era_compiler_llvm_context::EraVMWriteLLVM;
+use era_compiler_llvm_context::IContext;
 
 use crate::metadata::function::Function as FunctionMetadata;
 use crate::project::contract::vyper::expression::Expression;
