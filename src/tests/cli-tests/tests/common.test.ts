@@ -5,11 +5,10 @@ import { paths } from '../src/entities';
 describe("Common tests", () => {
     const zkvyperCommand = 'zkvyper';
     const vyperCommand = 'vyper';
-    let result : { exitCode: number; output: string; };
 
     describe("Run zkvyper without any options", () => {
         const args = [''];
-        result = executeCommand(zkvyperCommand, args);
+        const result = executeCommand(zkvyperCommand, args);
 
         it("Info with help is presented", () => {
             expect(result.output).toMatch(/(the following arguments are required: input_files)/i);
