@@ -97,7 +97,7 @@ compiling each contract in a separate process. To successfully run unit tests:
 
 For running command line interface tests, `zkvyper` itself and `vyper` must also be available in `$PATH`, because it calls itself recursively to allow compiling each contract in a separate processes. To successfully run CLI tests:
 
-1. Go to `src/tests/cli-tests`.
+1. Go to `cli-tests`.
 2. Make `npm i`.
 3. Add `vyper` and `zkvyper` to `$PATH`.
 4. Run `npm test`. 
