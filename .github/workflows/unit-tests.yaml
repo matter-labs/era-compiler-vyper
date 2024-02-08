@@ -4,6 +4,11 @@ name: Unit Tests
 on:
   workflow_dispatch:
   pull_request:
+    paths-ignore:
+      - 'cli-tests/**'
+      - '**/workflows/cli*'
+      - '.gitignore'
+      - '**/*.md'
   push:
     branches:
       - main

@@ -1,0 +1,125 @@
+name: Use precompiled binaries and call the CLI testing
+on:
+  pull_request:
+    paths:
+      - 'cli-tests/**'
+      - '**/workflows/cli*'
+  workflow_dispatch:
+    inputs:
+      zkvyper:
+        type: string
+        description: "zkvyper version, (repo: https://github.com/matter-labs/era-compiler-vyper/releases)"
+        required: true
+        default: "1.3.17"
+      vyper:
+        type: string
+        description: "vyper version, (repo: https://github.com/vyperlang/vyper/releases)"
+        required: true
+        default: "0.3.10"
+      commit:
+        type: string
+        description: "vyper commit, (repo: https://github.com/vyperlang/vyper/releases)"
+        required: true
+        default: "91361694"
+
+env:
+  ZKVYPER_VERSION: ${{ github.event.inputs.zkvyper || '1.3.17' }}
+  VYPER_VERSION: ${{ github.event.inputs.vyper || '0.3.10' }}
+  VYPER_COMMIT: ${{ github.event.inputs.commit || '91361694' }}
+
+jobs:
+  build_macos_amd64:
+    name: MacOS amd64
+    runs-on: [ matterlabs-ci-runner ]
+    outputs:
+      VYPER_VERSION: ${{ env.VYPER_VERSION }}
+      VYPER_COMMIT: ${{ env.VYPER_COMMIT }}
+    steps:
+      - name: Binaries Simulation
+        run: |
+          mkdir -p releases/build_macos_amd64
+          wget https://github.com/matter-labs/era-compiler-vyper/releases/download/${{ env.ZKVYPER_VERSION }}/zkvyper-macosx-amd64-v${{ env.ZKVYPER_VERSION }} -O releases/build_macos_amd64/zkvyper
+          ls -al releases/build_macos_amd64/zkvyper
+      - name: Save artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build_macos_amd64
+          path: releases
+
+  build_linux_amd64:
+    runs-on: [matterlabs-ci-runner]
+    name: Linux amd64
+    outputs:
+      VYPER_VERSION: ${{ env.VYPER_VERSION }}
+      VYPER_COMMIT: ${{ env.VYPER_COMMIT }}
+    steps:
+      - name: Binaries Simulation
+        run: |
+            mkdir -p releases/build_linux_amd64
+            wget https://github.com/matter-labs/era-compiler-vyper/releases/download/${{ env.ZKVYPER_VERSION }}/zkvyper-linux-amd64-musl-v${{ env.ZKVYPER_VERSION }} -O releases/build_linux_amd64/zkvyper
+            ls -al releases/build_linux_amd64/zkvyper
+      - name: Save artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build_linux_amd64
+          path: releases
+
+  build_windows_amd64:
+    name: Windows amd64 
+    runs-on: [matterlabs-ci-runner]
+    outputs:
+      VYPER_VERSION: ${{ env.VYPER_VERSION }}
+      VYPER_COMMIT: ${{ env.VYPER_COMMIT }}
+    steps:
+      - name: Binaries Simulation
+        run: |
+          mkdir -p releases/build_windows_amd64
+          wget https://github.com/matter-labs/era-compiler-vyper/releases/download/${{ env.ZKVYPER_VERSION }}/zkvyper-windows-amd64-gnu-v${{ env.ZKVYPER_VERSION }}.exe -O releases/build_windows_amd64/zkvyper.exe
+          ls -al releases/build_windows_amd64/zkvyper.exe 
+      - name: Save artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build_windows_amd64
+          path: releases
+
+
+  cli_test_linux_amd64:
+    needs:
+      - build_linux_amd64
+    name: CLI tests on linux
+    uses: ./.github/workflows/cli_test_run.yaml
+    permissions:
+        contents: read
+    with:
+        name: build_linux_amd64
+        path: releases
+        runner: matterlabs-ci-runner
+        vyper_url: https://github.com/vyperlang/vyper/releases/download/v${{ needs.build_linux_amd64.outputs.VYPER_VERSION }}/vyper.${{ needs.build_linux_amd64.outputs.VYPER_VERSION }}+commit.${{ needs.build_linux_amd64.outputs.VYPER_COMMIT }}.linux
+        
+
+  cli_test_windows:
+    needs:
+      - build_windows_amd64
+    name: CLI tests on Windows
+    uses: ./.github/workflows/cli_test_run.yaml
+    permissions:
+        contents: read
+    with:
+        name: build_windows_amd64
+        path: releases
+        runner: windows-2022-github-hosted-16core
+        vyper_url: https://github.com/vyperlang/vyper/releases/download/v${{ needs.build_windows_amd64.outputs.VYPER_VERSION }}/vyper.${{ needs.build_windows_amd64.outputs.VYPER_VERSION }}+commit.${{ needs.build_windows_amd64.outputs.VYPER_COMMIT }}.windows.exe
+
+        
+  cli_test_macos_amd64:
+    needs:
+      - build_macos_amd64
+    name: CLI tests on macOS
+    uses: ./.github/workflows/cli_test_run.yaml
+    permissions:
+        contents: read
+    with:
+        name: build_macos_amd64
+        path: releases
+        runner: macos-12-large
+        vyper_url: https://github.com/vyperlang/vyper/releases/download/v${{ needs.build_macos_amd64.outputs.VYPER_VERSION }}/vyper.${{ needs.build_macos_amd64.outputs.VYPER_VERSION }}+commit.${{ needs.build_macos_amd64.outputs.VYPER_COMMIT }}.darwin
