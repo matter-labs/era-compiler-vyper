@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   pull_request:
     paths-ignore:
-      - '**/cli-tests/**'
+      - 'cli-tests/**'
       - '**/workflows/cli*'
       - '.gitignore'
       - '**/*.md'
