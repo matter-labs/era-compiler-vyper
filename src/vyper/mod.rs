@@ -178,9 +178,6 @@ impl Compiler {
             let contract_name = &full_path[last_slash_position.unwrap_or_default()
                 ..last_dot_position.unwrap_or(full_path.len())];
 
-            Self::check_unsupported(source.content.as_str())
-                .map_err(|error| anyhow::anyhow!("Contract `{}`: {}", full_path, error))?;
-
             output
                 .contracts
                 .as_mut()
@@ -294,11 +291,6 @@ impl Compiler {
                     Err(error) => return (path_str, Err(error)),
                 };
 
-                if let Err(error) = Self::check_unsupported(source_code.as_str()) {
-                    let error = anyhow::anyhow!("Contract `{}`: {}", path_str, error);
-                    return (path_str, Err(error));
-                }
-
                 let contract_result =
                     VyperContract::try_from_lines(version.to_owned(), source_code, group.to_vec())
                         .map_err(|error| {
@@ -361,25 +353,6 @@ impl Compiler {
         }
 
         Ok(String::from_utf8_lossy(output.stdout.as_slice()).to_string())
-    }
-
-    ///
-    /// Checks for unsupported code is a Vyper source code file.
-    ///
-    pub fn check_unsupported(source_code: &str) -> anyhow::Result<()> {
-        for function in [
-            crate::r#const::FORBIDDEN_FUNCTION_NAME_CREATE_COPY_OF,
-            crate::r#const::FORBIDDEN_FUNCTION_NAME_CREATE_FROM_BLUEPRINT,
-        ] {
-            if source_code.contains(function) {
-                return Err(anyhow::anyhow!(
-                    "Built-in function `{}` is not supported",
-                    function
-                ));
-            }
-        }
-
-        Ok(())
     }
 
     ///

@@ -1075,6 +1075,7 @@ impl Instruction {
                 )
                 .map(|_| None)
             }
+
             Self::DLOAD(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
 
@@ -1127,6 +1128,7 @@ impl Instruction {
                 }
                 .map(|_| None)
             }
+
             Self::CODESIZE => {
                 match context
                     .code_type()
@@ -1165,6 +1167,7 @@ impl Instruction {
                 )
                 .map(|_| None)
             }
+
             Self::RETURNDATASIZE => {
                 era_compiler_llvm_context::eravm_evm_return_data::size(context).map(Some)
             }
@@ -1178,6 +1181,7 @@ impl Instruction {
                 )
                 .map(|_| None)
             }
+
             Self::EXTCODESIZE(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_ext_code::size(
@@ -1193,6 +1197,28 @@ impl Instruction {
                     arguments[0].into_int_value(),
                 )
                 .map(Some)
+            }
+            Self::EXTCODECOPY(arguments) => {
+                let arguments = Self::translate_arguments_llvm::<D, 4>(arguments, context)?;
+                let hash_offset = context.field_const(
+                    era_compiler_llvm_context::eravm_const::HEAP_AUX_OFFSET_EXTERNAL_CALL
+                        + (era_compiler_common::BYTE_LENGTH_X32
+                            + era_compiler_common::BYTE_LENGTH_FIELD)
+                            as u64,
+                );
+                let hash_pointer = era_compiler_llvm_context::EraVMPointer::new_with_offset(
+                    context,
+                    era_compiler_llvm_context::EraVMAddressSpace::HeapAuxiliary,
+                    context.field_type(),
+                    hash_offset,
+                    "extcodecopy_hash_destination",
+                );
+                let hash_value = era_compiler_llvm_context::eravm_evm_ext_code::hash(
+                    context,
+                    arguments[0].into_int_value(),
+                )?;
+                context.build_store(hash_pointer, hash_value);
+                Ok(None)
             }
 
             Self::RETURN(inner) => inner.into_llvm_value(context).map(|_| None),
@@ -1346,6 +1372,7 @@ impl Instruction {
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
+                    arguments[2].into_int_value(),
                     None,
                 )
                 .map(Some)
@@ -1357,6 +1384,7 @@ impl Instruction {
                     context,
                     arguments[0].into_int_value(),
                     arguments[1].into_int_value(),
+                    arguments[2].into_int_value(),
                     Some(arguments[3].into_int_value()),
                 )
                 .map(Some)
@@ -1429,10 +1457,6 @@ impl Instruction {
                 anyhow::bail!("The `CALLCODE` instruction is not supported")
             }
             Self::PC => anyhow::bail!("The `PC` instruction is not supported"),
-            Self::EXTCODECOPY(arguments) => {
-                let _arguments = Self::translate_arguments_llvm::<D, 4>(arguments, context)?;
-                anyhow::bail!("The `EXTCODECOPY` instruction is not supported")
-            }
             Self::SELFDESTRUCT(arguments) => {
                 let _arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
                 anyhow::bail!("The `SELFDESTRUCT` instruction is not supported")

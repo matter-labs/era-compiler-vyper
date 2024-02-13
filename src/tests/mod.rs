@@ -5,7 +5,6 @@
 #![cfg(test)]
 #![allow(dead_code)]
 
-pub mod builtins;
 pub mod optimizer;
 pub mod unsupported_opcodes;
 pub mod warnings;
