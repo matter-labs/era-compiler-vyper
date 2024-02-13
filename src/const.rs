@@ -50,12 +50,21 @@ pub const LABEL_SUFFIX_COMMON: &str = "common";
 /// The cleanup label suffix.
 pub const LABEL_SUFFIX_CLEANUP: &str = "cleanup";
 
-/// The forwarder contract name.
-pub const FORWARDER_CONTRACT_NAME: &str = "__VYPER_FORWARDER_CONTRACT";
+/// The `create_minimal_proxy_to` contract name.
+pub const MINIMAL_PROXY_CONTRACT_NAME: &str = "__VYPER_MINIMAL_PROXY_CONTRACT";
+
+/// The `create_minimal_proxy_to` contract size that is emitted by the upstream Vyper compiler to CREATE's LLL IR.
+/// The value is used to route between several built-in codegen when analyzing the CREATE opcode arguments.
+pub const MINIMAL_PROXY_SIZE: usize = 54;
+
+/// The `create_copy_of` contract size that is emitted by the upstream Vyper compiler to CREATE's LLL IR.
+/// The number `143` is the size of EraVM deployer header size plus `11` bytes of the supposed EVM implementation.
+/// The value is used to route between several built-in codegen when analyzing the CREATE opcode arguments.
+pub const COPY_OF_SIZE: usize = 143;
 
 lazy_static! {
     ///
-    /// The Vyper forwarder bytecode in bytes.
+    /// The Vyper minimal proxy bytecode in bytes.
     ///
     pub static ref FORWARDER_CONTRACT_BYTECODE_WORDS: Vec<[u8; era_compiler_common::BYTE_LENGTH_FIELD]> = {
         let mut assembly =
@@ -65,7 +74,7 @@ lazy_static! {
     };
 
     ///
-    /// The Vyper forwarder bytecode in words.
+    /// The Vyper minimal proxy bytecode in words.
     ///
     pub static ref FORWARDER_CONTRACT_BYTECODE: Vec<u8> = {
         FORWARDER_CONTRACT_BYTECODE_WORDS.clone()
@@ -75,7 +84,7 @@ lazy_static! {
     };
 
     ///
-    /// The Vyper forwarder bytecode hash.
+    /// The Vyper minimal proxy bytecode hash.
     ///
     pub static ref FORWARDER_CONTRACT_HASH: String = {
         zkevm_opcode_defs::bytecode_to_code_hash(FORWARDER_CONTRACT_BYTECODE_WORDS.as_slice()).map(hex::encode)
@@ -83,10 +92,10 @@ lazy_static! {
     };
 }
 
-/// The forwarder contract assembly.
+/// The minimal proxy contract assembly.
 pub const FORWARDER_CONTRACT_ASSEMBLY: &str = r#"
 	.text
-	.file	"forwarder.sol:Test"
+	.file	"minimal_proxy.sol:Test"
 	.globl	__entry
 __entry:
 .func_begin0:

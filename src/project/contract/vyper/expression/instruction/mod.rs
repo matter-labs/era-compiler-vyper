@@ -325,7 +325,7 @@ pub enum Instruction {
 
 impl Instruction {
     ///
-    /// Translates the specified number of arguments.
+    /// Translates the specified number of arguments into LLVM values.
     ///
     fn translate_arguments_llvm<'ctx, D, const N: usize>(
         arguments: [Box<Expression>; N],
@@ -345,6 +345,55 @@ impl Instruction {
                     debug_string
                 )
             })?);
+        }
+        values.reverse();
+
+        if values.len() != N {
+            anyhow::bail!(
+                "Expected {} arguments, found only {}: `{:?}`",
+                N,
+                values.len(),
+                values
+            );
+        }
+
+        Ok(values.try_into().expect("Always valid"))
+    }
+
+    ///
+    /// Translates the specified number of arguments into representation preserving
+    /// original LLL identifiers and constants.
+    ///
+    fn translate_arguments<'ctx, D, const N: usize>(
+        arguments: [Box<Expression>; N],
+        context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
+    ) -> anyhow::Result<[era_compiler_llvm_context::EraVMArgument<'ctx>; N]>
+    where
+        D: era_compiler_llvm_context::EraVMDependency + Clone,
+    {
+        let debug_string = format!("`{arguments:?}`");
+
+        let mut values = Vec::with_capacity(N);
+        for (index, expression) in arguments.into_iter().enumerate().rev() {
+            let original = match *expression {
+                Expression::Identifier(ref identifier) => Some(identifier.to_owned()),
+                Expression::IntegerLiteral(ref value) => Some(value.to_string()),
+                _ => None,
+            };
+            let value = expression.into_llvm_value(context)?.ok_or_else(|| {
+                anyhow::anyhow!(
+                    "Expression #{} of the instruction `{}` has zero valency",
+                    index,
+                    debug_string
+                )
+            })?;
+            values.push(match original {
+                Some(ref original) => era_compiler_llvm_context::EraVMArgument::new_with_original(
+                    value,
+                    original.to_owned(),
+                ),
+                None => era_compiler_llvm_context::EraVMArgument::new(value),
+            })
         }
         values.reverse();
 
@@ -1183,12 +1232,47 @@ impl Instruction {
             }
 
             Self::EXTCODESIZE(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
-                era_compiler_llvm_context::eravm_evm_ext_code::size(
+                let arguments = Self::translate_arguments::<D, 1>(arguments, context)?;
+                let mut requested_size = era_compiler_llvm_context::eravm_evm_ext_code::size(
                     context,
-                    arguments[0].into_int_value(),
-                )
-                .map(Some)
+                    arguments[0].value.into_int_value(),
+                )?;
+                if Some("create_target") == arguments[0].original.as_deref() {
+                    let result_pointer = context.build_alloca(
+                        context.field_type(),
+                        "extcodesize_create_target_result_pointer",
+                    );
+                    context.build_store(
+                        result_pointer,
+                        context.field_const(
+                            era_compiler_llvm_context::eravm_const::DEPLOYER_CALL_HEADER_SIZE
+                                as u64,
+                        ),
+                    );
+
+                    let is_zero_block =
+                        context.append_basic_block("extcodesize_create_target_is_zero_block");
+                    let join_block =
+                        context.append_basic_block("extcodesize_create_target_join_block");
+                    let is_zero = context.builder().build_int_compare(
+                        inkwell::IntPredicate::EQ,
+                        requested_size.into_int_value(),
+                        context.field_const(0),
+                        "extcodesize_create_target_is_zero",
+                    );
+                    context
+                        .builder()
+                        .build_conditional_branch(is_zero, is_zero_block, join_block);
+
+                    context.set_basic_block(is_zero_block);
+                    context.build_store(result_pointer, context.field_const(0));
+                    context.build_unconditional_branch(join_block);
+
+                    context.set_basic_block(join_block);
+                    requested_size =
+                        context.build_load(result_pointer, "extcodesize_create_target_result");
+                }
+                Ok(Some(requested_size))
             }
             Self::EXTCODEHASH(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
@@ -1200,24 +1284,46 @@ impl Instruction {
             }
             Self::EXTCODECOPY(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 4>(arguments, context)?;
-                let hash_offset = context.field_const(
+
+                let hash_value = era_compiler_llvm_context::eravm_evm_ext_code::hash(
+                    context,
+                    arguments[0].into_int_value(),
+                )?;
+
+                let hash_heap_offset = context.builder().build_int_add(
+                    arguments[1].into_int_value(),
+                    context.field_const(
+                        (era_compiler_common::BYTE_LENGTH_X32
+                            + era_compiler_common::BYTE_LENGTH_FIELD)
+                            as u64,
+                    ),
+                    "extcodecopy_hash_offset",
+                );
+                let hash_heap_pointer = era_compiler_llvm_context::EraVMPointer::new_with_offset(
+                    context,
+                    era_compiler_llvm_context::EraVMAddressSpace::Heap,
+                    context.field_type(),
+                    hash_heap_offset,
+                    "extcodecopy_hash_destination",
+                );
+                context.build_store(hash_heap_pointer, hash_value);
+
+                let hash_aux_heap_offset = context.field_const(
                     era_compiler_llvm_context::eravm_const::HEAP_AUX_OFFSET_EXTERNAL_CALL
                         + (era_compiler_common::BYTE_LENGTH_X32
                             + era_compiler_common::BYTE_LENGTH_FIELD)
                             as u64,
                 );
-                let hash_pointer = era_compiler_llvm_context::EraVMPointer::new_with_offset(
-                    context,
-                    era_compiler_llvm_context::EraVMAddressSpace::HeapAuxiliary,
-                    context.field_type(),
-                    hash_offset,
-                    "extcodecopy_hash_destination",
-                );
-                let hash_value = era_compiler_llvm_context::eravm_evm_ext_code::hash(
-                    context,
-                    arguments[0].into_int_value(),
-                )?;
-                context.build_store(hash_pointer, hash_value);
+                let hash_aux_heap_pointer =
+                    era_compiler_llvm_context::EraVMPointer::new_with_offset(
+                        context,
+                        era_compiler_llvm_context::EraVMAddressSpace::HeapAuxiliary,
+                        context.field_type(),
+                        hash_aux_heap_offset,
+                        "extcodecopy_hash_destination",
+                    );
+                context.build_store(hash_aux_heap_pointer, hash_value);
+
                 Ok(None)
             }
 

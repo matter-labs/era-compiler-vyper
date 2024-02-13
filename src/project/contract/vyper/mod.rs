@@ -162,13 +162,13 @@ impl Contract {
             )
         })?;
 
-        let is_forwarder_used = context.vyper().is_forwarder_used();
+        let is_minimal_proxy_used = context.vyper().is_minimal_proxy_used();
         let mut build = context.build(contract_path, metadata_hash)?;
 
-        if is_forwarder_used {
+        if is_minimal_proxy_used {
             build.factory_dependencies.insert(
                 crate::r#const::FORWARDER_CONTRACT_HASH.clone(),
-                crate::r#const::FORWARDER_CONTRACT_NAME.to_owned(),
+                crate::r#const::MINIMAL_PROXY_CONTRACT_NAME.to_owned(),
             );
         }
 
@@ -187,9 +187,7 @@ where
         let mut entry = era_compiler_llvm_context::EraVMEntryFunction::default();
         entry.declare(context)?;
 
-        let mut runtime = era_compiler_llvm_context::EraVMRuntime::new(
-            era_compiler_llvm_context::EraVMAddressSpace::HeapAuxiliary,
-        );
+        let mut runtime = era_compiler_llvm_context::EraVMRuntime::default();
         runtime.declare(context)?;
 
         era_compiler_llvm_context::EraVMDeployCodeFunction::new(
