@@ -60,21 +60,19 @@ describe("Common tests", () => {
             expect(isDestinationExist(paths.pathToOutputDir)).toBe(true);
         });
 
-        if (process.platform !== "win32") {
-            it("Output file is created", () => { // a bug on windows
-                expect(isDestinationExist(paths.pathToVyBinOutputFile)).toBe(true);
-                expect(isDestinationExist(paths.pathToVyAsmOutputFile)).toBe(true);
-            });
-            it("The output file is not empty", () => {
-                expect(isFileEmpty(paths.pathToVyBinOutputFile)).toBe(false);
-            });
-        }
+        it("Output file is created", () => { // a bug on windows
+            expect(isDestinationExist(paths.pathToVyBinOutputFile)).toBe(true);
+            expect(isDestinationExist(paths.pathToVyAsmOutputFile)).toBe(true);
+        });
+        it("The output file is not empty", () => {
+            expect(isFileEmpty(paths.pathToVyBinOutputFile)).toBe(false);
+        });
         
         it("No 'Error'/'Warning'/'Fail' in the output", () => {
             expect(result.output).not.toMatch(/([Ee]rror|[Ww]arning|[Ff]ail)/i);
         });
 
-        xit("vyper exit code == zkvyper exit code", () => {
+        it("vyper exit code == zkvyper exit code", () => {
             const vyperResult = executeCommand(vyperCommand, args);
             expect(vyperResult.exitCode).toBe(result.exitCode);
         });
