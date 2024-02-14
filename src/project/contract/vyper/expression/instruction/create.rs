@@ -5,7 +5,8 @@
 ///
 /// Translates various Vyper's `create` built-in instructions.
 ///
-/// If `input_length` is `54`, the built-in is `create_minimal_proxy_to`. TODO: check if constant.
+/// If `input_length` is `54`, the built-in is `create_minimal_proxy_to`.
+/// If `input_length` is `143`, the built-in is `create_copy_of`.
 ///
 pub fn create<'ctx, D>(
     context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
@@ -29,11 +30,11 @@ where
         create_from_blueprint_block,
         &[
             (
-                context.field_const(crate::r#const::MINIMAL_PROXY_SIZE as u64),
+                context.field_const(crate::r#const::MINIMAL_PROXY_BUILTIN_INPUT_SIZE as u64),
                 create_minimal_proxy_to_block,
             ),
             (
-                context.field_const(crate::r#const::COPY_OF_SIZE as u64),
+                context.field_const(crate::r#const::COPY_OF_BUILTIN_INPUT_SIZE as u64),
                 create_copy_of_block,
             ),
         ],

@@ -638,6 +638,22 @@ impl Instruction {
                 .map(Some)
             }
             Self::SUB(arguments) => {
+                // prevents the blueprint `code_offset`` from subtracting from the target code size
+                if let Expression::Instruction(Instruction::EXTCODESIZE(extcodesize_arguments)) =
+                    *(arguments[0].clone())
+                {
+                    let extcodesize_arguments = Self::translate_arguments::<D, 1>(
+                        extcodesize_arguments.to_owned(),
+                        context,
+                    )?;
+                    if Some(crate::r#const::EXTCODESIZE_BLUEPRINT_ARGUMENT_NAME)
+                        == extcodesize_arguments[0].original.as_deref()
+                    {
+                        let arguments = Self::translate_arguments::<D, 2>(arguments, context)?;
+                        return Ok(Some(arguments[0].value));
+                    }
+                }
+
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_arithmetic::subtraction(
                     context,
@@ -1237,7 +1253,9 @@ impl Instruction {
                     context,
                     arguments[0].value.into_int_value(),
                 )?;
-                if Some("create_target") == arguments[0].original.as_deref() {
+                if Some(crate::r#const::EXTCODESIZE_BLUEPRINT_ARGUMENT_NAME)
+                    == arguments[0].original.as_deref()
+                {
                     let result_pointer = context.build_alloca(
                         context.field_type(),
                         "extcodesize_create_target_result_pointer",
