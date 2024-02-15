@@ -638,20 +638,8 @@ impl Instruction {
                 .map(Some)
             }
             Self::SUB(arguments) => {
-                // prevents the blueprint `code_offset`` from subtracting from the target code size
-                if let Expression::Instruction(Instruction::EXTCODESIZE(extcodesize_arguments)) =
-                    *(arguments[0].clone())
-                {
-                    let extcodesize_arguments = Self::translate_arguments::<D, 1>(
-                        extcodesize_arguments.to_owned(),
-                        context,
-                    )?;
-                    if Some(crate::r#const::EXTCODESIZE_BLUEPRINT_ARGUMENT_NAME)
-                        == extcodesize_arguments[0].original.as_deref()
-                    {
-                        let arguments = Self::translate_arguments::<D, 2>(arguments, context)?;
-                        return Ok(Some(arguments[0].value));
-                    }
+                if let Some(result) = Self::check_sub_code_offset(context, &arguments)? {
+                    return Ok(Some(result));
                 }
 
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
@@ -1301,15 +1289,23 @@ impl Instruction {
                 .map(Some)
             }
             Self::EXTCODECOPY(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 4>(arguments, context)?;
+                let arguments = Self::translate_arguments::<D, 4>(arguments, context)?;
+
+                if Some(crate::r#const::EXTCODESIZE_BLUEPRINT_ARGUMENT_NAME)
+                    != arguments[0].original.as_deref()
+                {
+                    anyhow::bail!(
+                        "The `EXTCODECOPY` instruction is only supported for the `create_from_blueprint built-in."
+                    );
+                }
 
                 let hash_value = era_compiler_llvm_context::eravm_evm_ext_code::hash(
                     context,
-                    arguments[0].into_int_value(),
+                    arguments[0].value.into_int_value(),
                 )?;
 
                 let hash_heap_offset = context.builder().build_int_add(
-                    arguments[1].into_int_value(),
+                    arguments[1].value.into_int_value(),
                     context.field_const(
                         (era_compiler_common::BYTE_LENGTH_X32
                             + era_compiler_common::BYTE_LENGTH_FIELD)
@@ -1590,5 +1586,35 @@ impl Instruction {
                 anyhow::bail!("Unknown LLL instruction: {}", value);
             }
         }
+    }
+
+    ///
+    /// Checks if it is code offset is subtracted from `EXTCODESIZE`.
+    ///
+    fn check_sub_code_offset<'ctx, D>(
+        context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
+        arguments: &[Box<Expression>; 2],
+    ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
+    where
+        D: era_compiler_llvm_context::EraVMDependency + Clone,
+    {
+        if let Expression::Instruction(Instruction::EXTCODESIZE(extcodesize_arguments)) =
+            *(arguments[0].clone())
+        {
+            let extcodesize_arguments =
+                Self::translate_arguments::<D, 1>(extcodesize_arguments.to_owned(), context)?;
+            if Some(crate::r#const::EXTCODESIZE_BLUEPRINT_ARGUMENT_NAME)
+                == extcodesize_arguments[0].original.as_deref()
+            {
+                let arguments = Self::translate_arguments::<D, 2>(arguments.to_owned(), context)?;
+                if Some(crate::r#const::CODE_OFFSET_BLUEPRINT_ARGUMENT_NAME)
+                    == arguments[1].original.as_deref()
+                {
+                    return Ok(Some(arguments[0].value));
+                }
+            }
+        }
+
+        Ok(None)
     }
 }

@@ -50,8 +50,14 @@ pub const LABEL_SUFFIX_COMMON: &str = "common";
 /// The cleanup label suffix.
 pub const LABEL_SUFFIX_CLEANUP: &str = "cleanup";
 
+/// The forbidden function `create_copy_of`.
+pub const FORBIDDEN_FUNCTION_NAME_CREATE_COPY_OF: &str = "create_copy_of";
+
 /// The `EXTCODESIZE` argument LLL IR name when the blueprint size is requested.
 pub const EXTCODESIZE_BLUEPRINT_ARGUMENT_NAME: &str = "create_target";
+
+/// The code offset argument LLL IR name when the blueprint size is requested.
+pub const CODE_OFFSET_BLUEPRINT_ARGUMENT_NAME: &str = "code_offset";
 
 /// The `create_minimal_proxy_to` contract name.
 pub const MINIMAL_PROXY_CONTRACT_NAME: &str = "__VYPER_MINIMAL_PROXY_CONTRACT";
@@ -59,11 +65,6 @@ pub const MINIMAL_PROXY_CONTRACT_NAME: &str = "__VYPER_MINIMAL_PROXY_CONTRACT";
 /// The `create_minimal_proxy_to` contract size that is emitted by the upstream Vyper compiler to CREATE's LLL IR.
 /// The value is used to route between several built-in codegen when analyzing the CREATE opcode arguments.
 pub const MINIMAL_PROXY_BUILTIN_INPUT_SIZE: usize = 54;
-
-/// The `create_copy_of` contract size that is emitted by the upstream Vyper compiler to CREATE's LLL IR.
-/// The number `143` is the size of EraVM deployer header size plus `11` bytes of the supposed EVM implementation.
-/// The value is used to route between several built-in codegen when analyzing the CREATE opcode arguments.
-pub const COPY_OF_BUILTIN_INPUT_SIZE: usize = 143;
 
 lazy_static! {
     ///

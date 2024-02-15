@@ -20,7 +20,6 @@ where
 {
     let create_minimal_proxy_to_block = context.append_basic_block("create_minimal_proxy_to_block");
     let create_from_blueprint_block = context.append_basic_block("create_from_blueprint_block");
-    let create_copy_of_block = context.append_basic_block("create_copy_of_block");
     let create_join_block = context.append_basic_block("create_join_block");
 
     let result_pointer = context.build_alloca(context.field_type(), "create_result_pointer");
@@ -28,25 +27,14 @@ where
     context.builder().build_switch(
         input_length,
         create_from_blueprint_block,
-        &[
-            (
-                context.field_const(crate::r#const::MINIMAL_PROXY_BUILTIN_INPUT_SIZE as u64),
-                create_minimal_proxy_to_block,
-            ),
-            (
-                context.field_const(crate::r#const::COPY_OF_BUILTIN_INPUT_SIZE as u64),
-                create_copy_of_block,
-            ),
-        ],
+        &[(
+            context.field_const(crate::r#const::MINIMAL_PROXY_BUILTIN_INPUT_SIZE as u64),
+            create_minimal_proxy_to_block,
+        )],
     );
 
     context.set_basic_block(create_minimal_proxy_to_block);
     let result = create_minimal_proxy_to(context, value, input_offset, salt)?;
-    context.build_store(result_pointer, result);
-    context.build_unconditional_branch(create_join_block);
-
-    context.set_basic_block(create_copy_of_block);
-    let result = create_copy_of(context, value, salt)?;
     context.build_store(result_pointer, result);
     context.build_unconditional_branch(create_join_block);
 
@@ -269,82 +257,5 @@ where
 
     context.set_basic_block(join_block);
     let result = context.build_load(result_pointer, "create_from_blueprint_result");
-    Ok(result)
-}
-
-///
-/// Translates the Vyper's `create_copy_of` built-in.
-///
-/// Makes use of the `EXTCODECOPY` substituted with `EXTCODEHASH` for EraVM.
-///
-fn create_copy_of<'ctx, D>(
-    context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
-    value: inkwell::values::IntValue<'ctx>,
-    salt: Option<inkwell::values::IntValue<'ctx>>,
-) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>>
-where
-    D: era_compiler_llvm_context::EraVMDependency + Clone,
-{
-    let success_block = context.append_basic_block("create_copy_of_success_block");
-    let failure_block = context.append_basic_block("create_copy_of_failure_block");
-    let join_block = context.append_basic_block("create_copy_of_join_block");
-
-    let calldata_offset =
-        context.field_const(era_compiler_llvm_context::eravm_const::HEAP_AUX_OFFSET_EXTERNAL_CALL);
-    let calldata_length = context.field_const(
-        (era_compiler_llvm_context::eravm_const::DEPLOYER_CALL_HEADER_SIZE
-            + era_compiler_common::BYTE_LENGTH_FIELD) as u64,
-    );
-
-    let result_pointer =
-        context.build_alloca(context.field_type(), "create_copy_of_result_pointer");
-    context.build_store(result_pointer, context.field_const(0));
-    let address_or_status_code = match salt {
-        Some(salt) => era_compiler_llvm_context::eravm_evm_create::create2(
-            context,
-            era_compiler_llvm_context::EraVMAddressSpace::HeapAuxiliary,
-            value,
-            calldata_offset,
-            calldata_length,
-            Some(salt),
-        ),
-        None => era_compiler_llvm_context::eravm_evm_create::create(
-            context,
-            era_compiler_llvm_context::EraVMAddressSpace::HeapAuxiliary,
-            value,
-            calldata_offset,
-            calldata_length,
-        ),
-    }?;
-    let address_or_status_code_is_zero = context.builder().build_int_compare(
-        inkwell::IntPredicate::EQ,
-        address_or_status_code.into_int_value(),
-        context.field_const(0),
-        "create_copy_of_address_or_status_code_is_zero",
-    );
-    context.build_conditional_branch(address_or_status_code_is_zero, failure_block, success_block);
-
-    context.set_basic_block(success_block);
-    context.build_store(result_pointer, address_or_status_code);
-    context.build_unconditional_branch(join_block);
-
-    context.set_basic_block(failure_block);
-    let return_data_size = context
-        .get_global_value(era_compiler_llvm_context::eravm_const::GLOBAL_RETURN_DATA_SIZE)?;
-    era_compiler_llvm_context::eravm_evm_return_data::copy(
-        context,
-        context.field_const(0),
-        context.field_const(0),
-        return_data_size.into_int_value(),
-    )?;
-    context.build_exit(
-        context.llvm_runtime().revert,
-        context.field_const(0),
-        return_data_size.into_int_value(),
-    );
-    context.build_unconditional_branch(join_block);
-
-    context.set_basic_block(join_block);
-    let result = context.build_load(result_pointer, "create_copy_of_result");
     Ok(result)
 }
