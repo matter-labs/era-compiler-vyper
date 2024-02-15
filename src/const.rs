@@ -56,9 +56,6 @@ pub const FORBIDDEN_FUNCTION_NAME_CREATE_COPY_OF: &str = "create_copy_of";
 /// The `EXTCODESIZE` argument LLL IR name when the blueprint size is requested.
 pub const EXTCODESIZE_BLUEPRINT_ARGUMENT_NAME: &str = "create_target";
 
-/// The code offset argument LLL IR name when the blueprint size is requested.
-pub const CODE_OFFSET_BLUEPRINT_ARGUMENT_NAME: &str = "code_offset";
-
 /// The `create_minimal_proxy_to` contract name.
 pub const MINIMAL_PROXY_CONTRACT_NAME: &str = "__VYPER_MINIMAL_PROXY_CONTRACT";
 

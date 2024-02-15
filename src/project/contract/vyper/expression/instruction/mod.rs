@@ -1607,11 +1607,7 @@ impl Instruction {
                 == extcodesize_arguments[0].original.as_deref()
             {
                 let arguments = Self::translate_arguments::<D, 2>(arguments.to_owned(), context)?;
-                if Some(crate::r#const::CODE_OFFSET_BLUEPRINT_ARGUMENT_NAME)
-                    == arguments[1].original.as_deref()
-                {
-                    return Ok(Some(arguments[0].value));
-                }
+                return Ok(Some(arguments[0].value));
             }
         }
 
