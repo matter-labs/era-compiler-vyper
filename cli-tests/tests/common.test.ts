@@ -17,7 +17,7 @@ describe("Common tests", () => {
         it("Exit code = 1", () => {
             expect(result.exitCode).toBe(1);
         });
-        xit("vyper exit code == zkvyper exit code", () => {
+        it("vyper exit code == zkvyper exit code", () => {
             const vyperResult = executeCommand(vyperCommand, args);
             expect(vyperResult.exitCode).toBe(result.exitCode); // 2 for vyper and 1 for zkvyper
         });
