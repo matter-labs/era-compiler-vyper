@@ -32,9 +32,10 @@ runs:
       shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
       env:
         VYPER_DOWNLOAD_URL: "https://github.com/vyperlang/vyper/releases/download"
-        VYPER_VERSION: "v${{ inputs.vyper-version }}"
-        VYPER_DOWNLOAD_FILENAME: "vyper.${{ inputs.vyper-version }}+commit.${{ inputs.vyper-commit }}"
       run: |
+        VYPER_VERSION="v${{ inputs.vyper-version == '' && inputs.vyper-version.default || inputs.vyper-version }}"
+        VYPER_COMMIT="${{ inputs.vyper-commit == '' && inputs.vyper-commit.default || inputs.vyper-commit }}"
+        VYPER_DOWNLOAD_FILENAME="vyper.${VYPER_VERSION}+commit.${VYPER_COMMIT}"
         case "$RUNNER_OS" in
           Linux*)
             OUTPUT=vyper
