@@ -75,11 +75,12 @@ jobs:
             runner: windows-2022-github-hosted-16core
             release-suffix: windows-amd64-gnu
             required: ${{ github.event.inputs.release_windows_amd64 || true }}
+        exclude:
+          - required: false
     runs-on: ${{ matrix.runner }}
     container:
       image: ${{ matrix.image || '' }} # Special workaround to allow matrix builds with optional container
     name: ${{ matrix.name }}
-    if: ${{ matrix.required }}
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
