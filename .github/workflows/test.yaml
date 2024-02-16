@@ -4,17 +4,17 @@ name: Tests
 on:
   workflow_dispatch:
     inputs:
-      zkvyper:
+      zkvyper-version:
         type: string
-        description: "zkvyper version, (repo: https://github.com/matter-labs/era-compiler-vyper/releases)"
-        required: true
-        default: "1.3.17"
-      vyper:
+        description: "Prebuilt zkvyper version, (repo: https://github.com/matter-labs/era-compiler-vyper/releases)"
+        required: false
+        default: ""
+      vyper-version:
         type: string
         description: "vyper version, (repo: https://github.com/vyperlang/vyper/releases)"
         required: true
         default: "0.3.10"
-      commit:
+      vyper-commit:
         type: string
         description: "vyper commit, (repo: https://github.com/vyperlang/vyper/releases)"
         required: true
@@ -67,3 +67,6 @@ jobs:
         uses: ./.github/actions/run-tests
         with:
           target: ${{ matrix.target || '' }}
+          zkvyper-version: ${{ github.event.inputs.zkvyper-version || '' }}
+          vyper-version: ${{ github.event.inputs.vyper-version || '' }}
+          vyper-commit: ${{ github.event.inputs.vyper-commit || '' }}
