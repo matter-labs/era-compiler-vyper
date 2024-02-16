@@ -94,7 +94,6 @@ jobs:
           target: ${{ matrix.target }}
           rustflags: ${{ matrix.rustflags }}
       - name: Prepare binary
-        shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
         run: |
           mkdir -p ./releases/${RELEASE_SUFFIX}
           strip ./target/release/zkvyper
