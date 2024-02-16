@@ -55,7 +55,7 @@ runs:
         echo "$PWD" >> $GITHUB_PATH
     - name: Download prebuilt zkvyper
       shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
-      if: zkvyper-version != ''
+      if: inputs.zkvyper-version != ''
       env:
         ZKVYPER_DOWNLOAD_URL: "https://github.com/matter-labs/era-compiler-vyper/releases/download"
         ZKVYPER_VERSION: ${{ inputs.zkvyper-version }}
