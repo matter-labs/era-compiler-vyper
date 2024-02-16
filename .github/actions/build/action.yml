@@ -5,6 +5,10 @@ inputs:
     description: 'Specific build target triplet.'
     required: false
     default: ''
+  rustflags:
+    description: 'Additional compilation flags to use for building.'
+    required: false
+    default: ''
 runs:
   using: "composite"
   steps:
@@ -17,6 +21,8 @@ runs:
         echo "target=--target ${{ inputs.target }}" >> $GITHUB_OUTPUT
     - name: Build zkvyper
       shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
+      env:
+        RUSTFLAGS: ${{ inputs.rustflags }}
       run: |
         cargo build --release ${{ steps.build-target.outputs.target }}
         echo "$PWD/target/${{ inputs.target }}/release" >> $GITHUB_PATH

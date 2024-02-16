@@ -63,18 +63,18 @@ jobs:
       - name: Build LLVM
         uses: ./.github/actions/build-llvm
         with:
-          target: ${{ matrix.target || '' }}
+          target: ${{ matrix.target }}
       - name: Build zkvyper
         uses: ./.github/actions/build
         with:
-          target: ${{ matrix.target || '' }}
-          rustflags: ${{ matrix.rustflags || '' }}
+          target: ${{ matrix.target }}
+          rustflags: ${{ matrix.rustflags }}
       - name: Run tests
         # TODO: remove the condition as soon as the Vyper is available on Linux ARM64
         if: matrix.name != 'Linux ARM64'
         uses: ./.github/actions/run-tests
         with:
           target: ${{ matrix.target || '' }}
-          zkvyper-version: ${{ github.event.inputs.zkvyper-version || '' }}
-          vyper-version: ${{ github.event.inputs.vyper-version || '' }}
-          vyper-commit: ${{ github.event.inputs.vyper-commit || '' }}
+          zkvyper-version: ${{ github.event.inputs.zkvyper-version }}
+          vyper-version: ${{ github.event.inputs.vyper-version }}
+          vyper-commit: ${{ github.event.inputs.vyper-commit }}
