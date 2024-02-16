@@ -32,9 +32,9 @@ runs:
       shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
       env:
         VYPER_DOWNLOAD_URL: "https://github.com/vyperlang/vyper/releases/download"
+        VYPER_VERSION: ${{ inputs.vyper-version || '0.3.10' }}
+        VYPER_COMMIT: ${{ inputs.vyper-commit || '91361694' }}
       run: |
-        VYPER_VERSION="v${{ inputs.vyper-version == '' && inputs.vyper-version.default || inputs.vyper-version }}"
-        VYPER_COMMIT="${{ inputs.vyper-commit == '' && inputs.vyper-commit.default || inputs.vyper-commit }}"
         VYPER_DOWNLOAD_FILENAME="vyper.${VYPER_VERSION}+commit.${VYPER_COMMIT}"
         case "$RUNNER_OS" in
           Linux*)
@@ -51,7 +51,7 @@ runs:
             ;;
         esac
         curl --location -o $OUTPUT \
-          "$VYPER_DOWNLOAD_URL/$VYPER_VERSION/$VYPER_DOWNLOAD_FILENAME$VYPER_DOWNLOAD_EXTENSION"
+          "$VYPER_DOWNLOAD_URL/v$VYPER_VERSION/$VYPER_DOWNLOAD_FILENAME$VYPER_DOWNLOAD_EXTENSION"
         chmod a+x $OUTPUT
         echo "$PWD" >> $GITHUB_PATH
     - name: Download prebuilt zkvyper
