@@ -102,133 +102,108 @@ jobs:
           mv ./target/${{ matrix.target }}/release/zkvyper${WIN_SUFFIX} \
             ./releases/${RELEASE_SUFFIX}/zkvyper-${RELEASE_SUFFIX}${TAG_SUFFIX}${WIN_SUFFIX}
       - name: Upload binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.release-suffix }}
           path: releases
 
-#  prepare_release:
-#    runs-on: ubuntu-latest
-#    needs:
-#      - build_macos_arm64
-#      - build_macos_amd64
-#      - build_linux_amd64
-#      - build_linux_arm64
-#      - build_windows_amd64
-#    steps:
-#      - name: Checkout source
-#        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3
-#        with:
-#          fetch-depth: 0
-#          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ref || '' }}
-#
-#      - name: Download MacOS arm64 artifact
-#        uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7
-#        with:
-#          name: release_macos_arm64
-#          path: releases
-#
-#      - name: Download MacOS amd64 artifact
-#        uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7
-#        with:
-#          name: release_macos_amd64
-#          path: releases
-#
-#      - name: Download Linux arm64 artifact
-#        uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7
-#        with:
-#          name: release_linux_arm64
-#          path: releases
-#
-#      - name: Download Linux amd64 artifact
-#        uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7
-#        with:
-#          name: release_linux_amd64
-#          path: releases
-#
-#      - name: Download Windows amd64 artifact
-#        uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7
-#        with:
-#          name: release_windows_amd64
-#          path: releases
-#
-#      - name: Checkout repo with binaries
-#        if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
-#        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3
-#        with:
-#          repository: matter-labs/zkvyper-bin
-#          path: public_repo
-#          ref: main
-#
-#      - name: Generate Version or SHA
-#        id: version_or_sha
-#        run: |
-#          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-#            git config --global --add safe.directory $GITHUB_WORKSPACE
-#            echo "version_or_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-#          else
-#            echo "version_or_sha=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-#          fi
-#
-#      - name: List binaries to be released
-#        run: tree ./releases
-#
-#      - name: Publish pre-release
-#        if: github.event_name == 'workflow_dispatch'
-#        env:
-#          GH_TOKEN: ${{ github.token }}
-#        run: |
-#            BINARIES=($(find ./releases -type f))
-#            gh release create --prerelease prerelease-${{ steps.version_or_sha.outputs.version_or_sha }}-${{ github.event.inputs.prerelease_suffix }} \
-#              --target ${{ github.event.inputs.ref }} --title prerelease-${{ steps.version_or_sha.outputs.version_or_sha }}-${{ github.event.inputs.prerelease_suffix }} \
-#              "${BINARIES[@]}"
-#
-#      # to-do rename step after depcreation - matter-labs/zksolc-bin
-#      - name: Publish release (this repository)
-#        if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
-#        env:
-#          GH_TOKEN: ${{ github.token }}
-#        run: |
-#            BINARIES=($(find ./releases -type f))
-#            gh release create ${{ steps.version_or_sha.outputs.version_or_sha }} \
-#              --title ${{ steps.version_or_sha.outputs.version_or_sha }} \
-#              "${BINARIES[@]}"
-#
-#      - name: Publish release
-#        if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
-#        run: |
-#            chmod -R +x releases/
-#            cp -R releases/* public_repo/
-#            cd public_repo
-#            git config --global user.email "dev-robot@matterlabs.dev"
-#            git config --global user.name "zksync-admin-bot2"
-#            git add .
-#            git commit -m "Release: ${{ steps.version_or_sha.outputs.version_or_sha }}"
-#            git push
-#
-#      - name: Get CHANGELOG Entry
-#        if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
-#        id: changelog_reader
-#        uses: mindsers/changelog-reader-action@v2
-#        with:
-#          validation_level: warn
-#          path: ./CHANGELOG.md
-#
-#      - name: Prepare CHANGELOG for publishing
-#        if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
-#        run: |
-#          echo "## ${{ github.event.repository.name }}" >> ./release_changelog.md
-#          echo "## [${{ steps.changelog_reader.outputs.version }}] - ${{ steps.changelog_reader.outputs.date }}" >> ./release_changelog.md
-#          echo '${{ steps.changelog_reader.outputs.changes }}' >> ./release_changelog.md
-#
-#      - name: Create the Mattermost Message
-#        if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
-#        run: |
-#          echo "{\"text\":\"$(cat ./release_changelog.md)\"}" > mattermost.json
-#          cat mattermost.json
-#
-#      - uses: mattermost/action-mattermost-notify@master
-#        if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
-#        env:
-#          MATTERMOST_USERNAME: "Compiler Release Bot"
-#          MATTERMOST_WEBHOOK_URL: ${{ secrets.MATTERMOST_URL }}
+  prepare-release:
+    name: Prepare release
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ref || '' }}
+
+      - name: Download MacOS arm64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release*
+          path: releases
+
+      - name: Checkout repo with binaries
+        if: github.ref_type == 'tag'
+        uses: actions/checkout@v4
+        with:
+          repository: matter-labs/zkvyper-bin
+          path: public_repo
+          ref: main
+
+      - name: Generate Version or SHA
+        id: version_or_sha
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            git config --global --add safe.directory $GITHUB_WORKSPACE
+            echo "version_or_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          else
+            echo "version_or_sha=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: List binaries to be released
+        run: tree ./releases
+
+      - name: Publish pre-release
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+            BINARIES=($(find ./releases -type f))
+            gh release create \
+              --prerelease prerelease-${{ steps.version_or_sha.outputs.version_or_sha }}-${{ github.event.inputs.prerelease_suffix }} \
+              --target ${{ github.event.inputs.ref }} \
+              --title prerelease-${{ steps.version_or_sha.outputs.version_or_sha }}-${{ github.event.inputs.prerelease_suffix }} \
+              "${BINARIES[@]}"
+
+      # TODO: rename step after deprecation - matter-labs/zksolc-bin
+      - name: Publish release (this repository)
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+            BINARIES=($(find ./releases -type f))
+            gh release create ${{ steps.version_or_sha.outputs.version_or_sha }} \
+              --title ${{ steps.version_or_sha.outputs.version_or_sha }} \
+              "${BINARIES[@]}"
+
+      - name: Publish release
+        if: github.ref_type == 'tag'
+        run: |
+            chmod -R +x releases/
+            cp -R releases/* public_repo/
+            cd public_repo
+            git config --global user.email "dev-robot@matterlabs.dev"
+            git config --global user.name "zksync-admin-bot2"
+            git add .
+            git commit -m "Release: ${{ steps.version_or_sha.outputs.version_or_sha }}"
+            git push
+
+      - name: Get CHANGELOG Entry
+        if: github.ref_type == 'tag'
+        id: changelog_reader
+        uses: mindsers/changelog-reader-action@v2
+        with:
+          validation_level: warn
+          path: ./CHANGELOG.md
+
+      - name: Prepare CHANGELOG for publishing
+        if: github.ref_type == 'tag'
+        run: |
+          echo "## ${{ github.event.repository.name }}" >> ./release_changelog.md
+          echo "## [${{ steps.changelog_reader.outputs.version }}] - ${{ steps.changelog_reader.outputs.date }}" >> ./release_changelog.md
+          echo '${{ steps.changelog_reader.outputs.changes }}' >> ./release_changelog.md
+
+      - name: Create the Mattermost Message
+        if: github.ref_type == 'tag'
+        run: |
+          echo "{\"text\":\"$(cat ./release_changelog.md)\"}" > mattermost.json
+          cat mattermost.json
+
+      - uses: mattermost/action-mattermost-notify@master
+        if: github.ref_type == 'tag'
+        env:
+          MATTERMOST_USERNAME: "Compiler Release Bot"
+          MATTERMOST_WEBHOOK_URL: ${{ secrets.MATTERMOST_URL }}
