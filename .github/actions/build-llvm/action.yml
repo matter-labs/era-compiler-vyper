@@ -88,7 +88,7 @@ runs:
         LIBSTDCPP_SOURCE_PATH: "C:/a/_temp/msys64/mingw64/lib/libstdc++.a"
       with:
         timeout_minutes: 60
-        max_attempts: 2 # protection mechanism for sporadic dependencies download failure
+        max_attempts: 16 # protection mechanism for sporadic dependencies download failure
         command: zkevm-llvm build --use-ccache
 
     - name: Build LLVM MacOS and Windows
