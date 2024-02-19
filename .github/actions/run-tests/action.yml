@@ -93,7 +93,7 @@ runs:
       shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
       run: |
         rustup target add ${{ inputs.target }}
-        echo "target=--target ${{ inputs.target }}">> "${GITHUB_PATH}"
+        echo "target=--target ${{ inputs.target }}" >> "${GITHUB_OUTPUT}"
 
     - name: Run unit tests
       continue-on-error: true

@@ -36,6 +36,7 @@ concurrency:
 jobs:
   unit-tests:
     strategy:
+      fail-fast: false # finalize testing of all targets even if one failed
       matrix:
         include:
           - name: "MacOS x86"
