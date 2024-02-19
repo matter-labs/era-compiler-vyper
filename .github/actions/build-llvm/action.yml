@@ -76,8 +76,23 @@ runs:
         append-timestamp: false
         max-size: "2G"
         verbose: 2
+        save: ${{ github.event_name == 'push' }}
 
-    - name: Build LLVM framework
+    - name: Build LLVM Linux
+      if: ${{ runner.os == 'Linux' }}
+      uses: nick-fields/retry@v2
+      env:
+        CCACHE_BASEDIR: ${{ github.workspace }}
+        CCACHE_NOHASHDIR: "true"
+        CCACHE_COMPILERCHECK: "content"
+        LIBSTDCPP_SOURCE_PATH: "C:/a/_temp/msys64/mingw64/lib/libstdc++.a"
+      with:
+        timeout_minutes: 60
+        max_attempts: 16 # protection mechanism for sporadic dependencies download failure
+        command: zkevm-llvm build --use-ccache
+
+    - name: Build LLVM MacOS and Windows
+      if: ${{ runner.os != 'Linux' }}
       shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
       env:
         CCACHE_BASEDIR: ${{ github.workspace }}

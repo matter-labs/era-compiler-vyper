@@ -53,68 +53,50 @@ jobs:
           - name: "MacOS x86"
             runner: macos-12-large
             release-suffix: macosx-amd64
-            required: ${{ github.event.inputs.release_macos_amd64 || true }}
+            required: ${{ github.event.inputs.release_macos_amd64 || 'true' }}
           - name: "MacOS arm64"
             runner: [self-hosted, macOS, ARM64]
             release-suffix: macosx-arm64
-            required: ${{ github.event.inputs.release_macos_arm64 || true }}
+            required: ${{ github.event.inputs.release_macos_arm64 || 'true' }}
           - name: "Linux x86"
             runner: matterlabs-ci-runner
             image: matterlabs/llvm_runner:ubuntu22-llvm15-latest
             target: "x86_64-unknown-linux-musl"
             release-suffix: linux-amd64
-            required: ${{ github.event.inputs.release_linux_amd64 || true }}
+            required: ${{ github.event.inputs.release_linux_amd64 || 'true' }}
           - name: "Linux ARM64"
             runner: matterlabs-ci-runner-arm
             image: matterlabs/llvm_runner:ubuntu22-llvm15-latest
             target: "aarch64-unknown-linux-musl"
             rustflags: "-C link-arg=-Wl,-Bstatic -C link-arg=-lc -C link-arg=-L/usr/lib/llvm-15/lib/clang/15.0.7/lib/linux/ -C link-arg=-lclang_rt.builtins-aarch64"
             release-suffix: linux-arm64
-            required: ${{ github.event.inputs.release_linux_arm64 || true }}
+            required: ${{ github.event.inputs.release_linux_arm64 || 'true' }}
           - name: "Windows"
             runner: windows-2022-github-hosted-16core
-            shell: 'msys2 {0}'
             release-suffix: windows-amd64-gnu
-            required: ${{ github.event.inputs.release_windows_amd64 || true }}
+            required: ${{ github.event.inputs.release_windows_amd64 || 'true' }}
     runs-on: ${{ matrix.runner }}
     container:
       image: ${{ matrix.image || '' }} # Special workaround to allow matrix builds with optional container
     name: ${{ matrix.name }}
     steps:
       - name: Checkout source
-        if: ${{ matrix.required }}
+        if: ${{ matrix.required == 'true' }} # Important to use 'true' here, because the value is a string here
         uses: actions/checkout@v4
 
       - name: Build LLVM
-        if: ${{ matrix.required }}
+        if: ${{ matrix.required == 'true' }}
         uses: ./.github/actions/build-llvm
         with:
           target: ${{ matrix.target }}
 
       - name: Build zkvyper
-        if: ${{ matrix.required }}
+        if: ${{ matrix.required == 'true' }}
         uses: ./.github/actions/build
         with:
           target: ${{ matrix.target }}
           rustflags: ${{ matrix.rustflags }}
-
-      - name: Prepare binary
-        if: ${{ matrix.required }}
-        shell: ${{ matrix.shell || 'bash' }}
-        run: |
-          mkdir -p ./releases/${RELEASE_SUFFIX}
-          strip ./target/${{ matrix.target }}/release/zkvyper
-          [ ! -z "$GITHUB_REF_NAME" ] && TAG_SUFFIX="-${GITHUB_REF_NAME}"
-          [ "$RUNNER_OS" = "Windows" ] && WIN_SUFFIX=".exe"
-          mv ./target/${{ matrix.target }}/release/zkvyper${WIN_SUFFIX} \
-            ./releases/${RELEASE_SUFFIX}/zkvyper-${RELEASE_SUFFIX}${TAG_SUFFIX}${WIN_SUFFIX}
-
-      - name: Upload binary
-        if: ${{ matrix.required }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-${{ matrix.release-suffix }}
-          path: releases
+          release-suffix: ${{ matrix.release-suffix }}
 
   prepare-release:
     name: Prepare release
@@ -128,19 +110,11 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ref || '' }}
 
-      - name: Download MacOS arm64 artifact
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: release*
           path: releases
-
-      - name: Checkout repo with binaries
-        if: github.ref_type == 'tag'
-        uses: actions/checkout@v4
-        with:
-          repository: matter-labs/zkvyper-bin
-          path: public_repo
-          ref: main
 
       - name: Generate Version or SHA
         id: version_or_sha
