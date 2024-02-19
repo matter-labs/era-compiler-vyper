@@ -103,7 +103,13 @@ runs:
       run: |
         cargo install cargo2junit
         cargo test ${{ steps.build-target.outputs.target }} -- -Z unstable-options \
-          --format json | cargo2junit | tee "${{ inputs.results-xml }}"
+          --format json > results.json
+        if [ $? -eq 0 ]; then
+          cargo2junit < results.json > "${{ inputs.results-xml }}"
+        else
+          echo "Unit tests failed"
+          exit 1
+        fi
 
     - name: Upload results (MacOS and Windows)
       if: runner.os != 'Linux'
