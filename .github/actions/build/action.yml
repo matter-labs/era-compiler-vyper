@@ -19,6 +19,7 @@ runs:
       run: |
         rustup target add ${{ inputs.target }}
         echo "target=--target ${{ inputs.target }}" >> $GITHUB_OUTPUT
+
     - name: Build zkvyper
       shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
       env:

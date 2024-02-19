@@ -82,17 +82,24 @@ jobs:
     name: ${{ matrix.name }}
     steps:
       - name: Checkout source
+        if: ${{ matrix.required }}
         uses: actions/checkout@v4
+
       - name: Build LLVM
+        if: ${{ matrix.required }}
         uses: ./.github/actions/build-llvm
         with:
           target: ${{ matrix.target }}
+
       - name: Build zkvyper
+        if: ${{ matrix.required }}
         uses: ./.github/actions/build
         with:
           target: ${{ matrix.target }}
           rustflags: ${{ matrix.rustflags }}
+
       - name: Prepare binary
+        if: ${{ matrix.required }}
         shell: ${{ matrix.shell || 'bash' }}
         run: |
           mkdir -p ./releases/${RELEASE_SUFFIX}
@@ -101,7 +108,9 @@ jobs:
           [ "$RUNNER_OS" = "Windows" ] && WIN_SUFFIX=".exe"
           mv ./target/${{ matrix.target }}/release/zkvyper${WIN_SUFFIX} \
             ./releases/${RELEASE_SUFFIX}/zkvyper-${RELEASE_SUFFIX}${TAG_SUFFIX}${WIN_SUFFIX}
+
       - name: Upload binary
+        if: ${{ matrix.required }}
         uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.release-suffix }}

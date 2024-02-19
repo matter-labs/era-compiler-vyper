@@ -12,11 +12,13 @@ runs:
       if: runner.os == 'macOS'
       run: brew install cmake ninja
       shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
+
     - name: Windows prepare msys2
       if: runner.os == 'Windows'
       uses: msys2/setup-msys2@v2
       with:
         path-type: inherit # Important to correctly update PATH
+
     - name: Prepare env
       if: runner.os == 'Windows'
       shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
@@ -38,6 +40,7 @@ runs:
           mingw-w64-x86_64-gcc-libs \
           mingw-w64-x86_64-gcc
         echo "/c/Users/runneradmin/.cargo/bin" >> $GITHUB_PATH
+
     - name: Define build target
       id: build-target
       if: inputs.target != ''
@@ -45,12 +48,14 @@ runs:
       run: |
         rustup target add ${{ inputs.target }}
         echo "target=--target ${{ inputs.target }}" >> $GITHUB_OUTPUT
+
     - name: Clone LLVM framework
       shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
       run: |
         cargo install compiler-llvm-builder ${{ steps.build-target.outputs.target }} \
           --git https://github.com/matter-labs/era-compiler-llvm-builder
         zkevm-llvm clone
+
     - name: Define ccache key
       shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
       id: ccache-key
@@ -58,6 +63,7 @@ runs:
         LLVM_BRANCH="$(git -C ./llvm rev-parse --abbrev-ref HEAD)"
         LLVM_SHORT_SHA="$(git -C ./llvm rev-parse --short HEAD)"
         echo "key=llvm-${LLVM_BRANCH}-${LLVM_SHORT_SHA}-${{ runner.os }}-${{ runner.arch }}" | tee -a "${GITHUB_OUTPUT}"
+
     - name: Set up compiler cache
       uses: hendrikmuhs/ccache-action@v1.2
       env:
@@ -70,6 +76,7 @@ runs:
         append-timestamp: false
         max-size: "2G"
         verbose: 2
+
     - name: Build LLVM framework
       shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
       env:
