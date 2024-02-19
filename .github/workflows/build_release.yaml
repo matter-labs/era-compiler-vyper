@@ -158,7 +158,6 @@ jobs:
               --title prerelease-${{ steps.version_or_sha.outputs.version_or_sha }}-${{ github.event.inputs.prerelease_suffix }} \
               "${BINARIES[@]}"
 
-      # TODO: rename step after deprecation - matter-labs/zksolc-bin
       - name: Publish release (this repository)
         if: github.ref_type == 'tag'
         env:
@@ -168,42 +167,3 @@ jobs:
             gh release create ${{ steps.version_or_sha.outputs.version_or_sha }} \
               --title ${{ steps.version_or_sha.outputs.version_or_sha }} \
               "${BINARIES[@]}"
-
-      - name: Publish release
-        if: github.ref_type == 'tag'
-        run: |
-            chmod -R +x releases/
-            cp -R releases/* public_repo/
-            cd public_repo
-            git config --global user.email "dev-robot@matterlabs.dev"
-            git config --global user.name "zksync-admin-bot2"
-            git add .
-            git commit -m "Release: ${{ steps.version_or_sha.outputs.version_or_sha }}"
-            git push
-
-      - name: Get CHANGELOG Entry
-        if: github.ref_type == 'tag'
-        id: changelog_reader
-        uses: mindsers/changelog-reader-action@v2
-        with:
-          validation_level: warn
-          path: ./CHANGELOG.md
-
-      - name: Prepare CHANGELOG for publishing
-        if: github.ref_type == 'tag'
-        run: |
-          echo "## ${{ github.event.repository.name }}" >> ./release_changelog.md
-          echo "## [${{ steps.changelog_reader.outputs.version }}] - ${{ steps.changelog_reader.outputs.date }}" >> ./release_changelog.md
-          echo '${{ steps.changelog_reader.outputs.changes }}' >> ./release_changelog.md
-
-      - name: Create the Mattermost Message
-        if: github.ref_type == 'tag'
-        run: |
-          echo "{\"text\":\"$(cat ./release_changelog.md)\"}" > mattermost.json
-          cat mattermost.json
-
-      - uses: mattermost/action-mattermost-notify@master
-        if: github.ref_type == 'tag'
-        env:
-          MATTERMOST_USERNAME: "Compiler Release Bot"
-          MATTERMOST_WEBHOOK_URL: ${{ secrets.MATTERMOST_URL }}
