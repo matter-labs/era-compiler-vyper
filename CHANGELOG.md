@@ -9,6 +9,7 @@
 - The `--evm-version` parameter to the CLI
 - The `create_from_blueprint` Vyper built-in support
 - An option to disable the system request memoization
+- More compiler optimizations
 
 ### Fixed
 
