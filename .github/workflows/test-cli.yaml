@@ -1,14 +1,25 @@
-name: Tests
+name: CLI tests
 
-# Execute workflow for each PR and with each merge to the trunk
+# This workflow is triggered by the following events:
+# - Pull request changes in the CLI tests and related workflows
+# - Manually by the user
+#
+# If PR is in Draft state, then we use prebuilt binaries
+# If PR is in Ready to Merge state, then we build the binaries from the sources
+
 on:
+  pull_request:
+    paths:
+      - 'cli-tests/**'
+      - '.github/workflows/test-cli.yaml'
+      - '.github/actions/cli-tests/**'
   workflow_dispatch:
     inputs:
       zkvyper-version:
         type: string
         description: "Prebuilt zkvyper version, (repo: https://github.com/matter-labs/era-compiler-vyper/releases)"
         required: false
-        default: "1.4.0"
+        default: ""
       vyper-version:
         type: string
         description: "vyper version, (repo: https://github.com/vyperlang/vyper/releases)"
@@ -19,16 +30,6 @@ on:
         description: "vyper commit, (repo: https://github.com/vyperlang/vyper/releases)"
         required: true
         default: "91361694"
-  pull_request:
-    paths-ignore:
-      - 'cli-tests/**'
-      - '.github/workflows/test-cli.yaml'
-      - '.github/actions/cli-tests/**'
-      - '.gitignore'
-      - '**/*.md'
-  push:
-    branches:
-      - main
 
 # Cancel the workflow if any new changes pushed to a feature branch or the trunk
 concurrency:
@@ -36,7 +37,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  unit-tests:
+  cli-tests:
     strategy:
       fail-fast: false # finalize testing of all targets even if one failed
       matrix:
@@ -65,11 +66,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build LLVM
+        if: github.event.pull_request.draft == false
         uses: ./.github/actions/build-llvm
         with:
           target: ${{ matrix.target }}
 
       - name: Build zkvyper
+        if: github.event.pull_request.draft == false
         uses: ./.github/actions/build
         with:
           target: ${{ matrix.target }}
@@ -83,17 +86,10 @@ jobs:
           vyper-version: ${{ github.event.inputs.vyper-version }}
           vyper-commit: ${{ github.event.inputs.vyper-commit }}
 
-      - name: Run tests
-        # TODO: remove the condition as soon as the Vyper is available on Linux ARM64
-        if: matrix.name != 'Linux ARM64'
-        uses: ./.github/actions/unit-tests
-        with:
-          target: ${{ matrix.target || '' }}
-
       - name: Run CLI tests
         # TODO: remove the condition as soon as the Vyper is available on Linux ARM64
         if: matrix.name != 'Linux ARM64'
         uses: ./.github/actions/cli-tests
         with:
-          use-prebuilt-zkvyper: false # always build zkvyper from sources for general PR testing
-          zkvyper-version: ${{ github.event.inputs.zkvyper-version || '' }}
+          use-prebuilt-zkvyper: ${{ github.event.pull_request.draft }}
+          zkvyper-version: ${{ github.event.inputs.zkvyper-version }}

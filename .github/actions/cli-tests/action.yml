@@ -1,0 +1,71 @@
+name: 'ZKVyper CLI Tests'
+description: 'Executes zkvyper CLI tests'
+inputs:
+  use-prebuilt-zkvyper:
+    description: 'Whether to use prebuilt zkvyper executable (set to `true` if testing prebuilt binaries).'
+    required: false
+    default: 'false'
+  zkvyper-version:
+    description: 'Prebuilt version of zkvyper compiler to download and use in tests.'
+    required: true
+    default: ''
+runs:
+  using: "composite"
+  steps:
+    - name: Download prebuilt zkvyper
+      shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
+      if: inputs.use-prebuilt-zkvyper == 'true'
+      env:
+        ZKVYPER_DOWNLOAD_URL: "https://github.com/matter-labs/era-compiler-vyper/releases/download"
+        ZKVYPER_VERSION: ${{ inputs.zkvyper-version }}
+      run: |
+        OUTPUT=zkvyper
+        case "${RUNNER_OS}-${RUNNER_ARCH}" in
+          Linux-ARM64*)
+            ZKVYPER_DOWNLOAD_FILENAME="zkvyper-linux-arm64-musl-v${ZKVYPER_VERSION}"
+            ;;
+          Linux-X64*)
+            ZKVYPER_DOWNLOAD_FILENAME="zkvyper-linux-amd64-musl-v${ZKVYPER_VERSION}"
+            ;;
+          macOS-ARM64*)
+            ZKVYPER_DOWNLOAD_FILENAME="zkvyper-macosx-arm64-v${ZKVYPER_VERSION}"
+            ;;
+          macOS-X64*)
+            ZKVYPER_DOWNLOAD_FILENAME="zkvyper-macosx-amd64-v${ZKVYPER_VERSION}"
+            ;;
+          Windows*)
+            OUTPUT=zkvyper.exe
+            ZKVYPER_DOWNLOAD_FILENAME="zkvyper-windows-amd64-gnu-v${ZKVYPER_VERSION}.exe"
+            ;;
+        esac
+        curl --location -o $OUTPUT "${ZKVYPER_DOWNLOAD_URL}/${ZKVYPER_VERSION}/${ZKVYPER_DOWNLOAD_FILENAME}"
+        chmod a+x "${OUTPUT}"
+        echo "${PWD}" >> "${GITHUB_PATH}"
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Run CLI tests
+      shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
+      working-directory: cli-tests
+      run: |
+        npm install
+        npx jest --ci --reporters=default --reporters=jest-junit
+
+    - name: Upload results (MacOS and Windows)
+      if: runner.os != 'Linux'
+      uses: EnricoMi/publish-unit-test-result-action/composite@v2.12.0
+      with:
+        check_name: CLI Tests Results ${{ runner.os }} ${{ runner.arch }}
+        files: cli-tests/junit.xml
+        action_fail_on_inconclusive: true
+
+    - name: Upload results (Linux)
+      if: runner.os == 'Linux'
+      uses: EnricoMi/publish-unit-test-result-action@v2.12.0
+      with:
+        check_name: CLI Tests Results ${{ runner.os }} ${{ runner.arch }}
+        files: cli-tests/junit.xml
+        action_fail_on_inconclusive: true
