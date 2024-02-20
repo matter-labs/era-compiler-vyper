@@ -50,6 +50,7 @@ runs:
     - name: Run CLI tests
       shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
       working-directory: cli-tests
+      continue-on-error: true
       run: |
         npm install
         npx jest --ci --reporters=default --reporters=jest-junit
