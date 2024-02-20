@@ -24,24 +24,3 @@ def f():
     )
     .expect("Test failure");
 }
-
-#[test]
-#[should_panic(expected = "Built-in function `create_from_blueprint` is not supported")]
-fn create_from_blueprint() {
-    let source_code = r#"
-@external
-def f():
-    result: address = create_from_blueprint(convert(0x42, address))
-    return
-"#;
-
-    let _ = super::build_vyper(
-        source_code,
-        Some((
-            semver::Version::new(0, 3, 10),
-            "Built-in function `create_from_blueprint` is not supported",
-        )),
-        era_compiler_llvm_context::OptimizerSettings::none(),
-    )
-    .expect("Test failure");
-}

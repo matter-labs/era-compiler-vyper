@@ -10,27 +10,6 @@
 #![cfg(test)]
 
 #[test]
-#[should_panic(expected = "Built-in function `create_copy_of` is not supported")]
-fn extcodecopy() {
-    let source_code = r#"
-@external
-def f():
-    result: address = create_copy_of(convert(0x42, address))
-    return
-"#;
-
-    super::build_vyper(
-        source_code,
-        Some((
-            semver::Version::new(0, 3, 10),
-            "The `EXTCODECOPY` instruction is not supported",
-        )),
-        era_compiler_llvm_context::OptimizerSettings::none(),
-    )
-    .expect("Test failure");
-}
-
-#[test]
 #[should_panic(expected = "The `SELFDESTRUCT` instruction is not supported")]
 fn selfdestruct() {
     let source_code = r#"

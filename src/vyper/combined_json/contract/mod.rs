@@ -38,9 +38,9 @@ pub struct Contract {
 
 impl Contract {
     ///
-    /// Creates a forwarder.
+    /// Creates a minimal proxy.
     ///
-    pub fn new_forwarder() -> Self {
+    pub fn new_minimal_proxy() -> Self {
         Self {
             method_identifiers: Some(BTreeMap::new()),
             abi: Some(serde_json::Value::Object(serde_json::Map::default())),

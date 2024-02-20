@@ -142,7 +142,7 @@ impl Project {
             })
             .collect();
 
-        let is_forwarder_used = results.iter().any(|(_path, result)| {
+        let is_minimal_proxy_used = results.iter().any(|(_path, result)| {
             result
                 .as_ref()
                 .map(|contract| {
@@ -153,16 +153,16 @@ impl Project {
                 })
                 .unwrap_or_default()
         });
-        if is_forwarder_used {
-            let forwarder_build = era_compiler_llvm_context::EraVMBuild::new(
+        if is_minimal_proxy_used {
+            let minimal_proxy_build = era_compiler_llvm_context::EraVMBuild::new(
                 crate::r#const::FORWARDER_CONTRACT_ASSEMBLY.to_owned(),
                 None,
                 crate::r#const::FORWARDER_CONTRACT_BYTECODE.clone(),
                 crate::r#const::FORWARDER_CONTRACT_HASH.clone(),
             );
             build.contracts.insert(
-                crate::r#const::FORWARDER_CONTRACT_NAME.to_owned(),
-                ContractBuild::new(forwarder_build, vec![]),
+                crate::r#const::MINIMAL_PROXY_CONTRACT_NAME.to_owned(),
+                ContractBuild::new(minimal_proxy_build, vec![]),
             );
         }
 
