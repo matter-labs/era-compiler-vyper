@@ -122,5 +122,5 @@ jobs:
         if: matrix.name != 'Linux ARM64'
         uses: ./.github/actions/cli-tests
         with:
-          use-prebuilt-zkvyper: ${{ github.event.pull_request.draft }}
+          use-prebuilt-zkvyper: ${{ github.event.pull_request.draft || 'true' }}
           zkvyper-version: ${{ github.event.inputs.zkvyper-version || env.ZKVYPER_PREBUILT_VERSION }}

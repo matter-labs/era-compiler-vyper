@@ -36,7 +36,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  unit-tests:
+  test:
     strategy:
       fail-fast: false # finalize testing of all targets even if one failed
       matrix:

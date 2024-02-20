@@ -1,5 +1,5 @@
 name: 'ZKVyper Tests'
-description: 'Executes zkvyper unit and integration tests'
+description: 'Executes zkvyper unit tests'
 inputs:
   target:
     description: 'Specific target triplet.'
