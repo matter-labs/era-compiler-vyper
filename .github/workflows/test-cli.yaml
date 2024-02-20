@@ -19,7 +19,7 @@ on:
         type: string
         description: "Prebuilt zkvyper version, (repo: https://github.com/matter-labs/era-compiler-vyper/releases)"
         required: false
-        default: ""
+        default: "1.4.0"
       vyper-version:
         type: string
         description: "vyper version, (repo: https://github.com/vyperlang/vyper/releases)"
