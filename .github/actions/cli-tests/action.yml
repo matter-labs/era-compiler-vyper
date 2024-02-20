@@ -38,7 +38,6 @@ runs:
             ZKVYPER_DOWNLOAD_FILENAME="zkvyper-windows-amd64-gnu-v${ZKVYPER_VERSION}.exe"
             ;;
         esac
-        echo HERE HERE HERE "${ZKVYPER_DOWNLOAD_URL}/${ZKVYPER_VERSION}/${ZKVYPER_DOWNLOAD_FILENAME}"
         curl --location -o $OUTPUT "${ZKVYPER_DOWNLOAD_URL}/${ZKVYPER_VERSION}/${ZKVYPER_DOWNLOAD_FILENAME}"
         chmod a+x "${OUTPUT}"
         echo "${PWD}" >> "${GITHUB_PATH}"
