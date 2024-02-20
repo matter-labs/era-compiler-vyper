@@ -12,27 +12,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Prepare env
-      if: runner.os == 'Windows'
-      shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
-      env:
-        MINGW64_DOWNLOAD_URL: "https://repo.msys2.org/mingw/mingw64"
-        MINGW64_DOWNLOAD_FILENAME: "mingw-w64-x86_64-cmake-3.27.7-3-any.pkg.tar.zst"
-      run: |
-        pacman-key --refresh
-        pacman -Sy
-        curl -LO "$MINGW64_DOWNLOAD_URL/$MINGW64_DOWNLOAD_FILENAME"
-        pacman --noconfirm -U "$MINGW64_DOWNLOAD_FILENAME"
-        pacman --noconfirm -S --needed --overwrite \
-          base-devel \
-          git \
-          ninja \
-          mingw-w64-x86_64-clang \
-          mingw-w64-x86_64-lld \
-          mingw-w64-x86_64-rust \
-          mingw-w64-x86_64-gcc-libs \
-          mingw-w64-x86_64-gcc
-        echo "/c/Users/runneradmin/.cargo/bin" >> $GITHUB_PATH
     - name: Download prebuilt zkvyper
       shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
       if: inputs.use-prebuilt-zkvyper == 'true'
@@ -59,6 +38,7 @@ runs:
             ZKVYPER_DOWNLOAD_FILENAME="zkvyper-windows-amd64-gnu-v${ZKVYPER_VERSION}.exe"
             ;;
         esac
+        echo HERE HERE HERE "${ZKVYPER_DOWNLOAD_URL}/${ZKVYPER_VERSION}/${ZKVYPER_DOWNLOAD_FILENAME}"
         curl --location -o $OUTPUT "${ZKVYPER_DOWNLOAD_URL}/${ZKVYPER_VERSION}/${ZKVYPER_DOWNLOAD_FILENAME}"
         chmod a+x "${OUTPUT}"
         echo "${PWD}" >> "${GITHUB_PATH}"
