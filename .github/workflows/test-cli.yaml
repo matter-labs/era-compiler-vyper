@@ -36,6 +36,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+env:
+  ZKVYPER_PREBUILT_VERSION: ${{ github.event.inputs.zkvyper-version || '1.4.0' }}
+
 jobs:
   cli-tests:
     strategy:
@@ -120,4 +123,4 @@ jobs:
         uses: ./.github/actions/cli-tests
         with:
           use-prebuilt-zkvyper: ${{ github.event.pull_request.draft }}
-          zkvyper-version: ${{ github.event.inputs.zkvyper-version }}
+          zkvyper-version: ${{ github.event.inputs.zkvyper-version || env.ZKVYPER_PREBUILT_VERSION }}
