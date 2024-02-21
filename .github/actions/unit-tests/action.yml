@@ -1,4 +1,4 @@
-name: 'ZKVyper Tests'
+name: 'zkvyper tests'
 description: 'Executes zkvyper unit tests'
 inputs:
   target:

@@ -1,4 +1,4 @@
-name: 'ZKVyper CLI Tests'
+name: 'zkvyper CLI Tests'
 description: 'Executes zkvyper CLI tests'
 inputs:
   use-prebuilt-zkvyper:
@@ -43,9 +43,9 @@ runs:
         echo "${PWD}" >> "${GITHUB_PATH}"
 
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
 
     - name: Run CLI tests
       shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
