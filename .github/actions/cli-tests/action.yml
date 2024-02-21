@@ -22,10 +22,10 @@ runs:
         OUTPUT=zkvyper
         case "${RUNNER_OS}-${RUNNER_ARCH}" in
           Linux-ARM64*)
-            ZKVYPER_DOWNLOAD_FILENAME="zkvyper-linux-arm64-v${ZKVYPER_VERSION}"
+            ZKVYPER_DOWNLOAD_FILENAME="zkvyper-linux-arm64-musl-v${ZKVYPER_VERSION}"
             ;;
           Linux-X64*)
-            ZKVYPER_DOWNLOAD_FILENAME="zkvyper-linux-amd64-v${ZKVYPER_VERSION}"
+            ZKVYPER_DOWNLOAD_FILENAME="zkvyper-linux-amd64-musl-v${ZKVYPER_VERSION}"
             ;;
           macOS-ARM64*)
             ZKVYPER_DOWNLOAD_FILENAME="zkvyper-macosx-arm64-v${ZKVYPER_VERSION}"
