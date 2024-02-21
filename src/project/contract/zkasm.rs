@@ -37,22 +37,23 @@ impl Contract {
     pub fn compile(
         self,
         contract_path: &str,
-        source_code_hash: Option<[u8; compiler_common::BYTE_LENGTH_FIELD]>,
-        optimizer_settings: compiler_llvm_context::OptimizerSettings,
+        source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
+        optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         _suppressed_warnings: Vec<WarningType>,
-        debug_config: Option<compiler_llvm_context::DebugConfig>,
+        debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
         let metadata_hash = source_code_hash.map(|source_code_hash| {
             ContractMetadata::new(
                 &source_code_hash,
                 &self.version,
+                None,
                 semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
                 optimizer_settings,
             )
             .keccak256()
         });
 
-        let build = compiler_llvm_context::eravm_build_assembly_text(
+        let build = era_compiler_llvm_context::eravm_build_assembly_text(
             contract_path,
             self.source_code.as_str(),
             metadata_hash,

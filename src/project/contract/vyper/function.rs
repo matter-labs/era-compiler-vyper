@@ -4,8 +4,8 @@
 
 use inkwell::types::BasicType;
 
-use compiler_llvm_context::EraVMDependency;
-use compiler_llvm_context::EraVMWriteLLVM;
+use era_compiler_llvm_context::EraVMDependency;
+use era_compiler_llvm_context::EraVMWriteLLVM;
 
 use crate::metadata::function::Function as FunctionMetadata;
 use crate::project::contract::vyper::expression::Expression;
@@ -42,7 +42,7 @@ where
 {
     fn declare(
         &mut self,
-        context: &mut compiler_llvm_context::EraVMContext<D>,
+        context: &mut era_compiler_llvm_context::EraVMContext<D>,
     ) -> anyhow::Result<()> {
         let mut argument_types = vec![];
         if self
@@ -64,12 +64,15 @@ where
         )?;
         function
             .borrow_mut()
-            .set_vyper_data(compiler_llvm_context::EraVMFunctionVyperData::default());
+            .set_vyper_data(era_compiler_llvm_context::EraVMFunctionVyperData::default());
 
         Ok(())
     }
 
-    fn into_llvm(self, context: &mut compiler_llvm_context::EraVMContext<D>) -> anyhow::Result<()> {
+    fn into_llvm(
+        self,
+        context: &mut era_compiler_llvm_context::EraVMContext<D>,
+    ) -> anyhow::Result<()> {
         context.set_current_function(self.name.as_str())?;
 
         let llvm_entry_block = context.current_function().borrow().entry_block();

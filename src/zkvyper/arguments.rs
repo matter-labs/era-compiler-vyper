@@ -43,6 +43,10 @@ pub struct Arguments {
     #[structopt(long = "fallback-Oz")]
     pub fallback_to_optimizing_for_size: bool,
 
+    /// Disable the system request memoization.
+    #[structopt(long = "disable-system-request-memoization")]
+    pub disable_system_request_memoization: bool,
+
     /// Disable the `vyper` LLL IR optimizer.
     #[structopt(long = "disable-vyper-optimizer")]
     pub disable_vyper_optimizer: bool,
@@ -51,6 +55,11 @@ pub struct Arguments {
     /// In LLVM IR mode `vyper` is unused.
     #[structopt(long = "vyper")]
     pub vyper: Option<String>,
+
+    /// The EVM version to generate IR for.
+    /// See https://github.com/matter-labs/era-compiler-common/blob/main/src/evm_version.rs for reference.
+    #[structopt(long = "evm-version")]
+    pub evm_version: Option<String>,
 
     /// An extra output format string.
     /// See `vyper --help` for available options including combined JSON mode.
@@ -138,8 +147,14 @@ impl Arguments {
             );
         }
 
-        if (self.llvm_ir || self.zkasm) && self.vyper.is_some() {
-            anyhow::bail!("`vyper` is not used in LLVM IR and EraVM assembly modes.");
+        if self.llvm_ir || self.zkasm {
+            if self.vyper.is_some() {
+                anyhow::bail!("`vyper` is not used in LLVM IR and EraVM assembly modes.");
+            }
+
+            if self.evm_version.is_some() {
+                anyhow::bail!("EVM version is not used in LLVM IR and EraVM assembly modes.");
+            }
         }
 
         if self.zkasm {
@@ -149,6 +164,11 @@ impl Arguments {
 
             if self.fallback_to_optimizing_for_size {
                 anyhow::bail!("Falling back to -Oz is not supported in EraVM assembly mode.");
+            }
+            if self.disable_system_request_memoization {
+                anyhow::bail!(
+                    "Disabling the system request memoization is not supported in EraVM assembly mode."
+                );
             }
         }
 

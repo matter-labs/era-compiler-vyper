@@ -19,10 +19,10 @@ impl Set {
     ///
     pub fn into_llvm_value<D>(
         self,
-        context: &mut compiler_llvm_context::EraVMContext<D>,
+        context: &mut era_compiler_llvm_context::EraVMContext<D>,
     ) -> anyhow::Result<()>
     where
-        D: compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::EraVMDependency + Clone,
     {
         let [identifier, value] = self.0;
         let identifier = identifier.try_into_identifier()?;

@@ -29,7 +29,7 @@ pub struct Project {
     /// The Vyper compiler version.
     pub version: semver::Version,
     /// The project source code hash.
-    pub source_code_hash: [u8; compiler_common::BYTE_LENGTH_FIELD],
+    pub source_code_hash: [u8; era_compiler_common::BYTE_LENGTH_FIELD],
     /// The contract data,
     pub contracts: BTreeMap<String, Contract>,
 }
@@ -40,7 +40,7 @@ impl Project {
     ///
     pub fn new(
         version: semver::Version,
-        source_code_hash: [u8; compiler_common::BYTE_LENGTH_FIELD],
+        source_code_hash: [u8; era_compiler_common::BYTE_LENGTH_FIELD],
         contracts: BTreeMap<String, Contract>,
     ) -> Self {
         Self {
@@ -64,14 +64,14 @@ impl Project {
         project_contracts.insert(
             path,
             LLVMIRContract::new(
-                compiler_llvm_context::eravm_const::LLVM_VERSION,
+                era_compiler_llvm_context::eravm_const::LLVM_VERSION,
                 source_code,
             )
             .into(),
         );
 
         Ok(Self::new(
-            compiler_llvm_context::eravm_const::LLVM_VERSION,
+            era_compiler_llvm_context::eravm_const::LLVM_VERSION,
             source_code_hash,
             project_contracts,
         ))
@@ -92,14 +92,14 @@ impl Project {
         project_contracts.insert(
             path,
             ZKASMContract::new(
-                compiler_llvm_context::eravm_const::ZKEVM_VERSION,
+                era_compiler_llvm_context::eravm_const::ZKEVM_VERSION,
                 source_code,
             )
             .into(),
         );
 
         Ok(Self::new(
-            compiler_llvm_context::eravm_const::ZKEVM_VERSION,
+            era_compiler_llvm_context::eravm_const::ZKEVM_VERSION,
             source_code_hash,
             project_contracts,
         ))
@@ -110,11 +110,12 @@ impl Project {
     ///
     pub fn compile(
         self,
-        optimizer_settings: compiler_llvm_context::OptimizerSettings,
+        evm_version: Option<era_compiler_common::EVMVersion>,
+        optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         include_metadata_hash: bool,
         bytecode_encoding: zkevm_assembly::RunningVmEncodingMode,
         suppressed_warnings: Vec<WarningType>,
-        debug_config: Option<compiler_llvm_context::DebugConfig>,
+        debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<Build> {
         let mut build = Build::default();
         let source_code_hash = if include_metadata_hash {
@@ -131,6 +132,7 @@ impl Project {
                     contract,
                     source_code_hash,
                     bytecode_encoding == zkevm_assembly::RunningVmEncodingMode::Testing,
+                    evm_version,
                     optimizer_settings.clone(),
                     suppressed_warnings.clone(),
                     debug_config.clone(),
@@ -140,7 +142,7 @@ impl Project {
             })
             .collect();
 
-        let is_forwarder_used = results.iter().any(|(_path, result)| {
+        let is_minimal_proxy_used = results.iter().any(|(_path, result)| {
             result
                 .as_ref()
                 .map(|contract| {
@@ -151,16 +153,16 @@ impl Project {
                 })
                 .unwrap_or_default()
         });
-        if is_forwarder_used {
-            let forwarder_build = compiler_llvm_context::EraVMBuild::new(
+        if is_minimal_proxy_used {
+            let minimal_proxy_build = era_compiler_llvm_context::EraVMBuild::new(
                 crate::r#const::FORWARDER_CONTRACT_ASSEMBLY.to_owned(),
                 None,
                 crate::r#const::FORWARDER_CONTRACT_BYTECODE.clone(),
                 crate::r#const::FORWARDER_CONTRACT_HASH.clone(),
             );
             build.contracts.insert(
-                crate::r#const::FORWARDER_CONTRACT_NAME.to_owned(),
-                ContractBuild::new(forwarder_build, vec![]),
+                crate::r#const::MINIMAL_PROXY_CONTRACT_NAME.to_owned(),
+                ContractBuild::new(minimal_proxy_build, vec![]),
             );
         }
 

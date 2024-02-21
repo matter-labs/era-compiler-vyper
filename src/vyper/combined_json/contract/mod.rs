@@ -38,9 +38,9 @@ pub struct Contract {
 
 impl Contract {
     ///
-    /// Creates a forwarder.
+    /// Creates a minimal proxy.
     ///
-    pub fn new_forwarder() -> Self {
+    pub fn new_minimal_proxy() -> Self {
         Self {
             method_identifiers: Some(BTreeMap::new()),
             abi: Some(serde_json::Value::Object(serde_json::Map::default())),
@@ -69,7 +69,7 @@ impl Contract {
             .find_map(|(contract_entry, hash)| {
                 if contract_entry.starts_with(&(entry.to_owned() + "(")) {
                     Some(
-                        u32::from_str_radix(hash.as_str(), compiler_common::BASE_HEXADECIMAL)
+                        u32::from_str_radix(hash.as_str(), era_compiler_common::BASE_HEXADECIMAL)
                             .expect("Test hash is always valid"),
                     )
                 } else {
