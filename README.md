@@ -93,71 +93,14 @@ compiling each contract in a separate process. To successfully run unit tests:
 2. Move the binary from `./target/release/zkvyper` to a directory from `$PATH`, or add the target directory itself to `$PATH`.
 3. Run `cargo test`.
 
-## CLI reference
+## CLI testing
 
-#### `--version`
-Print the version and exit.  
+For running command line interface tests, `zkvyper` itself and `vyper` must also be available in `$PATH`, because it calls itself recursively to allow compiling each contract in a separate processes. To successfully run CLI tests:
 
-#### `<input_files>`
-Specify the input file paths.  
-Multiple Vyper files can be passed in the default Vyper mode.  
-LLVM IR mode currently supports only a single file.  
-
-#### `-o`, `--output-dir <path>`
-Create one file per component and contract/file at the specified directory, if given.  
-
-#### `--overwrite`
-Overwrite existing files (used together with -o).  
-
-#### `-O`, `--optimization <level>`
-Set the LLVM optimization parameter `-O[0 | 1 | 2 | 3 | s | z]`.  
-Use `3` for best performance and `z` for minimal size.  
-
-#### `--fallback-Oz`
-Try to recompile with `-Oz` if the bytecode is too large.  
-
-#### `--disable-vyper-optimizer`
-Disable the `vyper` LLL IR optimizer.  
-
-#### `--vyper <path>`
-Specify the path to the `vyper` executable. By default, the one in `${PATH}` is used.  
-In LLVM IR mode `vyper` is unused.  
-
-#### `-f <format>`
-An extra output format string.  
-See `vyper --help` for available options including combined JSON mode.
-
-#### `--llvm-ir`
-Switch to LLVM IR mode.  
-Only one input LLVM IR file is allowed.  
-Cannot be used with combined JSON mode.  
-Use this mode at your own risk, as LLVM IR input validation is not implemented.  
-
-#### `--zkasm`
-Switch to EraVM assembly mode.  
-Only one input EraVM assembly file is allowed.  
-Cannot be used with combined JSON mode.  
-Use this mode at your own risk, as EraVM assembly input validation is not implemented.  
-
-#### `--metadata-hash`
-Set metadata hash mode: `keccak256` | `none`.
-`keccak256` is enabled by default.
-
-#### `--debug-output-dir <path>`
-Dump all IR (LLL, LLVM IR, assembly) to files in the specified directory.  
-Only for testing and debugging.  
-
-#### `--llvm-verify-each`
-Set the `verify-each` option in LLVM.
-Only for testing and debugging.  
-
-#### `--llvm-debug-logging`
-Set the `debug-logging` option in LLVM.
-Only for testing and debugging.  
-
-#### `--recursive-process`
-Run this process recursively and provide JSON input to compile a single contract.  
-Only for usage from within the compiler.  
+1. Go to `cli-tests`.
+2. Make `npm i`.
+3. Add `vyper` and `zkvyper` to `$PATH`.
+4. Run `npm test`. 
 
 ## Troubleshooting
 

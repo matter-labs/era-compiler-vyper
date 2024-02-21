@@ -68,10 +68,10 @@ impl Build {
                     contract.write_to_combined_json(combined_json_contract)?
                 }
                 None => {
-                    if path.as_str() == crate::r#const::FORWARDER_CONTRACT_NAME {
+                    if path.as_str() == crate::r#const::MINIMAL_PROXY_CONTRACT_NAME {
                         combined_json
                             .contracts
-                            .insert(path, CombinedJsonContract::new_forwarder());
+                            .insert(path, CombinedJsonContract::new_minimal_proxy());
                     }
                 }
             }

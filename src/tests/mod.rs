@@ -14,7 +14,6 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use crate::build::Build;
-use crate::vyper::standard_json::input::settings::evm_version::EVMVersion as VyperStandardJsonInputSettingsEVMVersion;
 use crate::vyper::standard_json::input::settings::selection::Selection as VyperStandardJsonInputSettingsSelection;
 use crate::vyper::standard_json::input::Input as VyperStandardJsonInput;
 use crate::vyper::Compiler as VyperCompiler;
@@ -42,7 +41,7 @@ fn check_dependencies() {
 pub fn build_vyper(
     source_code: &str,
     version_filter: Option<(semver::Version, &str)>,
-    optimizer_settings: compiler_llvm_context::OptimizerSettings,
+    optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
 ) -> anyhow::Result<Build> {
     check_dependencies();
 
@@ -53,23 +52,18 @@ pub fn build_vyper(
         }
     }
 
-    let evm_version = if vyper.version.default == semver::Version::new(0, 3, 3) {
-        VyperStandardJsonInputSettingsEVMVersion::Berlin
-    } else {
-        VyperStandardJsonInputSettingsEVMVersion::Paris
-    };
-
     inkwell::support::enable_llvm_pretty_stack_trace();
-    compiler_llvm_context::initialize_target(compiler_llvm_context::Target::EraVM);
+    era_compiler_llvm_context::initialize_target(era_compiler_llvm_context::Target::EraVM);
     let _ = crate::process::EXECUTABLE.set(PathBuf::from(crate::r#const::DEFAULT_EXECUTABLE_NAME));
 
     let mut sources = BTreeMap::new();
     sources.insert("test.vy".to_string(), source_code.to_string());
     let input = VyperStandardJsonInput::try_from_sources(
         sources.clone(),
-        evm_version,
+        None,
         VyperStandardJsonInputSettingsSelection::generate_default(),
         true,
+        false,
         false,
     )?;
 
@@ -77,6 +71,7 @@ pub fn build_vyper(
 
     let project = output.try_into_project(&vyper.version.default)?;
     let build = project.compile(
+        None,
         optimizer_settings,
         false,
         zkevm_assembly::RunningVmEncodingMode::Production,
@@ -94,7 +89,7 @@ pub fn check_warning(source_code: &str, warning: &str) -> anyhow::Result<bool> {
     let build = build_vyper(
         source_code,
         None,
-        compiler_llvm_context::OptimizerSettings::none(),
+        era_compiler_llvm_context::OptimizerSettings::none(),
     )?;
     for (_path, contract) in build.contracts.iter() {
         for contract_warning in contract.warnings.iter() {

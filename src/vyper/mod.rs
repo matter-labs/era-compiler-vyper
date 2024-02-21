@@ -70,8 +70,16 @@ impl Compiler {
     ///
     /// The `vyper -f combined_json input_files...` mirror.
     ///
-    pub fn combined_json(&self, paths: &[PathBuf]) -> anyhow::Result<CombinedJson> {
+    pub fn combined_json(
+        &self,
+        paths: &[PathBuf],
+        evm_version: Option<era_compiler_common::EVMVersion>,
+    ) -> anyhow::Result<CombinedJson> {
         let mut command = std::process::Command::new(self.executable.as_str());
+        if let Some(evm_version) = evm_version {
+            command.arg("--evm-version");
+            command.arg(evm_version.to_string());
+        }
         command.arg("-f");
         command.arg("combined_json");
         command.args(paths);
@@ -89,21 +97,21 @@ impl Compiler {
             );
         }
 
-        let mut combined_json: CombinedJson =
-            compiler_common::deserialize_from_slice(output.stdout.as_slice()).map_err(|error| {
-                anyhow::anyhow!(
-                    "{} subprocess output parsing error: {}\n{}",
-                    self.executable,
-                    error,
-                    compiler_common::deserialize_from_slice::<serde_json::Value>(
-                        output.stdout.as_slice()
-                    )
-                    .map(|json| serde_json::to_string_pretty(&json).expect("Always valid"))
-                    .unwrap_or_else(
-                        |_| String::from_utf8_lossy(output.stdout.as_slice()).to_string()
-                    ),
+        let mut combined_json: CombinedJson = era_compiler_common::deserialize_from_slice(
+            output.stdout.as_slice(),
+        )
+        .map_err(|error| {
+            anyhow::anyhow!(
+                "{} subprocess output parsing error: {}\n{}",
+                self.executable,
+                error,
+                era_compiler_common::deserialize_from_slice::<serde_json::Value>(
+                    output.stdout.as_slice()
                 )
-            })?;
+                .map(|json| serde_json::to_string_pretty(&json).expect("Always valid"))
+                .unwrap_or_else(|_| String::from_utf8_lossy(output.stdout.as_slice()).to_string()),
+            )
+        })?;
         combined_json.remove_evm();
         Ok(combined_json)
     }
@@ -148,21 +156,21 @@ impl Compiler {
             );
         }
 
-        let mut output: StandardJsonOutput =
-            compiler_common::deserialize_from_slice(output.stdout.as_slice()).map_err(|error| {
-                anyhow::anyhow!(
-                    "{} subprocess output parsing error: {}\n{}",
-                    self.executable,
-                    error,
-                    compiler_common::deserialize_from_slice::<serde_json::Value>(
-                        output.stdout.as_slice()
-                    )
-                    .map(|json| serde_json::to_string_pretty(&json).expect("Always valid"))
-                    .unwrap_or_else(
-                        |_| String::from_utf8_lossy(output.stdout.as_slice()).to_string()
-                    ),
+        let mut output: StandardJsonOutput = era_compiler_common::deserialize_from_slice(
+            output.stdout.as_slice(),
+        )
+        .map_err(|error| {
+            anyhow::anyhow!(
+                "{} subprocess output parsing error: {}\n{}",
+                self.executable,
+                error,
+                era_compiler_common::deserialize_from_slice::<serde_json::Value>(
+                    output.stdout.as_slice()
                 )
-            })?;
+                .map(|json| serde_json::to_string_pretty(&json).expect("Always valid"))
+                .unwrap_or_else(|_| String::from_utf8_lossy(output.stdout.as_slice()).to_string()),
+            )
+        })?;
 
         for (full_path, source) in input.sources.into_iter() {
             let last_slash_position = full_path.rfind('/');
@@ -201,8 +209,17 @@ impl Compiler {
     ///
     /// Is used to print the IR for debugging.
     ///
-    pub fn lll_debug(&self, path: &Path, optimize: bool) -> anyhow::Result<String> {
+    pub fn lll_debug(
+        &self,
+        path: &Path,
+        evm_version: Option<era_compiler_common::EVMVersion>,
+        optimize: bool,
+    ) -> anyhow::Result<String> {
         let mut command = std::process::Command::new(self.executable.as_str());
+        if let Some(evm_version) = evm_version {
+            command.arg("--evm-version");
+            command.arg(evm_version.to_string());
+        }
         command.arg("-f");
         command.arg("ir");
         if !optimize || self.version.default >= semver::Version::new(0, 3, 10) {
@@ -234,11 +251,16 @@ impl Compiler {
         &self,
         version: &semver::Version,
         mut paths: Vec<PathBuf>,
+        evm_version: Option<era_compiler_common::EVMVersion>,
         optimize: bool,
     ) -> anyhow::Result<Project> {
         paths.sort();
 
         let mut command = std::process::Command::new(self.executable.as_str());
+        if let Some(evm_version) = evm_version {
+            command.arg("--evm-version");
+            command.arg(evm_version.to_string());
+        }
         command.arg("-f");
         command.arg("ir_json,metadata,method_identifiers,ast");
         if !optimize || self.version.default >= semver::Version::new(0, 3, 10) {
@@ -302,7 +324,7 @@ impl Compiler {
         for (_path, contract) in contracts.iter() {
             source_code_hasher.update(contract.source_code().as_bytes());
         }
-        let source_code_hash: [u8; compiler_common::BYTE_LENGTH_FIELD] =
+        let source_code_hash: [u8; era_compiler_common::BYTE_LENGTH_FIELD] =
             source_code_hasher.finalize_fixed().into();
 
         let project = Project::new(version.to_owned(), source_code_hash, contracts);
@@ -313,8 +335,17 @@ impl Compiler {
     ///
     /// The `vyper -f <identifiers> ...` mirror.
     ///
-    pub fn extra_output(&self, path: &Path, extra_output: &str) -> anyhow::Result<String> {
+    pub fn extra_output(
+        &self,
+        path: &Path,
+        evm_version: Option<era_compiler_common::EVMVersion>,
+        extra_output: &str,
+    ) -> anyhow::Result<String> {
         let mut command = std::process::Command::new(self.executable.as_str());
+        if let Some(evm_version) = evm_version {
+            command.arg("--evm-version");
+            command.arg(evm_version.to_string());
+        }
         command.arg("-f");
         command.arg(extra_output);
         command.arg(path);
@@ -336,10 +367,7 @@ impl Compiler {
     /// Checks for unsupported code is a Vyper source code file.
     ///
     pub fn check_unsupported(source_code: &str) -> anyhow::Result<()> {
-        for function in [
-            crate::r#const::FORBIDDEN_FUNCTION_NAME_CREATE_COPY_OF,
-            crate::r#const::FORBIDDEN_FUNCTION_NAME_CREATE_FROM_BLUEPRINT,
-        ] {
+        for function in [crate::r#const::FORBIDDEN_FUNCTION_NAME_CREATE_COPY_OF] {
             if source_code.contains(function) {
                 return Err(anyhow::anyhow!(
                     "Built-in function `{}` is not supported",
