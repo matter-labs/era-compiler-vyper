@@ -25,7 +25,7 @@ runs:
       shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
       run: |
         cargo install compiler-llvm-builder ${{ steps.build-target.outputs.target }} \
-          --git https://github.com/matter-labs/era-compiler-llvm-builder
+          --git https://github.com/matter-labs/era-compiler-llvm-builder --branch v1.0.18
         zkevm-llvm clone
 
     - name: Define ccache key
