@@ -73,11 +73,6 @@ fn main_inner() -> anyhow::Result<()> {
         None => vec![],
     };
 
-    let vyper =
-        era_compiler_vyper::VyperCompiler::new(arguments.vyper.unwrap_or_else(|| {
-            era_compiler_vyper::VyperCompiler::DEFAULT_EXECUTABLE_NAME.to_owned()
-        }))?;
-
     let evm_version = match arguments.evm_version {
         Some(evm_version) => Some(era_compiler_common::EVMVersion::try_from(
             evm_version.as_str(),
@@ -123,6 +118,12 @@ fn main_inner() -> anyhow::Result<()> {
             debug_config,
         )
     } else {
+        let vyper = era_compiler_vyper::VyperCompiler::new(
+            arguments
+                .vyper
+                .as_deref()
+                .unwrap_or(era_compiler_vyper::VyperCompiler::DEFAULT_EXECUTABLE_NAME),
+        )?;
         match arguments.format.as_deref() {
             Some("combined_json") => {
                 era_compiler_vyper::combined_json(
@@ -178,6 +179,12 @@ fn main_inner() -> anyhow::Result<()> {
                 println!("0x{bytecode_string}");
 
                 if let Some(format) = arguments.format.as_deref() {
+                    let vyper = era_compiler_vyper::VyperCompiler::new(
+                        arguments
+                            .vyper
+                            .as_deref()
+                            .unwrap_or(era_compiler_vyper::VyperCompiler::DEFAULT_EXECUTABLE_NAME),
+                    )?;
                     let extra_output =
                         vyper.extra_output(PathBuf::from(path).as_path(), evm_version, format)?;
                     println!();
