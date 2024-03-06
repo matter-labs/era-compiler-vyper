@@ -53,16 +53,16 @@ impl Compiler {
     /// Different tools may use different `executable` names. For example, the integration tester
     /// uses `vyper-<version>` format.
     ///
-    pub fn new(executable: String) -> anyhow::Result<Self> {
-        if let Err(error) = which::which(executable.as_str()) {
+    pub fn new(executable: &str) -> anyhow::Result<Self> {
+        if let Err(error) = which::which(executable) {
             anyhow::bail!(
                 "The `{executable}` executable not found in ${{PATH}}: {}",
                 error
             );
         }
-        let version = Self::version(&executable)?;
+        let version = Self::version(executable)?;
         Ok(Self {
-            executable,
+            executable: executable.to_owned(),
             version,
         })
     }

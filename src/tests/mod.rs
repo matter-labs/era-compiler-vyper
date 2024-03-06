@@ -45,7 +45,7 @@ pub fn build_vyper(
 ) -> anyhow::Result<Build> {
     check_dependencies();
 
-    let vyper = VyperCompiler::new(VyperCompiler::DEFAULT_EXECUTABLE_NAME.to_owned())?;
+    let vyper = VyperCompiler::new(VyperCompiler::DEFAULT_EXECUTABLE_NAME)?;
     if let Some((version, message)) = version_filter {
         if vyper.version.default != version {
             panic!("{}", message);
