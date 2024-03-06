@@ -367,10 +367,7 @@ impl Compiler {
     /// Checks for unsupported code is a Vyper source code file.
     ///
     pub fn check_unsupported(source_code: &str) -> anyhow::Result<()> {
-        for function in [
-            crate::r#const::FORBIDDEN_FUNCTION_NAME_CREATE_COPY_OF,
-            crate::r#const::FORBIDDEN_FUNCTION_NAME_CREATE_FROM_BLUEPRINT,
-        ] {
+        for function in [crate::r#const::FORBIDDEN_FUNCTION_NAME_CREATE_COPY_OF] {
             if source_code.contains(function) {
                 return Err(anyhow::anyhow!(
                     "Built-in function `{}` is not supported",

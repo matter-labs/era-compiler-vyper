@@ -13,9 +13,10 @@
 /.idea/
 /.vscode/
 
-# cli tests
+# Test artifacts
 **/cli-tests/node_modules
 **/cli-tests/artifacts
+*.xml
 
-# bak
-README.md.bak
+# Accidentally created backup files
+*.bak

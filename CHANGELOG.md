@@ -1,13 +1,19 @@
 # The `zkvyper` changelog
 
-## [Unreleased]
+## [1.4.0] - 2024-02-19
 
 ### Added
 
 - The `Cancun` EVM version support with temporarily unsupported transient storage
 - The `MCOPY` instruction support
 - The `--evm-version` parameter to the CLI
+- The `create_from_blueprint` Vyper built-in support
 - An option to disable the system request memoization
+- More compiler optimizations
+
+### Fixed
+
+- An issue with `MCOPY` for overlapping memory regions
 
 ## [1.3.17] - 2024-01-30
 
