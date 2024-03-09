@@ -11,6 +11,8 @@ use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Number;
 
+use era_compiler_llvm_context::IContext;
+
 use self::instruction::seq::Seq as SeqInstruction;
 use self::instruction::Instruction;
 

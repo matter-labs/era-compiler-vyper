@@ -123,7 +123,7 @@ pub fn standard_output(
     if let Some(ref debug_config) = debug_config {
         for path in input_files.iter() {
             let lll_debug = vyper.lll_debug(path.as_path(), evm_version, true)?;
-            debug_config.dump_lll(path.to_string_lossy().as_ref(), lll_debug.as_str())?;
+            debug_config.dump_lll(path.to_string_lossy().as_ref(), None, lll_debug.as_str())?;
         }
     }
 
@@ -168,7 +168,7 @@ pub fn combined_json(
         for path in input_files.iter() {
             let lll_debug =
                 vyper.lll_debug(path.as_path(), evm_version, vyper_optimizer_enabled)?;
-            debug_config.dump_lll(path.to_string_lossy().as_ref(), lll_debug.as_str())?;
+            debug_config.dump_lll(path.to_string_lossy().as_ref(), None, lll_debug.as_str())?;
         }
     }
 

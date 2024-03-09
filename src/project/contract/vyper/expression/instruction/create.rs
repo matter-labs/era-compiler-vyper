@@ -2,6 +2,8 @@
 //! The `create` instruction adapter.
 //!
 
+use era_compiler_llvm_context::IContext;
+
 ///
 /// Translates various Vyper's `create` built-in instructions.
 ///
@@ -75,7 +77,7 @@ where
         context.field_const(19),
         "create_address_offset",
     );
-    let address_dirty_pointer = era_compiler_llvm_context::EraVMPointer::new_with_offset(
+    let address_dirty_pointer = era_compiler_llvm_context::Pointer::new_with_offset(
         context,
         era_compiler_llvm_context::EraVMAddressSpace::Heap,
         context.field_type(),
@@ -108,7 +110,7 @@ where
         ),
         "create_hash_input_offset",
     );
-    let hash_input_offset_pointer = era_compiler_llvm_context::EraVMPointer::new_with_offset(
+    let hash_input_offset_pointer = era_compiler_llvm_context::Pointer::new_with_offset(
         context,
         era_compiler_llvm_context::EraVMAddressSpace::HeapAuxiliary,
         context.field_type(),
@@ -127,7 +129,7 @@ where
             .field_const(era_compiler_llvm_context::eravm_const::DEPLOYER_CALL_HEADER_SIZE as u64),
         "create_address_input_offset",
     );
-    let address_input_offset_pointer = era_compiler_llvm_context::EraVMPointer::new_with_offset(
+    let address_input_offset_pointer = era_compiler_llvm_context::Pointer::new_with_offset(
         context,
         era_compiler_llvm_context::EraVMAddressSpace::HeapAuxiliary,
         context.field_type(),

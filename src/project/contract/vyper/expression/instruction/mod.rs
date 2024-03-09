@@ -21,10 +21,11 @@ pub mod with;
 
 use std::collections::BTreeMap;
 
+use inkwell::values::BasicValue;
 use serde::Deserialize;
 use serde::Serialize;
 
-use inkwell::values::BasicValue;
+use era_compiler_llvm_context::IContext;
 
 use crate::project::contract::vyper::expression::Expression;
 
@@ -367,7 +368,7 @@ impl Instruction {
     fn translate_arguments<'ctx, D, const N: usize>(
         arguments: [Box<Expression>; N],
         context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
-    ) -> anyhow::Result<[era_compiler_llvm_context::EraVMArgument<'ctx>; N]>
+    ) -> anyhow::Result<[era_compiler_llvm_context::Value<'ctx>; N]>
     where
         D: era_compiler_llvm_context::EraVMDependency + Clone,
     {
@@ -388,11 +389,10 @@ impl Instruction {
                 )
             })?;
             values.push(match original {
-                Some(ref original) => era_compiler_llvm_context::EraVMArgument::new_with_original(
-                    value,
-                    original.to_owned(),
-                ),
-                None => era_compiler_llvm_context::EraVMArgument::new(value),
+                Some(ref original) => {
+                    era_compiler_llvm_context::Value::new_with_original(value, original.to_owned())
+                }
+                None => era_compiler_llvm_context::Value::new(value),
             })
         }
         values.reverse();
@@ -931,7 +931,7 @@ impl Instruction {
             Self::SHA3_32(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
 
-                let pointer_one = era_compiler_llvm_context::EraVMPointer::new_with_offset(
+                let pointer_one = era_compiler_llvm_context::Pointer::new_with_offset(
                     context,
                     era_compiler_llvm_context::EraVMAddressSpace::Heap,
                     context.field_type(),
@@ -950,7 +950,7 @@ impl Instruction {
             Self::SHA3_64(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
 
-                let pointer_one = era_compiler_llvm_context::EraVMPointer::new_with_offset(
+                let pointer_one = era_compiler_llvm_context::Pointer::new_with_offset(
                     context,
                     era_compiler_llvm_context::EraVMAddressSpace::Heap,
                     context.field_type(),
@@ -958,7 +958,7 @@ impl Instruction {
                     "sha3_pointer_one",
                 );
                 context.build_store(pointer_one, arguments[0]);
-                let pointer_two = era_compiler_llvm_context::EraVMPointer::new_with_offset(
+                let pointer_two = era_compiler_llvm_context::Pointer::new_with_offset(
                     context,
                     era_compiler_llvm_context::EraVMAddressSpace::Heap,
                     context.field_type(),
@@ -1003,14 +1003,14 @@ impl Instruction {
             }
             Self::MCOPY(arguments) => {
                 let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;
-                let destination = era_compiler_llvm_context::EraVMPointer::new_with_offset(
+                let destination = era_compiler_llvm_context::Pointer::new_with_offset(
                     context,
                     era_compiler_llvm_context::EraVMAddressSpace::Heap,
                     context.byte_type(),
                     arguments[0].into_int_value(),
                     "mcopy_destination",
                 );
-                let source = era_compiler_llvm_context::EraVMPointer::new_with_offset(
+                let source = era_compiler_llvm_context::Pointer::new_with_offset(
                     context,
                     era_compiler_llvm_context::EraVMAddressSpace::Heap,
                     context.byte_type(),
@@ -1079,10 +1079,10 @@ impl Instruction {
                     .code_type()
                     .ok_or_else(|| anyhow::anyhow!("The contract code part type is undefined"))?
                 {
-                    era_compiler_llvm_context::EraVMCodeType::Deploy => {
+                    era_compiler_llvm_context::CodeType::Deploy => {
                         Ok(Some(context.field_const(0).as_basic_value_enum()))
                     }
-                    era_compiler_llvm_context::EraVMCodeType::Runtime => {
+                    era_compiler_llvm_context::CodeType::Runtime => {
                         era_compiler_llvm_context::eravm_evm_calldata::load(
                             context,
                             arguments[0].into_int_value(),
@@ -1096,10 +1096,10 @@ impl Instruction {
                     .code_type()
                     .ok_or_else(|| anyhow::anyhow!("The contract code part type is undefined"))?
                 {
-                    era_compiler_llvm_context::EraVMCodeType::Deploy => {
+                    era_compiler_llvm_context::CodeType::Deploy => {
                         Ok(Some(context.field_const(0).as_basic_value_enum()))
                     }
-                    era_compiler_llvm_context::EraVMCodeType::Runtime => {
+                    era_compiler_llvm_context::CodeType::Runtime => {
                         era_compiler_llvm_context::eravm_evm_calldata::size(context).map(Some)
                     }
                 }
@@ -1111,10 +1111,10 @@ impl Instruction {
                     .code_type()
                     .ok_or_else(|| anyhow::anyhow!("The contract code part type is undefined"))?
                 {
-                    era_compiler_llvm_context::EraVMCodeType::Deploy => {
+                    era_compiler_llvm_context::CodeType::Deploy => {
                         era_compiler_llvm_context::eravm_evm_calldata::size(context)?
                     }
-                    era_compiler_llvm_context::EraVMCodeType::Runtime => {
+                    era_compiler_llvm_context::CodeType::Runtime => {
                         arguments[1].into_int_value().as_basic_value_enum()
                     }
                 }
@@ -1138,13 +1138,13 @@ impl Instruction {
                             "Immutables are not available if the contract part is undefined"
                         );
                     }
-                    Some(era_compiler_llvm_context::EraVMCodeType::Deploy) => {
+                    Some(era_compiler_llvm_context::CodeType::Deploy) => {
                         era_compiler_llvm_context::eravm_evm_calldata::load(
                             context,
                             arguments[0].into_int_value(),
                         )
                     }
-                    Some(era_compiler_llvm_context::EraVMCodeType::Runtime) => {
+                    Some(era_compiler_llvm_context::CodeType::Runtime) => {
                         era_compiler_llvm_context::eravm_evm_immutable::load(
                             context,
                             arguments[0].into_int_value(),
@@ -1162,7 +1162,7 @@ impl Instruction {
                             "Immutables are not available if the contract part is undefined"
                         );
                     }
-                    Some(era_compiler_llvm_context::EraVMCodeType::Deploy) => {
+                    Some(era_compiler_llvm_context::CodeType::Deploy) => {
                         era_compiler_llvm_context::eravm_evm_calldata::copy(
                             context,
                             arguments[0].into_int_value(),
@@ -1170,14 +1170,12 @@ impl Instruction {
                             arguments[2].into_int_value(),
                         )
                     }
-                    Some(era_compiler_llvm_context::EraVMCodeType::Runtime) => {
-                        immutable::load_bytes(
-                            context,
-                            arguments[0].into_int_value(),
-                            arguments[1].into_int_value(),
-                            arguments[2].into_int_value(),
-                        )
-                    }
+                    Some(era_compiler_llvm_context::CodeType::Runtime) => immutable::load_bytes(
+                        context,
+                        arguments[0].into_int_value(),
+                        arguments[1].into_int_value(),
+                        arguments[2].into_int_value(),
+                    ),
                 }
                 .map(|_| None)
             }
@@ -1187,10 +1185,10 @@ impl Instruction {
                     .code_type()
                     .ok_or_else(|| anyhow::anyhow!("The contract code part type is undefined"))?
                 {
-                    era_compiler_llvm_context::EraVMCodeType::Deploy => {
+                    era_compiler_llvm_context::CodeType::Deploy => {
                         era_compiler_llvm_context::eravm_evm_calldata::size(context).map(Some)
                     }
-                    era_compiler_llvm_context::EraVMCodeType::Runtime => {
+                    era_compiler_llvm_context::CodeType::Runtime => {
                         let code_source =
                             era_compiler_llvm_context::eravm_general::code_source(context)?;
                         era_compiler_llvm_context::eravm_evm_ext_code::size(
@@ -1202,7 +1200,7 @@ impl Instruction {
                 }
             }
             Self::CODECOPY(arguments) => {
-                if let era_compiler_llvm_context::EraVMCodeType::Runtime = context
+                if let era_compiler_llvm_context::CodeType::Runtime = context
                     .code_type()
                     .ok_or_else(|| anyhow::anyhow!("The contract code part type is undefined"))?
                 {
@@ -1313,7 +1311,7 @@ impl Instruction {
                     ),
                     "extcodecopy_hash_offset",
                 );
-                let hash_heap_pointer = era_compiler_llvm_context::EraVMPointer::new_with_offset(
+                let hash_heap_pointer = era_compiler_llvm_context::Pointer::new_with_offset(
                     context,
                     era_compiler_llvm_context::EraVMAddressSpace::Heap,
                     context.field_type(),
@@ -1328,14 +1326,13 @@ impl Instruction {
                             + era_compiler_common::BYTE_LENGTH_FIELD)
                             as u64,
                 );
-                let hash_aux_heap_pointer =
-                    era_compiler_llvm_context::EraVMPointer::new_with_offset(
-                        context,
-                        era_compiler_llvm_context::EraVMAddressSpace::HeapAuxiliary,
-                        context.field_type(),
-                        hash_aux_heap_offset,
-                        "extcodecopy_hash_destination",
-                    );
+                let hash_aux_heap_pointer = era_compiler_llvm_context::Pointer::new_with_offset(
+                    context,
+                    era_compiler_llvm_context::EraVMAddressSpace::HeapAuxiliary,
+                    context.field_type(),
+                    hash_aux_heap_offset,
+                    "extcodecopy_hash_destination",
+                );
                 context.build_store(hash_aux_heap_pointer, hash_value);
 
                 Ok(None)

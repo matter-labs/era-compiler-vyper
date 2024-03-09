@@ -63,15 +63,11 @@ impl Project {
         let mut project_contracts = BTreeMap::new();
         project_contracts.insert(
             path,
-            LLVMIRContract::new(
-                era_compiler_llvm_context::eravm_const::LLVM_VERSION,
-                source_code,
-            )
-            .into(),
+            LLVMIRContract::new(era_compiler_llvm_context::LLVM_VERSION, source_code).into(),
         );
 
         Ok(Self::new(
-            era_compiler_llvm_context::eravm_const::LLVM_VERSION,
+            era_compiler_llvm_context::LLVM_VERSION,
             source_code_hash,
             project_contracts,
         ))
