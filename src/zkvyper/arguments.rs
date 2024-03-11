@@ -47,6 +47,10 @@ pub struct Arguments {
     #[structopt(long = "disable-system-request-memoization")]
     pub disable_system_request_memoization: bool,
 
+    /// Set the jump table density threshold.
+    #[structopt(long = "jump-table-density-threshold")]
+    pub jump_table_density_threshold: Option<u32>,
+
     /// Disable the `vyper` LLL IR optimizer.
     #[structopt(long = "disable-vyper-optimizer")]
     pub disable_vyper_optimizer: bool,
@@ -168,6 +172,11 @@ impl Arguments {
             if self.disable_system_request_memoization {
                 anyhow::bail!(
                     "Disabling the system request memoization is not supported in EraVM assembly mode."
+                );
+            }
+            if self.jump_table_density_threshold.is_some() {
+                anyhow::bail!(
+                    "Setting the jump table density threshold is not supported in EraVM assembly mode."
                 );
             }
         }
