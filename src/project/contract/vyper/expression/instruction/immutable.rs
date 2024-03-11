@@ -2,6 +2,8 @@
 //! The immutable instructions.
 //!
 
+use era_compiler_llvm_context::IContext;
+
 ///
 /// Translates the immutable load sequence.
 ///
@@ -66,7 +68,7 @@ where
         heap_offset_pointer,
         "immutable_load_bytes_heap_offset_value",
     );
-    let heap_pointer = era_compiler_llvm_context::EraVMPointer::new_with_offset(
+    let heap_pointer = era_compiler_llvm_context::Pointer::new_with_offset(
         context,
         era_compiler_llvm_context::EraVMAddressSpace::Heap,
         context.field_type(),

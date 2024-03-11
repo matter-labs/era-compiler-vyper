@@ -62,14 +62,14 @@ jobs:
             runner: matterlabs-ci-runner
             image: matterlabs/llvm_runner:ubuntu22-llvm15-latest
             target: "x86_64-unknown-linux-musl"
-            release-suffix: linux-amd64
+            release-suffix: linux-amd64-musl
             required: ${{ github.event.inputs.release_linux_amd64 || 'true' }}
           - name: "Linux ARM64"
             runner: matterlabs-ci-runner-arm
             image: matterlabs/llvm_runner:ubuntu22-llvm15-latest
             target: "aarch64-unknown-linux-musl"
             rustflags: "-C link-arg=-Wl,-Bstatic -C link-arg=-lc -C link-arg=-L/usr/lib/llvm-15/lib/clang/15.0.7/lib/linux/ -C link-arg=-lclang_rt.builtins-aarch64"
-            release-suffix: linux-arm64
+            release-suffix: linux-arm64-musl
             required: ${{ github.event.inputs.release_linux_arm64 || 'true' }}
           - name: "Windows"
             runner: windows-2022-github-hosted-16core
@@ -83,6 +83,10 @@ jobs:
       - name: Checkout source
         if: ${{ matrix.required == 'true' }} # Important to use 'true' here, because the value is a string here
         uses: actions/checkout@v4
+
+      - name: Prepare Windows env
+        if: runner.os == 'Windows'
+        uses: ./.github/actions/prepare-msys
 
       - name: Build LLVM
         if: ${{ matrix.required == 'true' }}
@@ -150,3 +154,26 @@ jobs:
             gh release create ${{ steps.version_or_sha.outputs.version_or_sha }} \
               --title ${{ steps.version_or_sha.outputs.version_or_sha }} \
               "${BINARIES[@]}"
+
+      - name: Get changelog
+        if: github.ref_type == 'tag'
+        id: changelog_reader
+        uses: mindsers/changelog-reader-action@v2
+        with:
+          validation_level: warn
+          path: ./CHANGELOG.md
+
+      - name: Prepare CHANGELOG for publishing
+        if: github.ref_type == 'tag'
+        run: |
+          echo "## ${{ github.event.repository.name }}" >> ./release_changelog.md
+          echo "## [${{ steps.changelog_reader.outputs.version }}] - ${{ steps.changelog_reader.outputs.date }}" >> ./release_changelog.md
+          echo '${{ steps.changelog_reader.outputs.changes }}' >> ./release_changelog.md
+          echo "{\"text\":\"$(cat ./release_changelog.md)\"}" > ./slack-payload.json
+      - name: Send Slack notification
+        if: github.ref_type == 'tag'
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload-file-path: "./slack-payload.json"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_RELEASES }}
