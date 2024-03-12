@@ -1046,12 +1046,21 @@ impl Instruction {
                 .map(|_| None)
             }
             Self::TLOAD(arguments) => {
-                let _arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
-                anyhow::bail!("The `TLOAD` instruction is not supported until zkVM v1.5.0")
+                let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
+                era_compiler_llvm_context::eravm_evm_storage::transient_load(
+                    context,
+                    arguments[0].into_int_value(),
+                )
+                .map(Some)
             }
             Self::TSTORE(arguments) => {
-                let _arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                anyhow::bail!("The `TSTORE` instruction is not supported until zkVM v1.5.0")
+                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                era_compiler_llvm_context::eravm_evm_storage::transient_store(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
+                .map(|_| None)
             }
 
             Self::ILOAD(arguments) => {
