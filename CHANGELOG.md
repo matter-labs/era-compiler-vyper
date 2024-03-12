@@ -1,5 +1,11 @@
 # The `zkvyper` changelog
 
+### [Unreleased]
+
+### Added
+
+- The jump table density threshold optimizer parameter
+
 ## [1.4.0] - 2024-02-19
 
 ### Added
