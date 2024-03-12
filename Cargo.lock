@@ -307,7 +307,7 @@ dependencies = [
 [[package]]
 name = "era-compiler-llvm-context"
 version = "1.4.1"
-source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=az-cpr-1594-add-the-jump-table-threshold-parameter-to-fe#518db5bcfda42e44cdf98b887ad4f07a4e88847b"
+source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=main#7a7d7f8d1772c558c9dc6543148176700a6d9d51"
 dependencies = [
  "anyhow",
  "era-compiler-common",
@@ -328,7 +328,7 @@ dependencies = [
 
 [[package]]
 name = "era-compiler-vyper"
-version = "1.4.0"
+version = "1.4.1"
 dependencies = [
  "anyhow",
  "colored",
