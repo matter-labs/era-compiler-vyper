@@ -465,19 +465,19 @@ impl Instruction {
             Self::Jump(arguments) => {
                 let _arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
                 let block = context.current_function().borrow().return_block();
-                context.build_unconditional_branch(block);
+                context.build_unconditional_branch(block)?;
                 Ok(None)
             }
             Self::Label(inner) => inner.into_llvm_value(context).map(|_| None),
             Self::Cleanup_Repeat => Ok(None),
             Self::Break => {
                 let block = context.r#loop().join_block;
-                context.build_unconditional_branch(block);
+                context.build_unconditional_branch(block)?;
                 Ok(None)
             }
             Self::Continue => {
                 let block = context.r#loop().continue_block;
-                context.build_unconditional_branch(block);
+                context.build_unconditional_branch(block)?;
                 Ok(None)
             }
             Self::Pass => Ok(None),
@@ -609,13 +609,13 @@ impl Instruction {
                     arguments[0].into_int_value(),
                     context.field_const(0),
                     "select_condition",
-                );
+                )?;
                 Ok(Some(context.builder().build_select(
                     condition,
                     arguments[1].into_int_value(),
                     arguments[2].into_int_value(),
                     "select",
-                )))
+                )?))
             }
 
             Self::Assert(inner) => inner.into_llvm_value(context).map(|_| None),
@@ -937,8 +937,8 @@ impl Instruction {
                     context.field_type(),
                     context.field_const(crate::r#const::OFFSET_FREE_VAR_SPACE as u64),
                     "sha3_pointer_one",
-                );
-                context.build_store(pointer_one, arguments[0]);
+                )?;
+                context.build_store(pointer_one, arguments[0])?;
 
                 era_compiler_llvm_context::eravm_evm_crypto::sha3(
                     context,
@@ -956,16 +956,16 @@ impl Instruction {
                     context.field_type(),
                     context.field_const(crate::r#const::OFFSET_FREE_VAR_SPACE as u64),
                     "sha3_pointer_one",
-                );
-                context.build_store(pointer_one, arguments[0]);
+                )?;
+                context.build_store(pointer_one, arguments[0])?;
                 let pointer_two = era_compiler_llvm_context::Pointer::new_with_offset(
                     context,
                     era_compiler_llvm_context::EraVMAddressSpace::Heap,
                     context.field_type(),
                     context.field_const(crate::r#const::OFFSET_FREE_VAR_SPACE2 as u64),
                     "sha3_pointer_two",
-                );
-                context.build_store(pointer_two, arguments[1]);
+                )?;
+                context.build_store(pointer_two, arguments[1])?;
 
                 era_compiler_llvm_context::eravm_evm_crypto::sha3(
                     context,
@@ -1009,14 +1009,14 @@ impl Instruction {
                     context.byte_type(),
                     arguments[0].into_int_value(),
                     "mcopy_destination",
-                );
+                )?;
                 let source = era_compiler_llvm_context::Pointer::new_with_offset(
                     context,
                     era_compiler_llvm_context::EraVMAddressSpace::Heap,
                     context.byte_type(),
                     arguments[1].into_int_value(),
                     "mcopy_source",
-                );
+                )?;
 
                 context.build_memcpy(
                     context.intrinsics().memory_move,
@@ -1024,7 +1024,7 @@ impl Instruction {
                     source,
                     arguments[2].into_int_value(),
                     "mcopy_size",
-                );
+                )?;
                 Ok(None)
             }
 
@@ -1245,14 +1245,14 @@ impl Instruction {
                     let result_pointer = context.build_alloca(
                         context.field_type(),
                         "extcodesize_create_target_result_pointer",
-                    );
+                    )?;
                     context.build_store(
                         result_pointer,
                         context.field_const(
                             era_compiler_llvm_context::eravm_const::DEPLOYER_CALL_HEADER_SIZE
                                 as u64,
                         ),
-                    );
+                    )?;
 
                     let is_zero_block =
                         context.append_basic_block("extcodesize_create_target_is_zero_block");
@@ -1263,18 +1263,20 @@ impl Instruction {
                         requested_size.into_int_value(),
                         context.field_const(0),
                         "extcodesize_create_target_is_zero",
-                    );
-                    context
-                        .builder()
-                        .build_conditional_branch(is_zero, is_zero_block, join_block);
+                    )?;
+                    context.builder().build_conditional_branch(
+                        is_zero,
+                        is_zero_block,
+                        join_block,
+                    )?;
 
                     context.set_basic_block(is_zero_block);
-                    context.build_store(result_pointer, context.field_const(0));
-                    context.build_unconditional_branch(join_block);
+                    context.build_store(result_pointer, context.field_const(0))?;
+                    context.build_unconditional_branch(join_block)?;
 
                     context.set_basic_block(join_block);
                     requested_size =
-                        context.build_load(result_pointer, "extcodesize_create_target_result");
+                        context.build_load(result_pointer, "extcodesize_create_target_result")?;
                 }
                 Ok(Some(requested_size))
             }
@@ -1310,15 +1312,15 @@ impl Instruction {
                             as u64,
                     ),
                     "extcodecopy_hash_offset",
-                );
+                )?;
                 let hash_heap_pointer = era_compiler_llvm_context::Pointer::new_with_offset(
                     context,
                     era_compiler_llvm_context::EraVMAddressSpace::Heap,
                     context.field_type(),
                     hash_heap_offset,
                     "extcodecopy_hash_destination",
-                );
-                context.build_store(hash_heap_pointer, hash_value);
+                )?;
+                context.build_store(hash_heap_pointer, hash_value)?;
 
                 let hash_aux_heap_offset = context.field_const(
                     era_compiler_llvm_context::eravm_const::HEAP_AUX_OFFSET_EXTERNAL_CALL
@@ -1332,8 +1334,8 @@ impl Instruction {
                     context.field_type(),
                     hash_aux_heap_offset,
                     "extcodecopy_hash_destination",
-                );
-                context.build_store(hash_aux_heap_pointer, hash_value);
+                )?;
+                context.build_store(hash_aux_heap_pointer, hash_value)?;
 
                 Ok(None)
             }
@@ -1507,8 +1509,8 @@ impl Instruction {
                 .map(Some)
             }
 
-            Self::ADDRESS => Ok(context.build_call(context.intrinsics().address, &[], "address")),
-            Self::CALLER => Ok(context.build_call(context.intrinsics().caller, &[], "caller")),
+            Self::ADDRESS => context.build_call(context.intrinsics().address, &[], "address"),
+            Self::CALLER => context.build_call(context.intrinsics().caller, &[], "caller"),
 
             Self::CALLVALUE => {
                 era_compiler_llvm_context::eravm_evm_ether_gas::value(context).map(Some)
@@ -1522,7 +1524,7 @@ impl Instruction {
             }
             Self::SELFBALANCE => {
                 let address = context
-                    .build_call(context.intrinsics().address, &[], "self_balance_address")
+                    .build_call(context.intrinsics().address, &[], "self_balance_address")?
                     .expect("Always exists")
                     .into_int_value();
 

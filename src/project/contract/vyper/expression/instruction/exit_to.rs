@@ -28,7 +28,8 @@ impl ExitTo {
     {
         let label_name = self.0.remove(0).try_into_identifier()?;
         if label_name.as_str() == crate::r#const::VARIABLE_IDENTIFIER_RETURN_PC {
-            context.build_unconditional_branch(context.current_function().borrow().return_block());
+            context
+                .build_unconditional_branch(context.current_function().borrow().return_block())?;
             return Ok(());
         }
         let label_name = label_name
@@ -59,11 +60,11 @@ impl ExitTo {
                     .get_stack_pointer(name.as_str())
                     .ok_or_else(|| anyhow::anyhow!("Variable `{}` not found", name))?;
                 let value = expression.into_llvm_value(context)?.expect("Always exists");
-                context.build_store(pointer, value);
+                context.build_store(pointer, value)?;
             }
         }
 
-        context.build_unconditional_branch(block);
+        context.build_unconditional_branch(block)?;
         Ok(())
     }
 }

@@ -38,7 +38,7 @@ impl Set {
         let value = value
             .into_llvm_value(context)?
             .ok_or_else(|| anyhow::anyhow!("Expected a value"))?;
-        context.build_store(pointer, value);
+        context.build_store(pointer, value)?;
 
         Ok(())
     }
