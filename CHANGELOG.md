@@ -9,6 +9,7 @@
 ### Fixed
 
 - Printing `--help` if not arguments are provided
+- Missing `--overwrite` flag now triggers an error
 
 ## [1.4.0] - 2024-02-19
 

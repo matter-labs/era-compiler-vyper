@@ -54,7 +54,7 @@ impl Contract {
         assembly_file_path.push(assembly_file_name);
 
         if assembly_file_path.exists() && !overwrite {
-            eprintln!(
+            anyhow::bail!(
                 "Refusing to overwrite an existing file {assembly_file_path:?} (use --overwrite to force).",
             );
         } else {
@@ -77,7 +77,7 @@ impl Contract {
         binary_file_path.push(binary_file_name);
 
         if binary_file_path.exists() && !overwrite {
-            eprintln!(
+            anyhow::bail!(
                 "Refusing to overwrite an existing file {binary_file_path:?} (use --overwrite to force).",
             );
         } else {
