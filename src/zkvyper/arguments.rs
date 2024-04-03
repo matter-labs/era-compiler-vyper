@@ -14,7 +14,10 @@ use structopt::StructOpt;
 /// Example: `zkvyper ERC20.vy`
 ///
 #[derive(Debug, StructOpt)]
-#[structopt(name = "The EraVM Vyper compiler")]
+#[structopt(
+    name = "The EraVM Vyper compiler",
+    global_settings = &[structopt::clap::AppSettings::ArgRequiredElseHelp],
+)]
 pub struct Arguments {
     /// Print the version and exit.
     #[structopt(long = "version")]
