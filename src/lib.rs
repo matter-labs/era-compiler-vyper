@@ -38,6 +38,7 @@ pub use self::warning_type::WarningType;
 
 mod tests;
 
+use std::io::Write;
 use std::path::PathBuf;
 
 ///
@@ -197,10 +198,11 @@ pub fn combined_json(
 
             combined_json.write_to_directory(output_directory.as_path(), overwrite)?;
         }
-        None => println!(
+        None => writeln!(
+            std::io::stdout(),
             "{}",
             serde_json::to_string(&combined_json).expect("Always valid")
-        ),
+        )?,
     }
     std::process::exit(0);
 }

@@ -4,6 +4,7 @@
 
 pub mod arguments;
 
+use std::io::Write;
 use std::path::PathBuf;
 use std::str::FromStr;
 
@@ -19,12 +20,12 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 ///
 /// The application entry point.
 ///
-fn main() {
+fn main() -> anyhow::Result<()> {
     std::process::exit(match main_inner() {
-        Ok(()) => 0,
+        Ok(()) => era_compiler_common::EXIT_CODE_SUCCESS,
         Err(error) => {
-            eprintln!("{error}");
-            1
+            writeln!(std::io::stderr(), "{error}")?;
+            era_compiler_common::EXIT_CODE_FAILURE
         }
     })
 }
@@ -45,12 +46,13 @@ fn main_inner() -> anyhow::Result<()> {
     era_compiler_llvm_context::initialize_target(era_compiler_llvm_context::Target::EraVM); // TODO: pass from CLI
 
     if arguments.version {
-        println!(
+        writeln!(
+            std::io::stdout(),
             "{} v{} (LLVM build {})",
             env!("CARGO_PKG_DESCRIPTION"),
             env!("CARGO_PKG_VERSION"),
             inkwell::support::get_commit_id().to_string(),
-        );
+        )?;
         return Ok(());
     }
 
@@ -163,7 +165,7 @@ fn main_inner() -> anyhow::Result<()> {
         Some(output_directory) => {
             for (_path, contract) in build.contracts.iter() {
                 for warning in contract.warnings.iter() {
-                    eprintln!("\n{}", warning);
+                    writeln!(std::io::stderr(), "\n{}", warning)?;
                 }
             }
 
@@ -173,13 +175,13 @@ fn main_inner() -> anyhow::Result<()> {
         }
         None => {
             for (path, contract) in build.contracts.into_iter() {
-                eprintln!("Contract `{path}`:");
+                writeln!(std::io::stderr(), "Contract `{path}`:")?;
                 for warning in contract.warnings.iter() {
-                    eprintln!("\n{}", warning);
+                    writeln!(std::io::stderr(), "\n{}", warning)?;
                 }
 
                 let bytecode_string = hex::encode(contract.build.bytecode);
-                println!("0x{bytecode_string}");
+                writeln!(std::io::stdout(), "0x{bytecode_string}")?;
 
                 if let Some(format) = arguments.format.as_deref() {
                     let vyper = era_compiler_vyper::VyperCompiler::new(
@@ -190,8 +192,7 @@ fn main_inner() -> anyhow::Result<()> {
                     )?;
                     let extra_output =
                         vyper.extra_output(PathBuf::from(path).as_path(), evm_version, format)?;
-                    println!();
-                    println!("{extra_output}");
+                    writeln!(std::io::stdout(), "\n{extra_output}")?;
                 }
             }
         }

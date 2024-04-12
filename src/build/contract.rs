@@ -54,7 +54,7 @@ impl Contract {
         assembly_file_path.push(assembly_file_name);
 
         if assembly_file_path.exists() && !overwrite {
-            eprintln!(
+            anyhow::bail!(
                 "Refusing to overwrite an existing file {assembly_file_path:?} (use --overwrite to force).",
             );
         } else {
@@ -77,7 +77,7 @@ impl Contract {
         binary_file_path.push(binary_file_name);
 
         if binary_file_path.exists() && !overwrite {
-            eprintln!(
+            anyhow::bail!(
                 "Refusing to overwrite an existing file {binary_file_path:?} (use --overwrite to force).",
             );
         } else {
@@ -85,7 +85,7 @@ impl Contract {
                 .map_err(|error| {
                     anyhow::anyhow!("File {:?} creating error: {}", binary_file_path, error)
                 })?
-                .write_all(self.build.bytecode.as_slice())
+                .write_all(format!("0x{}", hex::encode(self.build.bytecode.as_slice())).as_bytes())
                 .map_err(|error| {
                     anyhow::anyhow!("File {:?} writing error: {}", binary_file_path, error)
                 })?;
