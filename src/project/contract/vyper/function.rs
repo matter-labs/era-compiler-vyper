@@ -88,10 +88,10 @@ where
             .find(|block| block.get_name().to_string_lossy() == self.name)
             .copied()
             .ok_or_else(|| anyhow::anyhow!("Block `{}` does not exist", self.name))?;
-        context.build_unconditional_branch(ir_entry_block);
+        context.build_unconditional_branch(ir_entry_block)?;
 
         context.set_basic_block(context.current_function().borrow().return_block());
-        context.build_return(None);
+        context.build_return(None)?;
 
         for block in llvm_value.get_basic_blocks() {
             if block.get_terminator().is_none() {
@@ -100,7 +100,7 @@ where
                     context.llvm_runtime().revert,
                     context.field_const(0),
                     context.field_const(0),
-                );
+                )?;
             }
         }
 

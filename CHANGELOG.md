@@ -4,13 +4,18 @@
 
 ### Added
 
-- The jump table density threshold optimizer parameter
+- More LLVM optimizations, including jump tables
+- The jump table density threshold optimization parameter
+
+### Changed
+
+- Updated to LLVM 17
 
 ### Fixed
 
-- Printing `--help` if not arguments are provided
+- Printing `--help` if no arguments are provided
 - Missing `--overwrite` flag now triggers an error
-- Bytecode is now printed to `--output-dir` as a hex string
+- Bytecode is now printed to `--output-dir` as a hexadecimal string
 - The broken pipe error when piping the output to another process
 
 ## [1.4.0] - 2024-02-19

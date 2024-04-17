@@ -33,24 +33,24 @@ where
         operand_2,
         operand_3,
         "clamp_condition_one",
-    );
+    )?;
     let condition_two = context.builder().build_int_compare(
         predicate_two,
         operand_3,
         operand_1,
         "clamp_condition_two",
-    );
+    )?;
     let condition = context
         .builder()
-        .build_and(condition_one, condition_two, "clamp_condition");
-    context.build_conditional_branch(condition, join_block, error_block);
+        .build_and(condition_one, condition_two, "clamp_condition")?;
+    context.build_conditional_branch(condition, join_block, error_block)?;
 
     context.set_basic_block(error_block);
     context.build_exit(
         context.llvm_runtime().revert,
         context.field_const(0),
         context.field_const(0),
-    );
+    )?;
 
     context.set_basic_block(join_block);
 
@@ -77,15 +77,15 @@ where
         operand_1,
         operand_2,
         "clamp_single_condition",
-    );
-    context.build_conditional_branch(condition, join_block, error_block);
+    )?;
+    context.build_conditional_branch(condition, join_block, error_block)?;
 
     context.set_basic_block(error_block);
     context.build_exit(
         context.llvm_runtime().revert,
         context.field_const(0),
         context.field_const(0),
-    );
+    )?;
 
     context.set_basic_block(join_block);
 
