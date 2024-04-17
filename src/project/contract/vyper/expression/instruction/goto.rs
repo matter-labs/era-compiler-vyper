@@ -54,7 +54,7 @@ impl Goto {
             function.borrow().declaration(),
             arguments.as_slice(),
             label_name.as_str(),
-        );
+        )?;
 
         Ok(None)
     }
@@ -94,11 +94,11 @@ impl Goto {
                     .get_stack_pointer(name.as_str())
                     .ok_or_else(|| anyhow::anyhow!("Variable `{}` not found", name))?;
                 let value = expression.into_llvm_value(context)?.expect("Always exists");
-                context.build_store(pointer, value);
+                context.build_store(pointer, value)?;
             }
         }
 
-        context.build_unconditional_branch(block);
+        context.build_unconditional_branch(block)?;
 
         Ok(None)
     }

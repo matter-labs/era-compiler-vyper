@@ -39,21 +39,21 @@ impl Assert {
             condition,
             context.field_type(),
             "if_condition_extended",
-        );
+        )?;
         let condition = context.builder().build_int_compare(
             inkwell::IntPredicate::NE,
             condition,
             context.field_const(0),
             "if_condition_compared",
-        );
-        context.build_conditional_branch(condition, join_block, error_block);
+        )?;
+        context.build_conditional_branch(condition, join_block, error_block)?;
 
         context.set_basic_block(error_block);
         context.build_exit(
             context.llvm_runtime().revert,
             context.field_const(0),
             context.field_const(0),
-        );
+        )?;
 
         context.set_basic_block(join_block);
 

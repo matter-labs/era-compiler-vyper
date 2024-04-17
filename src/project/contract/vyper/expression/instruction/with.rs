@@ -41,11 +41,11 @@ impl With {
         let [identifier, value, block] = self.0;
         let identifier = identifier.try_into_identifier()?;
 
-        let pointer = context.build_alloca(context.field_type(), identifier.as_str());
+        let pointer = context.build_alloca(context.field_type(), identifier.as_str())?;
         let value = value
             .into_llvm_value(context)?
             .ok_or_else(|| anyhow::anyhow!("Expected a value"))?;
-        context.build_store(pointer, value);
+        context.build_store(pointer, value)?;
         let shadowed_pointer = context
             .current_function()
             .borrow_mut()

@@ -129,14 +129,14 @@ impl Label {
                     }
                     label_arguments.push(name.clone());
 
-                    let pointer = context.build_alloca(context.field_type(), name.as_str());
+                    let pointer = context.build_alloca(context.field_type(), name.as_str())?;
                     let value =
                         if name.as_str() == crate::r#const::VARIABLE_IDENTIFIER_RETURN_BUFFER {
                             context.current_function().borrow().get_nth_param(0)
                         } else {
                             context.field_const(0).as_basic_value_enum()
                         };
-                    context.build_store(pointer, value);
+                    context.build_store(pointer, value)?;
                     context
                         .current_function()
                         .borrow_mut()
@@ -192,7 +192,8 @@ impl Label {
         block.into_llvm_value(context)?;
 
         if label_name == crate::r#const::FUNCTION_IDENTIFIER_FALLBACK {
-            context.build_unconditional_branch(context.current_function().borrow().return_block());
+            context
+                .build_unconditional_branch(context.current_function().borrow().return_block())?;
         }
 
         if label_name.starts_with("external___init")

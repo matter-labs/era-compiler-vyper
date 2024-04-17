@@ -142,13 +142,13 @@ impl Expression {
                         modulo,
                         context.field_const(1),
                         "max_value_diff",
-                    );
+                    )?;
                     let max_value = context.field_type().const_all_ones();
                     let value = context.builder().build_int_sub(
                         max_value,
                         max_value_diff,
                         "negative_value",
-                    );
+                    )?;
                     value.as_basic_value_enum()
                 } else {
                     context
@@ -164,7 +164,7 @@ impl Expression {
                         context.llvm_runtime().revert,
                         context.field_const(0),
                         context.field_const(0),
-                    );
+                    )?;
                 }
 
                 let value = match context
@@ -172,7 +172,7 @@ impl Expression {
                     .borrow()
                     .get_stack_pointer(identifier.as_str())
                 {
-                    Some(pointer) => context.build_load(pointer, identifier.as_str()),
+                    Some(pointer) => context.build_load(pointer, identifier.as_str())?,
                     None => context.field_const(0).as_basic_value_enum(),
                 };
 
