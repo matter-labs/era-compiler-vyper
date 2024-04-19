@@ -23,28 +23,23 @@ describe("Output dir", () => {
 
         it("Output files are created", () => { // a bug on windows
             // Remove if () {} after the bugfix on win
-            if (os.platform() === 'win32') {
-                console.log("Expected file: " + pathToVyBinOutputFile(tmpDirZkVyper.name))
-                console.log("Actual file: " + executeCommand('dir', [tmpDirZkVyper.name, '/B']).output)
-            }
+            // if (os.platform() === 'win32') {
+            //     console.log("Expected file: " + pathToVyBinOutputFile(tmpDirZkVyper.name))
+            //     console.log("Actual file: " + executeCommand('dir', [tmpDirZkVyper.name, '/B']).output)
+            // }
             expect(isDestinationExist(pathToVyBinOutputFile(tmpDirZkVyper.name))).toBe(true);
             expect(isDestinationExist(pathToVyAsmOutputFile(tmpDirZkVyper.name))).toBe(true);
         });
 
         it("The output files are not empty", () => {
             // Remove if () {} after the bugfix on win
-            if (os.platform() === 'win32') {
-                const args_cmd = [
-                    `"${paths.pathToVyBinOutputFile}"`,
-                    `-O3`,
-                    `--bin`,
-                    `--asm`
-                ];
-                console.log(`The output file: ${pathToVyBinOutputFile(tmpDirZkVyper.name)} contains: \n`
-                    + executeCommand('type', [pathToVyBinOutputFile(tmpDirZkVyper.name)]).output);
-                console.log(`The output file should contain: \n`
-                    + executeCommand(zkvyperCommand, args_cmd).output);
-            }
+            // if (os.platform() === 'win32') {
+            //     const args_cmd = [`"${paths.pathToVyBinOutputFile}"`];
+            //     console.log(`The output file: ${pathToVyBinOutputFile(tmpDirZkVyper.name)} contains: \n`
+            //         + executeCommand('type', [pathToVyBinOutputFile(tmpDirZkVyper.name)]).output);
+            //     console.log(`The output file should contain: \n`
+            //         + executeCommand(zkvyperCommand, args_cmd).output);
+            // }
             expect(isFileEmpty(pathToVyBinOutputFile(tmpDirZkVyper.name))).toBe(false);
             expect(isFileEmpty(pathToVyAsmOutputFile(tmpDirZkVyper.name))).toBe(false);
         });
