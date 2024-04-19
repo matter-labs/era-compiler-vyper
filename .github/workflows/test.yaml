@@ -62,7 +62,9 @@ jobs:
     name: ${{ matrix.name }}
     steps:
 
-      - uses: AutoModality/action-clean@v1
+      - name: Clean up workspace
+        if: runner.os == 'Linux'
+        uses: AutoModality/action-clean@v1
 
       - name: Checkout source
         uses: actions/checkout@v4

@@ -65,6 +65,10 @@ jobs:
       image: ${{ matrix.image || '' }} # Special workaround to allow matrix builds with optional container
     name: ${{ matrix.name }}
     steps:
+      - name: Clean up workspace
+        if: runner.os == 'Linux'
+        uses: AutoModality/action-clean@v1
+
       - name: Checkout source
         uses: actions/checkout@v4
 
