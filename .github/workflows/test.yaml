@@ -45,15 +45,16 @@ jobs:
             runner: macos-12-large
           - name: "MacOS arm64"
             runner: [self-hosted, macOS, ARM64]
-          - name: "Linux x86"
-            runner: matterlabs-ci-runner
-            image: matterlabs/llvm_runner:ubuntu22-llvm15-latest
-            target: "x86_64-unknown-linux-musl"
-          - name: "Linux ARM64"
-            runner: matterlabs-ci-runner-arm
-            image: matterlabs/llvm_runner:ubuntu22-llvm15-latest
-            target: "aarch64-unknown-linux-musl"
-            rustflags: "-C link-arg=-Wl,-Bstatic -C link-arg=-lc -C link-arg=-L/usr/lib/llvm-15/lib/clang/15.0.7/lib/linux/ -C link-arg=-lclang_rt.builtins-aarch64"
+#            TODO: remove after resolving LLVM issue on Linux
+#          - name: "Linux x86"
+#            runner: matterlabs-ci-runner
+#            image: matterlabs/llvm_runner:ubuntu22-llvm15-latest
+#            target: "x86_64-unknown-linux-musl"
+#          - name: "Linux ARM64"
+#            runner: matterlabs-ci-runner-arm
+#            image: matterlabs/llvm_runner:ubuntu22-llvm15-latest
+#            target: "aarch64-unknown-linux-musl"
+#            rustflags: "-C link-arg=-Wl,-Bstatic -C link-arg=-lc -C link-arg=-L/usr/lib/llvm-15/lib/clang/15.0.7/lib/linux/ -C link-arg=-lclang_rt.builtins-aarch64"
           - name: "Windows"
             runner: windows-2022-github-hosted-16core
     runs-on: ${{ matrix.runner }}
@@ -61,6 +62,11 @@ jobs:
       image: ${{ matrix.image || '' }} # Special workaround to allow matrix builds with optional container
     name: ${{ matrix.name }}
     steps:
+
+      - name: Clean up workspace
+        if: runner.os == 'Linux'
+        uses: AutoModality/action-clean@v1
+
       - name: Checkout source
         uses: actions/checkout@v4
 

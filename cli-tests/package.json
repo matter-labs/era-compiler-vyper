@@ -7,7 +7,7 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "test": "npx jest --verbose --testPathPattern=common.test.ts"
+    "test": "npx jest --verbose --testPathPattern="
   },
   "keywords": [],
   "author": "Matter Labs",
@@ -19,6 +19,8 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "jest-junit": "^16.0.0"
+    "@types/tmp": "^0.2.6",
+    "jest-junit": "^16.0.0",
+    "tmp": "^0.2.3"
   }
 }
