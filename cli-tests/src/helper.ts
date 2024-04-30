@@ -10,7 +10,7 @@ export function executeCommand(command: string, args: string[]) {
   const result = spawnSync(command, args, { encoding: 'utf-8', shell: true, stdio: 'pipe' });
   return {
       exitCode: result.status,
-      output: result.stdout.trim() || result.stderr.trim()
+      output: result.stdout.trim() + result.stderr.trim()
   };
 }
 
@@ -37,4 +37,14 @@ export const pathToVyBinOutputFile = (destination: string): string  => {
 
 export const pathToVyAsmOutputFile = (destination: string): string  => {
     return path.join(destination, paths.contractVyFilename + paths.asmExtension);
+};
+
+export const pathToVyIllOutputFile = (destination: string): string  => {
+    return path.join(destination, paths.contractVyFilename + paths.illExtension);
+};
+export const pathToVyOptimIllOutputFile = (destination: string): string  => {
+    return path.join(destination, paths.contractVyFilename + paths.illOptimizedExtension);
+};
+export const pathToVyUnOptimIllOutputFile = (destination: string): string  => {
+    return path.join(destination, paths.contractVyFilename + paths.illUnOptimizedExtension);
 };
