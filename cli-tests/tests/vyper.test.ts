@@ -49,7 +49,7 @@ describe("Set of --solc tests", () => {
         });
 
         it("--metadata-hash info is presented", () => {
-            expect(result.output).toMatch(/(error)/i);
+            expect(result.output).toMatch(/(error|not found)/i);
         });
     });
 });

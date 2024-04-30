@@ -10,7 +10,7 @@ export function executeCommand(command: string, args: string[]) {
   const result = spawnSync(command, args, { encoding: 'utf-8', shell: true, stdio: 'pipe' });
   return {
       exitCode: result.status,
-      output: result.stdout.trim() || result.stderr.trim()
+      output: result.stdout.trim() + result.stderr.trim()
   };
 }
 
