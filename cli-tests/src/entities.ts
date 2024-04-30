@@ -3,6 +3,9 @@ import * as path from 'path';
 const outputDir = 'artifacts';
 const binExtension = '.zbin';
 const asmExtension = '.zasm';
+const illExtension = '.ill';
+const illOptimizedExtension = '.optimized.ill';
+const illUnOptimizedExtension = '.unoptimized.ill';
 const contractVyFilename = 'contract.vy';
 const contractEcRecover = 'ecrecover.vy';
 const contractExtCode = 'extcode.vy';
@@ -24,6 +27,9 @@ export const paths = {
   outputDir: outputDir,
   binExtension: binExtension,
   asmExtension: asmExtension,
+  illExtension: illExtension,
+  illOptimizedExtension: illOptimizedExtension,
+  illUnOptimizedExtension: illUnOptimizedExtension,
   contractVyFilename: contractVyFilename,
   pathToOutputDir: pathToOutputDir,
   pathToContracts: pathToContracts,

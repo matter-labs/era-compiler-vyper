@@ -38,3 +38,13 @@ export const pathToVyBinOutputFile = (destination: string): string  => {
 export const pathToVyAsmOutputFile = (destination: string): string  => {
     return path.join(destination, paths.contractVyFilename + paths.asmExtension);
 };
+
+export const pathToVyIllOutputFile = (destination: string): string  => {
+    return path.join(destination, paths.contractVyFilename + paths.illExtension);
+};
+export const pathToVyOptimIllOutputFile = (destination: string): string  => {
+    return path.join(destination, paths.contractVyFilename + paths.illOptimizedExtension);
+};
+export const pathToVyUnOptimIllOutputFile = (destination: string): string  => {
+    return path.join(destination, paths.contractVyFilename + paths.illUnOptimizedExtension);
+};
