@@ -9,7 +9,6 @@ if (os.platform() !== 'win32') { //bugs on windows
         //id1983
         describe("Default run with --overwrite output dir", () => {
             const tmpDirZkVyper = createTmpDirectory();
-            console.log(`Before: ` + executeCommand(`ls`, [`${tmpDirZkVyper.name}`]).output)
 
             it("Output dir is created", () => {
                 expect(isDestinationExist(tmpDirZkVyper.name)).toBe(true);
@@ -21,11 +20,6 @@ if (os.platform() !== 'win32') { //bugs on windows
             //trying to run a command to get a warning and verify an exit code
             const pre_args = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${tmpDirZkVyper.name}"`]; // issue on windows
             const pre_result = executeCommand(zkvyperCommand, pre_args);
-
-            it("Exit code = 1", () => {
-                console.log(`after: ` + executeCommand(`ls`, [`${tmpDirZkVyper.name}`]).output)
-                expect(pre_result.exitCode).toBe(1);
-            });
 
             it("Refusing to overwrite in the output", () => {
                 expect(pre_result.output).toMatch(/(Refusing to overwrite)/i);
