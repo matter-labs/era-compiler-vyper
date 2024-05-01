@@ -9,20 +9,21 @@ if (os.platform() !== 'win32') { //bugs on windows
         //id1983
         describe("Default run with --overwrite output dir", () => {
             const tmpDirZkVyper = createTmpDirectory();
+            console.log(`Before: ` + executeCommand(`ls`, [`${tmpDirZkVyper.name}`]).output)
 
             it("Output dir is created", () => {
                 expect(isDestinationExist(tmpDirZkVyper.name)).toBe(true);
             });
 
             //adding empty files to tmp dir
-            console.log("file path+ ext: " + `${paths.contractVyFilename}${paths.binExtension}`)
             createFiles(tmpDirZkVyper.name, [`${paths.contractVyFilename}${paths.binExtension}`, `${paths.contractVyFilename}${paths.asmExtension}`])
 
             //trying to run a command to get a warning and verify an exit code
-            let args = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${tmpDirZkVyper.name}"`]; // issue on windows
-            const pre_result = executeCommand(zkvyperCommand, args);
+            const pre_args = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${tmpDirZkVyper.name}"`]; // issue on windows
+            const pre_result = executeCommand(zkvyperCommand, pre_args);
 
             it("Exit code = 1", () => {
+                console.log(`after: ` + executeCommand(`ls`, [`${tmpDirZkVyper.name}`]).output)
                 expect(pre_result.exitCode).toBe(1);
             });
 
@@ -31,7 +32,7 @@ if (os.platform() !== 'win32') { //bugs on windows
             });
 
             //trying to add a flag and verify that command passed with 0 exit code
-            args = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${tmpDirZkVyper.name}"`, `--overwrite`]; // issue on windows
+            const args = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${tmpDirZkVyper.name}"`, `--overwrite`]; // issue on windows
             const result = executeCommand(zkvyperCommand, args);
 
             it("Exit code = 0", () => {
