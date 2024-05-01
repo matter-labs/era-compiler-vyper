@@ -3,6 +3,7 @@ import { spawnSync } from "child_process";
 import * as tmp from 'tmp';
 import { paths } from './entities';
 import * as path from 'path';
+import * as os from 'os';
 
 tmp.setGracefulCleanup();
 
@@ -23,6 +24,20 @@ export const isFileEmpty = (file: string): boolean  => {
         return (fs.readFileSync(file).length === 0);
     } 
 };
+
+export const createFiles = (absolutePath: string, files: string[]) => {
+
+        for (let file_name of files) {
+            if (file_name != '') {
+                const full_path = path.join(absolutePath, file_name);
+                if (os.platform() === 'win32') {
+                    executeCommand('cmd', [`/c`, `echo. > ${full_path}`]);
+                } else {
+                    executeCommand('touch', [`${full_path}`]);
+                }
+            }
+        }
+}
 
 export const createTmpDirectory = (name = 'tmp-XXXXXX'): tmp.DirResult => {
     if (!fs.existsSync(paths.pathToOutputDir)) {
