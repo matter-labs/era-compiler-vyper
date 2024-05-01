@@ -1,4 +1,4 @@
-import {executeCommand, isDestinationExist, isFileEmpty, createTmpDirectory, pathToVyBinOutputFile, pathToVyAsmOutputFile, pathToVyIllOutputFile, pathToVyOptimIllOutputFile, pathToVyUnOptimIllOutputFile} from "../src/helper";
+import {executeCommand, isDestinationExist, createTmpDirectory, directoryContainsSubstring} from "../src/helper";
 import { paths } from '../src/entities';
 import * as os from 'os';
 import * as fs from 'fs';
@@ -30,11 +30,8 @@ if (os.platform() !== 'win32') { //bugs on windows
                 ];
                 const filenames = fs.readdirSync(tmpDirZkVyper.name);
 
-                // check if each expected substring is present in at least one filename
-                expectedSubstrings.forEach(substring => {
-                    const found = filenames.some(filename => filename.includes(substring));
-                    expect(found).toBeTruthy();
-                });
+                const allSubstringsFound = directoryContainsSubstring(filenames, expectedSubstrings);
+                expect(allSubstringsFound).toBeTruthy();
             });
 
             it("No 'Error'/'Warning'/'Fail' in the output", () => {

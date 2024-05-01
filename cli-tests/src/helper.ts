@@ -15,6 +15,30 @@ export function executeCommand(command: string, args: string[]) {
   };
 }
 
+export const directoryContainsSubstring = (filenames: string[], substrings: string[]): boolean => {
+    let allSubstringsFound = true;
+    const missedSubstrings: string[] = [];
+
+    // check if each expected substring is present in at least one filename
+    for (let substring of substrings) {
+        let substringFound = false;
+        for (let file_name of filenames) {
+            if (file_name.includes(substring)) {
+                substringFound = true;
+                break;
+            }
+        }
+        if (!substringFound) {
+            allSubstringsFound = false;
+            missedSubstrings.push(substring);
+        }
+    }
+    if (!allSubstringsFound) {
+        console.log("Missed substrings:", missedSubstrings.join(', '));
+    }
+    return allSubstringsFound;
+}
+
 export const isDestinationExist = (destination: string): boolean  => {
     return fs.existsSync(destination);
 };
