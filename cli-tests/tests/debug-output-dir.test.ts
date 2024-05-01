@@ -1,6 +1,7 @@
 import {executeCommand, isDestinationExist, isFileEmpty, createTmpDirectory, pathToVyBinOutputFile, pathToVyAsmOutputFile, pathToVyIllOutputFile, pathToVyOptimIllOutputFile, pathToVyUnOptimIllOutputFile} from "../src/helper";
 import { paths } from '../src/entities';
 import * as os from 'os';
+import * as fs from 'fs';
 
 if (os.platform() !== 'win32') { //bugs on windows
     describe("Output dir", () => {
@@ -20,21 +21,20 @@ if (os.platform() !== 'win32') { //bugs on windows
                 expect(isDestinationExist(tmpDirZkVyper.name)).toBe(true);
             });
 
-            //TODO: bug with creation filenames QA-853
-            xit("Output files are created", () => {
-                // Remove if () {} after the bugfix on win
-                console.log("paths.pathToBasicVyContract: " + paths.pathToBasicVyContract);
-                console.log("pathToVyAsmOutputFile(tmpDirZkVyper.name): " + pathToVyAsmOutputFile(tmpDirZkVyper.name));
+            it("It should contain filenames with specified substrings", () => {
+                const expectedSubstrings = [
+                    paths.illExtension,
+                    paths.illOptimizedExtension,
+                    paths.illUnOptimizedExtension,
+                    paths.asmExtension
+                ];
+                const filenames = fs.readdirSync(tmpDirZkVyper.name);
 
-                if (os.platform() === 'win32') {
-                    console.log("Expected file: " + pathToVyBinOutputFile(tmpDirZkVyper.name))
-                    console.log("Actual file: " + executeCommand('dir', [tmpDirZkVyper.name, '/B']).output)
-                } else {
-                    expect(isDestinationExist(pathToVyAsmOutputFile(tmpDirZkVyper.name))).toBe(true);
-                    expect(isDestinationExist(pathToVyIllOutputFile(tmpDirZkVyper.name))).toBe(true);
-                    expect(isDestinationExist(pathToVyOptimIllOutputFile(tmpDirZkVyper.name))).toBe(true);
-                    expect(isDestinationExist(pathToVyUnOptimIllOutputFile(tmpDirZkVyper.name))).toBe(true);
-                }
+                // check if each expected substring is present in at least one filename
+                expectedSubstrings.forEach(substring => {
+                    const found = filenames.some(filename => filename.includes(substring));
+                    expect(found).toBeTruthy();
+                });
             });
 
             it("No 'Error'/'Warning'/'Fail' in the output", () => {
