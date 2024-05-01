@@ -34,6 +34,9 @@ export const directoryContainsSubstring = (filenames: string[], substrings: stri
         }
     }
     if (!allSubstringsFound) {
+        for (let file_name of filenames) {
+            console.log("filename: ", file_name, `\n`);
+        }
         console.log("Missed substrings:", missedSubstrings.join(', '));
     }
     return allSubstringsFound;
