@@ -12,6 +12,7 @@ const contractExtCode = 'extcode.vy';
 const contractTxOrigin = 'txorigin.vy';
 const contractZkasmFilename = 'contract.zkasm';
 const contractJSONFilename = 'contract.json';
+const contractLLVMFilename = 'contract.ll';
 const pathToOutputDir = path.join( __dirname, '..', outputDir);
 const pathToContracts = path.join( __dirname, '..', 'src', 'contracts');
 const pathToBasicVyContract = path.join(pathToContracts, 'vyper', contractVyFilename);
@@ -20,6 +21,7 @@ const pathToEcRecoverContract = path.join(pathToContracts, 'vyper', contractEcRe
 const pathToExtCodeContract = path.join(pathToContracts, 'vyper', contractExtCode);
 const pathToTxOriginContract = path.join(pathToContracts, 'vyper', contractTxOrigin);
 const pathToJSONContract = path.join(pathToContracts, 'json', contractJSONFilename);
+const pathToLLVMContract = path.join(pathToContracts, 'llvm', contractLLVMFilename);
 const pathToVyBinOutputFile = path.join(pathToOutputDir, contractVyFilename + binExtension);
 const pathToVyAsmOutputFile = path.join(pathToOutputDir, contractVyFilename + asmExtension);
 
@@ -39,6 +41,7 @@ export const paths = {
   pathToExtCodeContract: pathToExtCodeContract,
   pathToEcRecoverContract: pathToEcRecoverContract,
   pathToJSONContract: pathToJSONContract,
+  pathToLLVMContract: pathToLLVMContract,
   pathToVyBinOutputFile: pathToVyBinOutputFile,
   pathToVyAsmOutputFile: pathToVyAsmOutputFile,
 };
