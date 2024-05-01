@@ -2,12 +2,12 @@ import {executeCommand} from "../src/helper";
 import { paths } from '../src/entities';
 
 
-describe("Set of --llvm-verify-each tests", () => {
+describe("Set of --metadata-hash tests", () => {
     const zkvyperCommand = 'zkvyper';
 
-    //id1972
-    describe(`Run ${zkvyperCommand} with --llvm-verify-each by default`, () => {
-        const args = [`${paths.pathToBasicVyContract}`, `--llvm-verify-each`];
+    //id1941
+    describe(`Run ${zkvyperCommand} with --metadata-hash by default`, () => {
+        const args = [`${paths.pathToBasicVyContract}`, `--metadata-hash=none`];
         const result = executeCommand(zkvyperCommand, args);
 
         it("Valid command exit code = 0", () => {
@@ -19,9 +19,23 @@ describe("Set of --llvm-verify-each tests", () => {
         });
     });
 
-    //id1972:II
-    describe(`Run only with --llvm-verify-each options`, () => {
-        const args = [`--llvm-verify-each`];
+    //id1941:II
+    describe(`Run ${zkvyperCommand} with not full --metadata-hash options`, () => {
+        const args = [`${paths.pathToBasicVyContract}`, `--metadata-hash`];
+        const result = executeCommand(zkvyperCommand, args);
+
+        it("Valid command exit code = 1", () => {
+            expect(result.exitCode).toBe(1);
+        });
+
+        it("Error is presented", () => {
+            expect(result.output).toMatch(/(requires a value)/i);
+        });
+    });
+
+    //id1941:III
+    describe(`Run only with --metadata-hash options`, () => {
+        const args = [`--metadata-hash=none`];
         const result = executeCommand(zkvyperCommand, args);
 
         it("Valid command exit code = 1", () => {
@@ -33,9 +47,9 @@ describe("Set of --llvm-verify-each tests", () => {
         });
     });
 
-    //id1973
-    describe(`Run ${zkvyperCommand} with double --llvm-verify-each options`, () => {
-        const args = [`${paths.pathToBasicVyContract}`, `--llvm-verify-each`, `--llvm-verify-each`];
+    //id1975
+    describe(`Run ${zkvyperCommand} with double --metadata-hash options`, () => {
+        const args = [`${paths.pathToBasicVyContract}`, `--metadata-hash=none`, `--metadata-hash`];
         const result = executeCommand(zkvyperCommand, args);
 
         it("Valid command exit code = 1", () => {
@@ -47,17 +61,4 @@ describe("Set of --llvm-verify-each tests", () => {
         });
     });
 
-    //id1974
-    describe(`Run ${zkvyperCommand} with incompatible contract and --llvm-verify-each option`, () => {
-        const args = [`${paths.pathToLLVMContract}`, `--llvm-verify-each`];
-        const result = executeCommand(zkvyperCommand, args);
-
-        it("Valid command exit code = 1", () => {
-            expect(result.exitCode).toBe(1);
-        });
-
-        it("Error is presented", () => {
-            expect(result.output).toMatch(/(vyper error)/i);
-        });
-    });
 });
