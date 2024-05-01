@@ -57,11 +57,7 @@ export const createFiles = (absolutePath: string, files: string[]) => {
         for (let file_name of files) {
             if (file_name != '') {
                 const full_path = path.join(absolutePath, file_name);
-                if (os.platform() === 'win32') {
-                    executeCommand('cmd', [`/c`, `echo. > ${full_path}`]);
-                } else {
-                    executeCommand('touch', [`${full_path}`]);
-                }
+                fs.writeFileSync(full_path, '');
             }
         }
 }
