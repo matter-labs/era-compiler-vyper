@@ -3,6 +3,7 @@ import { spawnSync } from "child_process";
 import * as tmp from 'tmp';
 import { paths } from './entities';
 import * as path from 'path';
+import * as os from 'os';
 
 tmp.setGracefulCleanup();
 
@@ -10,8 +11,35 @@ export function executeCommand(command: string, args: string[]) {
   const result = spawnSync(command, args, { encoding: 'utf-8', shell: true, stdio: 'pipe' });
   return {
       exitCode: result.status,
-      output: result.stdout.trim() || result.stderr.trim()
+      output: result.stdout.trim() + result.stderr.trim()
   };
+}
+
+export const directoryContainsSubstring = (filenames: string[], substrings: string[]): boolean => {
+    let allSubstringsFound = true;
+    const missedSubstrings: string[] = [];
+
+    // check if each expected substring is present in at least one filename
+    for (let substring of substrings) {
+        let substringFound = false;
+        for (let file_name of filenames) {
+            if (file_name.includes(substring)) {
+                substringFound = true;
+                break;
+            }
+        }
+        if (!substringFound) {
+            allSubstringsFound = false;
+            missedSubstrings.push(substring);
+        }
+    }
+    if (!allSubstringsFound) {
+        for (let file_name of filenames) {
+            console.log("filename: ", file_name, `\n`);
+        }
+        console.log("Missed substrings:", missedSubstrings.join(', '));
+    }
+    return allSubstringsFound;
 }
 
 export const isDestinationExist = (destination: string): boolean  => {
@@ -23,6 +51,16 @@ export const isFileEmpty = (file: string): boolean  => {
         return (fs.readFileSync(file).length === 0);
     } 
 };
+
+export const createFiles = (absolutePath: string, files: string[]) => {
+
+        for (let file_name of files) {
+            if (file_name != '') {
+                const full_path = path.join(absolutePath, file_name);
+                fs.writeFileSync(full_path, '');
+            }
+        }
+}
 
 export const createTmpDirectory = (name = 'tmp-XXXXXX'): tmp.DirResult => {
     if (!fs.existsSync(paths.pathToOutputDir)) {
@@ -37,4 +75,14 @@ export const pathToVyBinOutputFile = (destination: string): string  => {
 
 export const pathToVyAsmOutputFile = (destination: string): string  => {
     return path.join(destination, paths.contractVyFilename + paths.asmExtension);
+};
+
+export const pathToVyIllOutputFile = (destination: string): string  => {
+    return path.join(destination, paths.contractVyFilename + paths.illExtension);
+};
+export const pathToVyOptimIllOutputFile = (destination: string): string  => {
+    return path.join(destination, paths.contractVyFilename + paths.illOptimizedExtension);
+};
+export const pathToVyUnOptimIllOutputFile = (destination: string): string  => {
+    return path.join(destination, paths.contractVyFilename + paths.illUnOptimizedExtension);
 };
