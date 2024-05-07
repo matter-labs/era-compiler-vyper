@@ -103,7 +103,9 @@ impl Contract {
     ) -> anyhow::Result<()> {
         let hexadecimal_bytecode = hex::encode(self.build.bytecode);
         combined_json_contract.bytecode = Some(hexadecimal_bytecode);
-        combined_json_contract.bytecode_runtime = combined_json_contract.bytecode.clone();
+        combined_json_contract
+            .bytecode_runtime
+            .clone_from(&combined_json_contract.bytecode);
 
         combined_json_contract.warnings = Some(self.warnings);
         combined_json_contract.factory_deps = Some(self.build.factory_dependencies);
