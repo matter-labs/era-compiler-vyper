@@ -15,7 +15,7 @@ use crate::project::contract::vyper::expression::Expression;
 /// It is the upper level instruction which describes the deploy code. The runtime code is located
 /// in its return statement.
 ///
-/// Since the deploy and runtime code in zkSync are not separated, they are flattened and
+/// Since the deploy and runtime code in ZKsync are not separated, they are flattened and
 /// translated as entities of the same level with branching in the contract entry.
 ///
 #[derive(Debug, Serialize, Deserialize, Clone)]
