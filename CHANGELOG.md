@@ -15,6 +15,7 @@
 
 ### Fixed
 
+- The `xor(zext(cmp), -1)` optimization bug
 - Printing `--help` if no arguments are provided
 - Missing `--overwrite` flag now triggers an error
 - Bytecode is now printed to `--output-dir` as a hexadecimal string
