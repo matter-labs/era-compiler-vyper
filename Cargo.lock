@@ -309,7 +309,7 @@ dependencies = [
 [[package]]
 name = "era-compiler-llvm-context"
 version = "1.5.0"
-source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=main#bde99017add2c53a34a6cbcf2ba39560a3e72f53"
+source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=az-cpr-1699-switch-to-the-default-codegen-with-our-fork-of-solc#e011a780e83e0bf4d2454632ea72fbf153e7c08a"
 dependencies = [
  "anyhow",
  "era-compiler-common",
