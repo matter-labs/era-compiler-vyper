@@ -21,9 +21,6 @@ on:
         default: "91361694"
   pull_request:
     paths-ignore:
-      - 'cli-tests/**'
-      - '.github/workflows/test-cli.yaml'
-      - '.github/actions/cli-tests/**'
       - '.gitignore'
       - '**/*.md'
   push:
@@ -36,7 +33,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+
+  # Check for cargo licensing issues
+  cargo-license:
+    uses: matter-labs/era-compiler-ci/.github/workflows/cargo-license.yaml@main
+    secrets: inherit
+
+  # Check for secrets leak in the repository
+  secrets-scanner:
+    uses: matter-labs/era-compiler-ci/.github/workflows/secrets-scanner.yaml@main
+    secrets: inherit
+
+  build-and-test:
     strategy:
       fail-fast: false # finalize testing of all targets even if one failed
       matrix:
@@ -49,10 +57,11 @@ jobs:
             runner: matterlabs-ci-runner
             image: matterlabs/llvm_runner:ubuntu22-llvm17-latest
             target: "x86_64-unknown-linux-musl"
-          - name: "Linux ARM64"
-            runner: matterlabs-ci-runner-arm
-            image: matterlabs/llvm_runner:ubuntu22-llvm17-latest
-            target: "aarch64-unknown-linux-musl"
+          # TODO: uncomment as soon as the Vyper is available on Linux ARM64
+          # - name: "Linux ARM64"
+          #   runner: matterlabs-ci-runner-arm
+          #   image: matterlabs/llvm_runner:ubuntu22-llvm17-latest
+          #   target: "aarch64-unknown-linux-musl"
           - name: "Windows"
             runner: windows-2022-github-hosted-16core
     runs-on: ${{ matrix.runner }}
@@ -61,27 +70,37 @@ jobs:
     name: ${{ matrix.name }}
     steps:
 
-      - name: Clean up workspace
-        if: runner.os == 'Linux'
-        uses: AutoModality/action-clean@v1
-
       - name: Checkout source
         uses: actions/checkout@v4
 
+      - name: Check CLI test files
+        id: changed-files-yaml
+        uses: tj-actions/changed-files@v44
+        with:
+          files_yaml: |
+            cli_tests:
+              - 'cli-tests/**'
+              - '.github/actions/cli-tests/**'
+
       - name: Prepare Windows env
         if: runner.os == 'Windows'
-        uses: ./.github/actions/prepare-msys
+        uses: matter-labs/era-compiler-ci/.github/actions/prepare-msys@main
 
       - name: Build LLVM
-        uses: ./.github/actions/build-llvm
+        if: steps.changed-files-yaml.outputs.cli_tests_only_changed == 'false'
+        uses: matter-labs/era-compiler-ci/.github/actions/build-llvm@main
+        with:
+          target-env: 'musl'
+          enable-assertions: 'false'
 
       - name: Build zkvyper
+        if: steps.changed-files-yaml.outputs.cli_tests_only_changed == 'false'
         uses: ./.github/actions/build
         with:
           target: ${{ matrix.target }}
+          release-suffix: ${{ matrix.release-suffix }}
 
       - name: Install vyper compiler
-        # TODO: remove the condition as soon as the Vyper is available on Linux ARM64
         if: matrix.name != 'Linux ARM64'
         uses: ./.github/actions/install-vyper
         with:
@@ -89,16 +108,13 @@ jobs:
           vyper-commit: ${{ github.event.inputs.vyper-commit }}
 
       - name: Run tests
-        # TODO: remove the condition as soon as the Vyper is available on Linux ARM64
-        if: matrix.name != 'Linux ARM64'
+        if: steps.changed-files-yaml.outputs.cli_tests_only_changed == 'false'
         uses: ./.github/actions/unit-tests
         with:
           target: ${{ matrix.target || '' }}
 
       - name: Run CLI tests
-        # TODO: remove the condition as soon as the Vyper is available on Linux ARM64
-        if: matrix.name != 'Linux ARM64'
         uses: ./.github/actions/cli-tests
         with:
-          use-prebuilt-zkvyper: false # always build zkvyper from sources for general PR testing
+          use-prebuilt-zkvyper: ${{ steps.changed-files-yaml.outputs.cli_tests_only_changed }}
           zkvyper-version: ${{ github.event.inputs.zkvyper-version || '' }}
