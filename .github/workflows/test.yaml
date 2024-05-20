@@ -74,6 +74,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check CLI test files
+        if: github.event_name == 'pull_request'
         id: changed-files-yaml
         uses: tj-actions/changed-files@v44
         with:
@@ -87,14 +88,14 @@ jobs:
         uses: matter-labs/era-compiler-ci/.github/actions/prepare-msys@main
 
       - name: Build LLVM
-        if: steps.changed-files-yaml.outputs.cli_tests_only_changed == 'false'
+        if: steps.changed-files-yaml.outputs.cli_tests_only_changed != 'true'
         uses: matter-labs/era-compiler-ci/.github/actions/build-llvm@main
         with:
           target-env: 'musl'
           enable-assertions: 'false'
 
       - name: Build zkvyper
-        if: steps.changed-files-yaml.outputs.cli_tests_only_changed == 'false'
+        if: steps.changed-files-yaml.outputs.cli_tests_only_changed != 'true'
         uses: ./.github/actions/build
         with:
           target: ${{ matrix.target }}
@@ -108,7 +109,7 @@ jobs:
           vyper-commit: ${{ github.event.inputs.vyper-commit }}
 
       - name: Run tests
-        if: steps.changed-files-yaml.outputs.cli_tests_only_changed == 'false'
+        if: steps.changed-files-yaml.outputs.cli_tests_only_changed != 'true'
         uses: ./.github/actions/unit-tests
         with:
           target: ${{ matrix.target || '' }}
