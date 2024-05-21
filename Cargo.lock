@@ -309,7 +309,7 @@ dependencies = [
 [[package]]
 name = "era-compiler-llvm-context"
 version = "1.5.0"
-source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=main#bde99017add2c53a34a6cbcf2ba39560a3e72f53"
+source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=az-cpr-1702-support-extcodecopy-codecopy#1a3e10695a149500b4bde82c7a0737653d7fc19b"
 dependencies = [
  "anyhow",
  "era-compiler-common",
@@ -318,11 +318,8 @@ dependencies = [
  "itertools",
  "md5",
  "num",
- "once_cell",
- "regex",
  "semver",
  "serde",
- "sha2",
  "sha3",
  "zkevm-assembly",
  "zkevm_opcode_defs",
@@ -580,9 +577,9 @@ dependencies = [
 
 [[package]]
 name = "itertools"
-version = "0.12.1"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba291022dbbd398a455acf126c1e341954079855bc60dfdda641363bd6922569"
+checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
 dependencies = [
  "either",
 ]
