@@ -1303,56 +1303,50 @@ impl Instruction {
                 if Some(crate::r#const::EXTCODESIZE_BLUEPRINT_ARGUMENT_NAME)
                     != arguments[0].original.as_deref()
                 {
-                    era_compiler_llvm_context::eravm_evm_ext_code::copy(
-                        context,
-                        arguments[0].value.into_int_value(),
-                        arguments[1].value.into_int_value(),
-                        arguments[2].value.into_int_value(),
-                        arguments[3].value.into_int_value(),
-                    )
-                    .map(|_| None)
-                } else {
-                    let hash_value = era_compiler_llvm_context::eravm_evm_ext_code::hash(
-                        context,
-                        arguments[0].value.into_int_value(),
-                    )?;
-
-                    let hash_heap_offset = context.builder().build_int_add(
-                        arguments[1].value.into_int_value(),
-                        context.field_const(
-                            (era_compiler_common::BYTE_LENGTH_X32
-                                + era_compiler_common::BYTE_LENGTH_FIELD)
-                                as u64,
-                        ),
-                        "extcodecopy_hash_offset",
-                    )?;
-                    let hash_heap_pointer = era_compiler_llvm_context::Pointer::new_with_offset(
-                        context,
-                        era_compiler_llvm_context::EraVMAddressSpace::Heap,
-                        context.field_type(),
-                        hash_heap_offset,
-                        "extcodecopy_hash_destination",
-                    )?;
-                    context.build_store(hash_heap_pointer, hash_value)?;
-
-                    let hash_aux_heap_offset = context.field_const(
-                        era_compiler_llvm_context::eravm_const::HEAP_AUX_OFFSET_EXTERNAL_CALL
-                            + (era_compiler_common::BYTE_LENGTH_X32
-                                + era_compiler_common::BYTE_LENGTH_FIELD)
-                                as u64,
+                    anyhow::bail!(
+                        "The `EXTCODECOPY` instruction is only supported for the `create_from_blueprint built-in."
                     );
-                    let hash_aux_heap_pointer =
-                        era_compiler_llvm_context::Pointer::new_with_offset(
-                            context,
-                            era_compiler_llvm_context::EraVMAddressSpace::HeapAuxiliary,
-                            context.field_type(),
-                            hash_aux_heap_offset,
-                            "extcodecopy_hash_destination",
-                        )?;
-                    context.build_store(hash_aux_heap_pointer, hash_value)?;
-
-                    Ok(None)
                 }
+
+                let hash_value = era_compiler_llvm_context::eravm_evm_ext_code::hash(
+                    context,
+                    arguments[0].value.into_int_value(),
+                )?;
+
+                let hash_heap_offset = context.builder().build_int_add(
+                    arguments[1].value.into_int_value(),
+                    context.field_const(
+                        (era_compiler_common::BYTE_LENGTH_X32
+                            + era_compiler_common::BYTE_LENGTH_FIELD)
+                            as u64,
+                    ),
+                    "extcodecopy_hash_offset",
+                )?;
+                let hash_heap_pointer = era_compiler_llvm_context::Pointer::new_with_offset(
+                    context,
+                    era_compiler_llvm_context::EraVMAddressSpace::Heap,
+                    context.field_type(),
+                    hash_heap_offset,
+                    "extcodecopy_hash_destination",
+                )?;
+                context.build_store(hash_heap_pointer, hash_value)?;
+
+                let hash_aux_heap_offset = context.field_const(
+                    era_compiler_llvm_context::eravm_const::HEAP_AUX_OFFSET_EXTERNAL_CALL
+                        + (era_compiler_common::BYTE_LENGTH_X32
+                            + era_compiler_common::BYTE_LENGTH_FIELD)
+                            as u64,
+                );
+                let hash_aux_heap_pointer = era_compiler_llvm_context::Pointer::new_with_offset(
+                    context,
+                    era_compiler_llvm_context::EraVMAddressSpace::HeapAuxiliary,
+                    context.field_type(),
+                    hash_aux_heap_offset,
+                    "extcodecopy_hash_destination",
+                )?;
+                context.build_store(hash_aux_heap_pointer, hash_value)?;
+
+                Ok(None)
             }
 
             Self::RETURN(inner) => inner.into_llvm_value(context).map(|_| None),
