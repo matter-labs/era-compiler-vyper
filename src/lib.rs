@@ -189,7 +189,8 @@ pub fn combined_json(
         debug_config,
     )?;
 
-    let mut combined_json = vyper.combined_json(input_files.as_slice(), evm_version)?;
+    let mut combined_json =
+        vyper.combined_json(input_files.as_slice(), evm_version, vyper_optimizer_enabled)?;
     build.write_to_combined_json(&mut combined_json, &zkvyper_version)?;
 
     match output_directory {

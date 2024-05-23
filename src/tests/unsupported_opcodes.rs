@@ -4,7 +4,6 @@
 //! It is not possible to reproduce:
 //! - PC
 //! - CALLCODE
-//! - EXTCODECOPY without using Vyper built-in functions forbidden on the AST level
 //!
 
 #![cfg(test)]

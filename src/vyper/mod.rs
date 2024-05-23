@@ -74,6 +74,7 @@ impl Compiler {
         &self,
         paths: &[PathBuf],
         evm_version: Option<era_compiler_common::EVMVersion>,
+        optimize: bool,
     ) -> anyhow::Result<CombinedJson> {
         let mut command = std::process::Command::new(self.executable.as_str());
         if let Some(evm_version) = evm_version {
@@ -83,8 +84,9 @@ impl Compiler {
         command.arg("-f");
         command.arg("combined_json");
         command.args(paths);
-        if self.version.default >= semver::Version::new(0, 3, 10) {
-            command.arg("--no-optimize");
+        if !optimize || self.version.default >= semver::Version::new(0, 3, 10) {
+            command.arg("--optimize");
+            command.arg("none");
         }
         let output = command.output().map_err(|error| {
             anyhow::anyhow!("{} subprocess error: {:?}", self.executable, error)
@@ -223,7 +225,8 @@ impl Compiler {
         command.arg("-f");
         command.arg("ir");
         if !optimize || self.version.default >= semver::Version::new(0, 3, 10) {
-            command.arg("--no-optimize");
+            command.arg("--optimize");
+            command.arg("none");
         }
         command.arg(path);
 
@@ -264,7 +267,8 @@ impl Compiler {
         command.arg("-f");
         command.arg("ir_json,metadata,method_identifiers,ast");
         if !optimize || self.version.default >= semver::Version::new(0, 3, 10) {
-            command.arg("--no-optimize");
+            command.arg("--optimize");
+            command.arg("none");
         }
         command.args(paths.as_slice());
 
