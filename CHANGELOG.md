@@ -1,8 +1,12 @@
 # The `zkvyper` changelog
 
-### [Unreleased]
+## [Unreleased]
 
-### [1.4.1] - 2024-04-24
+### Added
+
+- The support for `EXTCODECOPY` instruction
+
+## [1.4.1] - 2024-04-24
 
 ### Added
 
