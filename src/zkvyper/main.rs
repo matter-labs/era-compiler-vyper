@@ -1,5 +1,5 @@
 //!
-//! Vyper to EraVM compiler binary.
+//! Vyper compiler binary.
 //!
 
 pub mod arguments;

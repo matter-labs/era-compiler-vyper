@@ -1,8 +1,16 @@
 # The `zkvyper` changelog
 
-### [Unreleased]
+## [Unreleased]
 
-### [1.4.1] - 2024-04-24
+### Added
+
+- More LLVM optimizations
+
+### Fixed
+
+- Excessive RAM usage with some projects
+
+## [1.4.1] - 2024-04-24
 
 ### Added
 
