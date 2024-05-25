@@ -1,5 +1,5 @@
 //!
-//! Vyper to EraVM compiler arguments.
+//! Vyper compiler arguments.
 //!
 
 use std::path::Path;

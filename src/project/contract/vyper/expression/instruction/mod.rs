@@ -47,8 +47,6 @@ use self::with::With;
 ///
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "lowercase")]
-#[allow(non_camel_case_types)]
-#[allow(clippy::upper_case_acronyms)]
 pub enum Instruction {
     /// The LLL IR `with` expression.
     With(With),

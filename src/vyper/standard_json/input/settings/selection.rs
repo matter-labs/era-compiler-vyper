@@ -11,8 +11,6 @@ use serde::Serialize;
 /// The `vyper --standard-json` expected output selection.
 ///
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Hash)]
-#[allow(non_camel_case_types)]
-#[allow(clippy::upper_case_acronyms)]
 pub enum Selection {
     /// The AST.
     #[serde(rename = "ast")]

@@ -1,5 +1,5 @@
 //!
-//! Vyper to EraVM compiler constants.
+//! Vyper compiler constants.
 //!
 
 #![allow(dead_code)]
