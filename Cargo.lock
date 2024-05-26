@@ -337,7 +337,6 @@ dependencies = [
  "inkwell",
  "lazy_static",
  "mimalloc",
- "once_cell",
  "path-slash",
  "rayon",
  "semver",

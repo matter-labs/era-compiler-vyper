@@ -133,7 +133,7 @@ fn main_inner() -> anyhow::Result<()> {
             Some("combined_json") => {
                 era_compiler_vyper::combined_json(
                     arguments.input_files,
-                    vyper,
+                    &vyper,
                     evm_version,
                     !arguments.disable_vyper_optimizer,
                     optimizer_settings,
@@ -150,7 +150,7 @@ fn main_inner() -> anyhow::Result<()> {
             }
             Some(_) | None => era_compiler_vyper::standard_output(
                 arguments.input_files,
-                vyper,
+                &vyper,
                 evm_version,
                 !arguments.disable_vyper_optimizer,
                 optimizer_settings,
