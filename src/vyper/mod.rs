@@ -7,9 +7,12 @@ pub mod standard_json;
 pub mod version;
 
 use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::OnceLock;
+use std::sync::RwLock;
 
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelIterator;
@@ -29,10 +32,11 @@ use self::version::Version;
 ///
 /// The Vyper compiler.
 ///
+#[derive(Debug, Clone)]
 pub struct Compiler {
     /// The binary executable name.
     pub executable: String,
-    /// The binary version.
+    /// The `vyper` compiler version.
     pub version: Version,
 }
 
@@ -54,17 +58,30 @@ impl Compiler {
     /// uses `vyper-<version>` format.
     ///
     pub fn new(executable: &str) -> anyhow::Result<Self> {
+        if let Some(executable) = Self::executables()
+            .read()
+            .expect("Sync")
+            .get(executable)
+            .cloned()
+        {
+            return Ok(executable);
+        }
+        let mut executables = Self::executables().write().expect("Sync");
+
         if let Err(error) = which::which(executable) {
             anyhow::bail!(
                 "The `{executable}` executable not found in ${{PATH}}: {}",
                 error
             );
         }
-        let version = Self::version(executable)?;
-        Ok(Self {
+        let version = Self::parse_version(executable)?;
+        let compiler = Self {
             executable: executable.to_owned(),
             version,
-        })
+        };
+
+        executables.insert(executable.to_owned(), compiler.clone());
+        Ok(compiler)
     }
 
     ///
@@ -390,9 +407,17 @@ impl Compiler {
     }
 
     ///
+    /// Returns the global shared array of `vyper` executables.
+    ///
+    fn executables() -> &'static RwLock<HashMap<String, Self>> {
+        static EXECUTABLES: OnceLock<RwLock<HashMap<String, Compiler>>> = OnceLock::new();
+        EXECUTABLES.get_or_init(|| RwLock::new(HashMap::new()))
+    }
+
+    ///
     /// The `vyper --version` mini-parser.
     ///
-    fn version(executable: &str) -> anyhow::Result<Version> {
+    fn parse_version(executable: &str) -> anyhow::Result<Version> {
         let mut command = std::process::Command::new(executable);
         command.arg("--version");
         let output = command

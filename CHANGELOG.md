@@ -5,6 +5,7 @@
 ### Added
 
 - More LLVM optimizations
+- Caching of the underlying compiler's metadata, including `--version`
 
 ### Fixed
 
