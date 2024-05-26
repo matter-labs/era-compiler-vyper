@@ -84,9 +84,13 @@ impl Compiler {
         command.arg("-f");
         command.arg("combined_json");
         command.args(paths);
-        if !optimize || self.version.default >= semver::Version::new(0, 3, 10) {
-            command.arg("--optimize");
-            command.arg("none");
+        if !optimize {
+            if self.version.default >= semver::Version::new(0, 3, 10) {
+                command.arg("--optimize");
+                command.arg("none");
+            } else {
+                command.arg("--no-optimize");
+            }
         }
         let output = command.output().map_err(|error| {
             anyhow::anyhow!("{} subprocess error: {:?}", self.executable, error)
@@ -224,9 +228,13 @@ impl Compiler {
         }
         command.arg("-f");
         command.arg("ir");
-        if !optimize || self.version.default >= semver::Version::new(0, 3, 10) {
-            command.arg("--optimize");
-            command.arg("none");
+        if !optimize {
+            if self.version.default >= semver::Version::new(0, 3, 10) {
+                command.arg("--optimize");
+                command.arg("none");
+            } else {
+                command.arg("--no-optimize");
+            }
         }
         command.arg(path);
 
@@ -266,9 +274,13 @@ impl Compiler {
         }
         command.arg("-f");
         command.arg("ir_json,metadata,method_identifiers,ast");
-        if !optimize || self.version.default >= semver::Version::new(0, 3, 10) {
-            command.arg("--optimize");
-            command.arg("none");
+        if !optimize {
+            if self.version.default >= semver::Version::new(0, 3, 10) {
+                command.arg("--optimize");
+                command.arg("none");
+            } else {
+                command.arg("--no-optimize");
+            }
         }
         command.args(paths.as_slice());
 
