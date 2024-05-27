@@ -8,7 +8,6 @@ pub mod version;
 
 use std::collections::BTreeMap;
 use std::collections::HashMap;
-use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::OnceLock;
@@ -152,46 +151,41 @@ impl Compiler {
         if self.version.default >= semver::Version::new(0, 3, 10) {
             input.settings.optimize = false;
         }
-        let input_json = serde_json::to_vec(&input).expect("Always valid");
 
-        let process = command.spawn().map_err(|error| {
-            anyhow::anyhow!("{} subprocess spawning error: {:?}", self.executable, error)
+        let mut process = command.spawn().map_err(|error| {
+            anyhow::anyhow!("{} subprocess spawning error: {error:?}", self.executable)
         })?;
-        process
-            .stdin
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("{} stdin getting error", self.executable))?
-            .write_all(input_json.as_slice())
-            .map_err(|error| {
-                anyhow::anyhow!("{} stdin writing error: {:?}", self.executable, error)
-            })?;
-
-        let output = process.wait_with_output().map_err(|error| {
-            anyhow::anyhow!("{} subprocess output error: {:?}", self.executable, error)
+        let stdin = process.stdin.take().ok_or_else(|| {
+            anyhow::anyhow!("{:?} subprocess stdin getting error", self.executable)
         })?;
-        if !output.status.success() {
-            anyhow::bail!(
-                "{} error: {}",
-                self.executable,
-                String::from_utf8_lossy(output.stderr.as_slice()).to_string()
-            );
-        }
-
-        let mut output: StandardJsonOutput = era_compiler_common::deserialize_from_slice(
-            output.stdout.as_slice(),
-        )
-        .map_err(|error| {
+        serde_json::to_writer(stdin, &input).map_err(|error| {
             anyhow::anyhow!(
-                "{} subprocess output parsing error: {}\n{}",
-                self.executable,
-                error,
-                era_compiler_common::deserialize_from_slice::<serde_json::Value>(
-                    output.stdout.as_slice()
-                )
-                .map(|json| serde_json::to_string_pretty(&json).expect("Always valid"))
-                .unwrap_or_else(|_| String::from_utf8_lossy(output.stdout.as_slice()).to_string()),
+                "{} subprocess stdin writing error: {error:?}",
+                self.executable
             )
         })?;
+
+        let result = process.wait_with_output().map_err(|error| {
+            anyhow::anyhow!(
+                "{} subprocess output reading error: {error:?}",
+                self.executable
+            )
+        })?;
+        let stderr_message = String::from_utf8_lossy(result.stderr.as_slice());
+        let mut output = match era_compiler_common::deserialize_from_slice::<StandardJsonOutput>(
+            result.stdout.as_slice(),
+        ) {
+            Ok(output) => output,
+            Err(error) => {
+                anyhow::bail!(
+                    "{} subprocess stdout parsing error: {error:?} (stderr: {stderr_message})",
+                    self.executable
+                );
+            }
+        };
+        if !result.status.success() {
+            anyhow::bail!("{} error: {stderr_message}", self.executable);
+        }
 
         for (full_path, source) in input.sources.into_iter() {
             let last_slash_position = full_path.rfind('/');
@@ -298,7 +292,6 @@ impl Compiler {
         let output = command.output().map_err(|error| {
             anyhow::anyhow!("{} subprocess error: {:?}", self.executable, error)
         })?;
-
         if !output.status.success() {
             anyhow::bail!(
                 "{} error: {}",
@@ -376,6 +369,7 @@ impl Compiler {
         command.arg("-f");
         command.arg(extra_output);
         command.arg(path);
+
         let output = command.output().map_err(|error| {
             anyhow::anyhow!("{} subprocess error: {:?}", self.executable, error)
         })?;
