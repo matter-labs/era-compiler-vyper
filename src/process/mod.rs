@@ -20,7 +20,8 @@ pub static EXECUTABLE: OnceLock<PathBuf> = OnceLock::new();
 /// Read input from `stdin`, compile a contract, and write the output to `stdout`.
 ///
 pub fn run() -> anyhow::Result<()> {
-    let input: Input = era_compiler_common::deserialize_from_reader(std::io::stdin())
+    let input_json = std::io::read_to_string(std::io::stdin()).expect("Stdin reading error");
+    let input: Input = era_compiler_common::deserialize_from_str(input_json.as_str())
         .expect("Stdin reading error");
 
     if input.enable_test_encoding {
