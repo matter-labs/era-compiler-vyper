@@ -84,6 +84,7 @@ impl Contract {
                 contract_path,
                 source_code_hash,
                 optimizer_settings,
+                llvm_options,
                 suppressed_warnings,
                 debug_config,
             ),

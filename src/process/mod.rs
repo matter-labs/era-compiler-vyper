@@ -40,7 +40,10 @@ pub fn run() -> anyhow::Result<()> {
     match result {
         Ok(build) => {
             let output = Output::new(build);
-            serde_json::to_writer(std::io::stdout(), &output).expect("Stdout writing error");
+            let output_json = serde_json::to_vec(&output).expect("Always valid");
+            std::io::stdout()
+                .write_all(output_json.as_slice())
+                .expect("Stdout writing error");
             Ok(())
         }
         Err(error) => {
@@ -71,15 +74,16 @@ where
     command.stderr(std::process::Stdio::piped());
     command.arg("--recursive-process");
 
-    let process = command
+    let mut process = command
         .spawn()
         .map_err(|error| anyhow::anyhow!("{executable:?} subprocess spawning error: {error:?}"))?;
 
     let stdin = process
         .stdin
-        .as_ref()
+        .as_mut()
         .ok_or_else(|| anyhow::anyhow!("{executable:?} subprocess stdin getting error"))?;
-    serde_json::to_writer(stdin, &input).map_err(|error| {
+    let stdin_input = serde_json::to_vec(&input).expect("Always valid");
+    stdin.write_all(stdin_input.as_slice()).map_err(|error| {
         anyhow::anyhow!("{executable:?} subprocess stdin writing error: {error:?}",)
     })?;
 
@@ -91,7 +95,7 @@ where
         anyhow::bail!("{stderr_message}");
     }
     let output = match era_compiler_common::deserialize_from_slice::<O>(result.stdout.as_slice()) {
-        Ok(combined_json) => combined_json,
+        Ok(output) => output,
         Err(error) => {
             anyhow::bail!("{executable:?} subprocess stdout parsing error: {error:?} (stderr: {stderr_message})");
         }

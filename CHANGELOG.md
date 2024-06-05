@@ -5,11 +5,18 @@
 ### Added
 
 - More LLVM optimizations
+- The `--llvm-options` parameter to pass arbitrary options to LLVM
+- The `--threads` parameter to control the number of threads
 - Caching of the underlying compiler's metadata, including `--version`
+
+### Changed
+
+- Updated to EraVM v1.5.0
 
 ### Fixed
 
-- Excessive RAM usage with some projects
+- Excessive RAM usage and compilation time with some projects
+- Redundancy in error printing
 
 ## [1.4.1] - 2024-04-24
 

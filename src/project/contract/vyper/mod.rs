@@ -135,6 +135,7 @@ impl Contract {
                 evm_version,
                 semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
                 optimizer.settings().to_owned(),
+                llvm_options.as_slice(),
             )
             .keccak256()
         });

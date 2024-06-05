@@ -57,7 +57,7 @@ describe("Set of --llvm-ir tests", () => {
         });
 
         it("Error is presented", () => {
-            expect(result.output).toMatch(/(compiling error)/i);
+            expect(result.output).toMatch(/(expected top-level entity)/i);
         });
     });
 });
