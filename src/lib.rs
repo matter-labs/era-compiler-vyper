@@ -51,6 +51,7 @@ use std::path::PathBuf;
 pub fn llvm_ir(
     mut input_files: Vec<PathBuf>,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
+    llvm_options: &[&str],
     include_metadata_hash: bool,
     suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
@@ -69,6 +70,7 @@ pub fn llvm_ir(
     let build = project.compile(
         None,
         optimizer_settings,
+        llvm_options,
         include_metadata_hash,
         zkevm_assembly::RunningVmEncodingMode::Production,
         suppressed_warnings,
@@ -83,6 +85,7 @@ pub fn llvm_ir(
 ///
 pub fn zkasm(
     mut input_files: Vec<PathBuf>,
+    llvm_options: &[&str],
     include_metadata_hash: bool,
     suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
@@ -102,6 +105,7 @@ pub fn zkasm(
     let build = project.compile(
         None,
         optimizer_settings,
+        llvm_options,
         include_metadata_hash,
         zkevm_assembly::RunningVmEncodingMode::Production,
         suppressed_warnings,
@@ -120,6 +124,7 @@ pub fn standard_output(
     evm_version: Option<era_compiler_common::EVMVersion>,
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
+    llvm_options: &[&str],
     include_metadata_hash: bool,
     suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
@@ -141,6 +146,7 @@ pub fn standard_output(
     let build = project.compile(
         evm_version,
         optimizer_settings,
+        llvm_options,
         include_metadata_hash,
         zkevm_assembly::RunningVmEncodingMode::Production,
         suppressed_warnings,
@@ -159,6 +165,7 @@ pub fn combined_json(
     evm_version: Option<era_compiler_common::EVMVersion>,
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
+    llvm_options: &[&str],
     include_metadata_hash: bool,
     suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
@@ -185,6 +192,7 @@ pub fn combined_json(
     let build = project.compile(
         evm_version,
         optimizer_settings,
+        llvm_options,
         include_metadata_hash,
         zkevm_assembly::RunningVmEncodingMode::Production,
         suppressed_warnings,

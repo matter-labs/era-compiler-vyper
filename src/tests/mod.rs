@@ -73,6 +73,7 @@ pub fn build_vyper(
     let build = project.compile(
         None,
         optimizer_settings,
+        &[],
         false,
         zkevm_assembly::RunningVmEncodingMode::Production,
         vec![],

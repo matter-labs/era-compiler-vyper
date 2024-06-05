@@ -32,6 +32,7 @@ pub fn run() -> anyhow::Result<()> {
         input.source_code_hash,
         input.evm_version,
         input.optimizer_settings,
+        input.llvm_options,
         input.suppressed_warnings,
         input.debug_config,
     );
@@ -86,15 +87,15 @@ where
         anyhow::anyhow!("{executable:?} subprocess output reading error: {error:?}")
     })?;
     let stderr_message = String::from_utf8_lossy(result.stderr.as_slice());
+    if !result.status.success() {
+        anyhow::bail!("{stderr_message}");
+    }
     let output = match era_compiler_common::deserialize_from_slice::<O>(result.stdout.as_slice()) {
         Ok(combined_json) => combined_json,
         Err(error) => {
             anyhow::bail!("{executable:?} subprocess stdout parsing error: {error:?} (stderr: {stderr_message})");
         }
     };
-    if !result.status.success() {
-        anyhow::bail!("{executable:?} error: {stderr_message}");
-    }
 
     Ok(output)
 }

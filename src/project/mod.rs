@@ -110,6 +110,7 @@ impl Project {
         self,
         evm_version: Option<era_compiler_common::EVMVersion>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
+        llvm_options: &[&str],
         include_metadata_hash: bool,
         bytecode_encoding: zkevm_assembly::RunningVmEncodingMode,
         suppressed_warnings: Vec<WarningType>,
@@ -133,6 +134,10 @@ impl Project {
                         bytecode_encoding == zkevm_assembly::RunningVmEncodingMode::Testing,
                         evm_version,
                         optimizer_settings.clone(),
+                        llvm_options
+                            .iter()
+                            .map(|option| (*option).to_owned())
+                            .collect(),
                         suppressed_warnings.clone(),
                         debug_config.clone(),
                     ));
@@ -168,15 +173,27 @@ impl Project {
             );
         }
 
+        let mut errors = Vec::with_capacity(results.len());
         for (path, result) in results.into_iter() {
             match result {
                 Ok(contract) => {
                     build.contracts.insert(path, contract);
                 }
                 Err(error) => {
-                    anyhow::bail!("Contract `{}` compiling error: {:?}", path, error);
+                    errors.push((path, error));
                 }
             }
+        }
+
+        if !errors.is_empty() {
+            anyhow::bail!(
+                "{}",
+                errors
+                    .into_iter()
+                    .map(|(path, error)| format!("Contract `{path}`: {error}"))
+                    .collect::<Vec<String>>()
+                    .join("\n")
+            );
         }
 
         Ok(build)
