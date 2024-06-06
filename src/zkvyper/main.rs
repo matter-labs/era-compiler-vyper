@@ -38,10 +38,15 @@ fn main_inner() -> anyhow::Result<()> {
     arguments.validate()?;
     arguments.normalize_input_paths()?;
 
-    rayon::ThreadPoolBuilder::new()
+    let mut thread_pool_builder = rayon::ThreadPoolBuilder::new();
+    if let Some(threads) = arguments.threads {
+        thread_pool_builder = thread_pool_builder.num_threads(threads);
+    }
+    thread_pool_builder
         .stack_size(RAYON_WORKER_STACK_SIZE)
         .build_global()
         .expect("Thread pool configuration failure");
+
     inkwell::support::enable_llvm_pretty_stack_trace();
     era_compiler_llvm_context::initialize_target(era_compiler_llvm_context::Target::EraVM); // TODO: pass from CLI
 
@@ -98,6 +103,12 @@ fn main_inner() -> anyhow::Result<()> {
     optimizer_settings.is_verify_each_enabled = arguments.llvm_verify_each;
     optimizer_settings.is_debug_logging_enabled = arguments.llvm_debug_logging;
 
+    let llvm_options: Vec<&str> = arguments
+        .llvm_options
+        .as_ref()
+        .map(|options| options.split(' ').collect())
+        .unwrap_or_default();
+
     let include_metadata_hash = match arguments.metadata_hash {
         Some(metadata_hash) => {
             let metadata =
@@ -111,6 +122,7 @@ fn main_inner() -> anyhow::Result<()> {
         era_compiler_vyper::llvm_ir(
             arguments.input_files,
             optimizer_settings,
+            llvm_options.as_slice(),
             include_metadata_hash,
             suppressed_warnings,
             debug_config,
@@ -118,6 +130,7 @@ fn main_inner() -> anyhow::Result<()> {
     } else if arguments.zkasm {
         era_compiler_vyper::zkasm(
             arguments.input_files,
+            llvm_options.as_slice(),
             include_metadata_hash,
             suppressed_warnings,
             debug_config,
@@ -137,6 +150,7 @@ fn main_inner() -> anyhow::Result<()> {
                     evm_version,
                     !arguments.disable_vyper_optimizer,
                     optimizer_settings,
+                    llvm_options.as_slice(),
                     include_metadata_hash,
                     suppressed_warnings,
                     debug_config,
@@ -154,6 +168,7 @@ fn main_inner() -> anyhow::Result<()> {
                 evm_version,
                 !arguments.disable_vyper_optimizer,
                 optimizer_settings,
+                llvm_options.as_slice(),
                 include_metadata_hash,
                 suppressed_warnings,
                 debug_config,

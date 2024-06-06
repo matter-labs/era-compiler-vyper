@@ -54,7 +54,7 @@ impl Expression {
                 sequence.normalize_deploy_code();
                 Ok(sequence)
             }
-            instruction => anyhow::bail!("Expected [`seq`, `deploy`], found `{:?}`", instruction),
+            instruction => anyhow::bail!("Expected [`seq`, `deploy`], found `{instruction:?}`"),
         }
     }
 
@@ -77,7 +77,7 @@ impl Expression {
                 runtime_code.normalize_runtime_code();
                 Ok(Some((runtime_code, immutables_size)))
             }
-            instruction => anyhow::bail!("Expected [`seq`, `deploy`], found `{:?}`", instruction),
+            instruction => anyhow::bail!("Expected [`seq`, `deploy`], found `{instruction:?}`"),
         }
     }
 
@@ -87,7 +87,7 @@ impl Expression {
     pub fn try_into_identifier(&self) -> anyhow::Result<String> {
         match self {
             Self::Identifier(string) => Ok(string.to_owned()),
-            expression => anyhow::bail!("Expected identifier, found `{:?}`", expression),
+            expression => anyhow::bail!("Expected identifier, found `{expression:?}`"),
         }
     }
 
@@ -117,7 +117,7 @@ impl Expression {
     pub fn function_name(&self) -> anyhow::Result<String> {
         match self {
             Expression::Instruction(inner) => inner.function_name(),
-            expression => anyhow::bail!("Expected a function sequence, found `{:?}`", expression),
+            expression => anyhow::bail!("Expected a function sequence, found `{expression:?}`"),
         }
     }
 
@@ -180,7 +180,7 @@ impl Expression {
             }
 
             Self::Unknown(value) => {
-                anyhow::bail!("Unknown LLL expression: {}", value);
+                anyhow::bail!("Unknown LLL expression: {value}");
             }
         }
     }

@@ -117,6 +117,7 @@ impl Contract {
         source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
         evm_version: Option<era_compiler_common::EVMVersion>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
+        llvm_options: Vec<String>,
         suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
@@ -134,6 +135,7 @@ impl Contract {
                 evm_version,
                 semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
                 optimizer.settings().to_owned(),
+                llvm_options.as_slice(),
             )
             .keccak256()
         });
@@ -142,6 +144,7 @@ impl Contract {
         let mut context = era_compiler_llvm_context::EraVMContext::<DependencyData>::new(
             &llvm,
             llvm.create_module(contract_path),
+            llvm_options,
             optimizer,
             Some(dependency_data),
             metadata_hash.is_some(),
@@ -233,14 +236,14 @@ where
             Expression::IntegerLiteral(number) => {
                 let immutables_size = number
                     .as_u64()
-                    .ok_or_else(|| anyhow::anyhow!("Immutable size `{}` parsing error", number))?;
+                    .ok_or_else(|| anyhow::anyhow!("Immutable size `{number}` parsing error"))?;
                 let vyper_data = era_compiler_llvm_context::EraVMContextVyperData::new(
                     immutables_size as usize,
                     false,
                 );
                 context.set_vyper_data(vyper_data);
             }
-            expression => anyhow::bail!("Invalid immutables size format: {:?}", expression),
+            expression => anyhow::bail!("Invalid immutables size format: {expression:?}"),
         }
 
         let mut function_expressions = deploy_code
@@ -322,6 +325,7 @@ impl EraVMDependency for DependencyData {
         _contract: Self,
         _name: &str,
         _optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
+        _llvm_options: &[String],
         _is_system_mode: bool,
         _include_metadata_hash: bool,
         _debug_config: Option<era_compiler_llvm_context::DebugConfig>,
@@ -330,10 +334,10 @@ impl EraVMDependency for DependencyData {
     }
 
     fn resolve_path(&self, _identifier: &str) -> anyhow::Result<String> {
-        anyhow::bail!("The dependency mechanism is not available in Vyper");
+        anyhow::bail!("Dependency mechanism is not available in Vyper");
     }
 
     fn resolve_library(&self, _path: &str) -> anyhow::Result<String> {
-        anyhow::bail!("The dependency mechanism is not available in Vyper");
+        anyhow::bail!("Dependency mechanism is not available in Vyper");
     }
 }

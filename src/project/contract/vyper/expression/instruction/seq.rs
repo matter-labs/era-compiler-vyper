@@ -140,7 +140,7 @@ impl Seq {
     pub fn function_name(&self) -> anyhow::Result<String> {
         match self.0.first() {
             Some(Expression::Instruction(Instruction::Label(label))) => label.name(),
-            expression => anyhow::bail!("Expected a function sequence, found `{:?}`", expression),
+            expression => anyhow::bail!("Expected a function sequence, found `{expression:?}`"),
         }
     }
 

@@ -22,6 +22,8 @@ pub struct Metadata<'a> {
     pub zk_version: semver::Version,
     /// The EraVM compiler stringified optimizer settings.
     pub optimizer_settings: String,
+    /// The LLVM extra arguments.
+    pub llvm_options: &'a [String],
 }
 
 impl<'a> Metadata<'a> {
@@ -34,6 +36,7 @@ impl<'a> Metadata<'a> {
         evm_version: Option<era_compiler_common::EVMVersion>,
         zk_version: semver::Version,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
+        llvm_options: &'a [String],
     ) -> Self {
         Self {
             source_hash,
@@ -41,6 +44,7 @@ impl<'a> Metadata<'a> {
             evm_version,
             zk_version,
             optimizer_settings: optimizer_settings.to_string(),
+            llvm_options,
         }
     }
 
