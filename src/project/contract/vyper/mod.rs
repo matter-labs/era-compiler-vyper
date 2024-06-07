@@ -326,7 +326,7 @@ impl EraVMDependency for DependencyData {
         _name: &str,
         _optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         _llvm_options: &[String],
-        _is_system_mode: bool,
+        _enable_eravm_extensions: bool,
         _include_metadata_hash: bool,
         _debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<String> {

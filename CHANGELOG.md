@@ -15,6 +15,7 @@
 
 ### Fixed
 
+- The bytes-to-cells LLVM misoptimization
 - Excessive RAM usage and compilation time with some projects
 - Redundancy in error printing
 
