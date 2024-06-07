@@ -1,6 +1,10 @@
 //!
-//! Vyper to EraVM compiler library.
+//! Vyper compiler library.
 //!
+
+#![allow(non_camel_case_types)]
+#![allow(clippy::upper_case_acronyms)]
+#![allow(clippy::too_many_arguments)]
 
 pub(crate) mod build;
 pub(crate) mod r#const;
@@ -47,6 +51,7 @@ use std::path::PathBuf;
 pub fn llvm_ir(
     mut input_files: Vec<PathBuf>,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
+    llvm_options: &[&str],
     include_metadata_hash: bool,
     suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
@@ -65,6 +70,7 @@ pub fn llvm_ir(
     let build = project.compile(
         None,
         optimizer_settings,
+        llvm_options,
         include_metadata_hash,
         zkevm_assembly::RunningVmEncodingMode::Production,
         suppressed_warnings,
@@ -79,6 +85,7 @@ pub fn llvm_ir(
 ///
 pub fn zkasm(
     mut input_files: Vec<PathBuf>,
+    llvm_options: &[&str],
     include_metadata_hash: bool,
     suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
@@ -98,6 +105,7 @@ pub fn zkasm(
     let build = project.compile(
         None,
         optimizer_settings,
+        llvm_options,
         include_metadata_hash,
         zkevm_assembly::RunningVmEncodingMode::Production,
         suppressed_warnings,
@@ -110,13 +118,13 @@ pub fn zkasm(
 ///
 /// Runs the standard output mode.
 ///
-#[allow(clippy::too_many_arguments)]
 pub fn standard_output(
     input_files: Vec<PathBuf>,
     vyper: &VyperCompiler,
     evm_version: Option<era_compiler_common::EVMVersion>,
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
+    llvm_options: &[&str],
     include_metadata_hash: bool,
     suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
@@ -138,6 +146,7 @@ pub fn standard_output(
     let build = project.compile(
         evm_version,
         optimizer_settings,
+        llvm_options,
         include_metadata_hash,
         zkevm_assembly::RunningVmEncodingMode::Production,
         suppressed_warnings,
@@ -150,13 +159,13 @@ pub fn standard_output(
 ///
 /// Runs the combined JSON mode.
 ///
-#[allow(clippy::too_many_arguments)]
 pub fn combined_json(
     input_files: Vec<PathBuf>,
     vyper: &VyperCompiler,
     evm_version: Option<era_compiler_common::EVMVersion>,
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
+    llvm_options: &[&str],
     include_metadata_hash: bool,
     suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
@@ -183,13 +192,15 @@ pub fn combined_json(
     let build = project.compile(
         evm_version,
         optimizer_settings,
+        llvm_options,
         include_metadata_hash,
         zkevm_assembly::RunningVmEncodingMode::Production,
         suppressed_warnings,
         debug_config,
     )?;
 
-    let mut combined_json = vyper.combined_json(input_files.as_slice(), evm_version)?;
+    let mut combined_json =
+        vyper.combined_json(input_files.as_slice(), evm_version, vyper_optimizer_enabled)?;
     build.write_to_combined_json(&mut combined_json, &zkvyper_version)?;
 
     match output_directory {

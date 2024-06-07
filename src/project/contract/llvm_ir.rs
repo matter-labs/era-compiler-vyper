@@ -39,6 +39,7 @@ impl Contract {
         contract_path: &str,
         source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
+        llvm_options: Vec<String>,
         _suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
@@ -52,6 +53,7 @@ impl Contract {
                 None,
                 semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
                 optimizer.settings().to_owned(),
+                llvm_options.as_slice(),
             )
             .keccak256()
         });
@@ -68,6 +70,7 @@ impl Contract {
         >::new(
             &llvm,
             module,
+            llvm_options,
             optimizer,
             None,
             metadata_hash.is_some(),

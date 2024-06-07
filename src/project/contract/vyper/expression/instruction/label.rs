@@ -144,7 +144,7 @@ impl Label {
                 }
             }
             Some(Expression::Identifier(identifier)) if identifier.as_str() == "var_list" => {}
-            expression => anyhow::bail!("Expected a variable list, found `{:?}`", expression),
+            expression => anyhow::bail!("Expected a variable list, found `{expression:?}`"),
         };
 
         context

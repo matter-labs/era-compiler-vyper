@@ -21,8 +21,6 @@ use self::zkasm::Contract as ZKASMContract;
 /// The contract.
 ///
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[allow(non_camel_case_types)]
-#[allow(clippy::upper_case_acronyms)]
 pub enum Contract {
     /// The Vyper contract.
     Vyper(VyperContract),
@@ -60,6 +58,7 @@ impl Contract {
         source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
         evm_version: Option<era_compiler_common::EVMVersion>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
+        llvm_options: Vec<String>,
         suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
@@ -69,6 +68,7 @@ impl Contract {
                 source_code_hash,
                 evm_version,
                 optimizer_settings,
+                llvm_options,
                 suppressed_warnings,
                 debug_config,
             ),
@@ -76,6 +76,7 @@ impl Contract {
                 contract_path,
                 source_code_hash,
                 optimizer_settings,
+                llvm_options,
                 suppressed_warnings,
                 debug_config,
             ),
@@ -83,6 +84,7 @@ impl Contract {
                 contract_path,
                 source_code_hash,
                 optimizer_settings,
+                llvm_options,
                 suppressed_warnings,
                 debug_config,
             ),

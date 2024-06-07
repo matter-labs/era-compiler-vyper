@@ -1,12 +1,25 @@
 # The `zkvyper` changelog
 
-### [1.5.0] - 2024-00-00
+## [Unreleased]
+
+### Added
+
+- More LLVM optimizations
+- The `--llvm-options` parameter to pass arbitrary options to LLVM
+- The `--threads` parameter to control the number of threads
+- Caching of the underlying compiler's metadata, including `--version`
+
+### Changed
+
+- Updated to EraVM v1.5.0
 
 ### Fixed
 
 - The bytes-to-cells LLVM misoptimization
+- Excessive RAM usage and compilation time with some projects
+- Redundancy in error printing
 
-### [1.4.1] - 2024-04-24
+## [1.4.1] - 2024-04-24
 
 ### Added
 

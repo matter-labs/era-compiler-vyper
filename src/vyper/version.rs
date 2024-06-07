@@ -5,6 +5,7 @@
 ///
 /// The Vyper compiler version.
 ///
+#[derive(Debug, Clone)]
 pub struct Version {
     /// The long version string.
     pub long: String,

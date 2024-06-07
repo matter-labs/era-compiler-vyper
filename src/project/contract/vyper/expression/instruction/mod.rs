@@ -47,8 +47,6 @@ use self::with::With;
 ///
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "lowercase")]
-#[allow(non_camel_case_types)]
-#[allow(clippy::upper_case_acronyms)]
 pub enum Instruction {
     /// The LLL IR `with` expression.
     With(With),
@@ -351,10 +349,8 @@ impl Instruction {
 
         if values.len() != N {
             anyhow::bail!(
-                "Expected {} arguments, found only {}: `{:?}`",
-                N,
+                "Expected {N} arguments, found only {}: `{values:?}`",
                 values.len(),
-                values
             );
         }
 
@@ -399,10 +395,8 @@ impl Instruction {
 
         if values.len() != N {
             anyhow::bail!(
-                "Expected {} arguments, found only {}: `{:?}`",
-                N,
+                "Expected {N} arguments, found only {}: `{values:?}`",
                 values.len(),
-                values
             );
         }
 
@@ -439,7 +433,7 @@ impl Instruction {
     pub fn function_name(&self) -> anyhow::Result<String> {
         match self {
             Self::Seq(inner) => inner.function_name(),
-            expression => anyhow::bail!("Expected a function sequence, found `{:?}`", expression),
+            expression => anyhow::bail!("Expected a function sequence, found `{expression:?}`"),
         }
     }
 
@@ -1143,9 +1137,7 @@ impl Instruction {
 
                 match context.code_type() {
                     None => {
-                        anyhow::bail!(
-                            "Immutables are not available if the contract part is undefined"
-                        );
+                        panic!("code part is undefined");
                     }
                     Some(era_compiler_llvm_context::CodeType::Deploy) => {
                         era_compiler_llvm_context::eravm_evm_calldata::load(
@@ -1591,7 +1583,7 @@ impl Instruction {
             }
 
             Self::Unknown(value) => {
-                anyhow::bail!("Unknown LLL instruction: {}", value);
+                anyhow::bail!("Unknown LLL instruction: {value}");
             }
         }
     }

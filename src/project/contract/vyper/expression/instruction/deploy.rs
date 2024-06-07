@@ -32,7 +32,7 @@ impl Deploy {
 
         match expression {
             Expression::Instruction(Instruction::Seq(sequence)) => Ok((sequence, immutables_size)),
-            expression => anyhow::bail!("Expected `seq`, found `{:?}`", expression),
+            expression => anyhow::bail!("Expected `seq`, found `{expression:?}`"),
         }
     }
 }

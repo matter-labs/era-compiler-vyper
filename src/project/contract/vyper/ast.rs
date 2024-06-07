@@ -12,7 +12,6 @@ use crate::warning_type::WarningType;
 /// The Vyper contract AST.
 ///
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[allow(clippy::upper_case_acronyms)]
 pub struct AST {
     /// The contract name.
     pub contract_name: String,

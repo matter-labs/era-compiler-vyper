@@ -1,5 +1,5 @@
 //!
-//! Vyper to EraVM compiler arguments.
+//! Vyper compiler arguments.
 //!
 
 use std::path::Path;
@@ -54,6 +54,10 @@ pub struct Arguments {
     #[structopt(long = "jump-table-density-threshold")]
     pub jump_table_density_threshold: Option<u32>,
 
+    /// Pass arbitary space-separated options to LLVM.
+    #[structopt(long = "llvm-options")]
+    pub llvm_options: Option<String>,
+
     /// Disable the `vyper` LLL IR optimizer.
     #[structopt(long = "disable-vyper-optimizer")]
     pub disable_vyper_optimizer: bool,
@@ -72,6 +76,10 @@ pub struct Arguments {
     /// See `vyper --help` for available options including combined JSON mode.
     #[structopt(short = "f")]
     pub format: Option<String>,
+
+    /// Sets the number of threads, which execute the tests concurrently.
+    #[structopt(short = "t", long = "threads")]
+    pub threads: Option<usize>,
 
     /// Switch to LLVM IR mode.
     /// Only one input LLVM IR file is allowed.

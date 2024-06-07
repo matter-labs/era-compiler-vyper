@@ -5,16 +5,18 @@
 pub mod contract;
 pub mod dependency_data;
 
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use rayon::iter::IntoParallelIterator;
+use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use sha3::Digest;
 
 use crate::build::contract::Contract as ContractBuild;
 use crate::build::Build;
 use crate::process::input::Input as ProcessInput;
+use crate::process::output::Output as ProcessOutput;
 use crate::warning_type::WarningType;
 
 use self::contract::llvm_ir::Contract as LLVMIRContract;
@@ -108,6 +110,7 @@ impl Project {
         self,
         evm_version: Option<era_compiler_common::EVMVersion>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
+        llvm_options: &[&str],
         include_metadata_hash: bool,
         bytecode_encoding: zkevm_assembly::RunningVmEncodingMode,
         suppressed_warnings: Vec<WarningType>,
@@ -121,20 +124,28 @@ impl Project {
         };
         let results: BTreeMap<String, anyhow::Result<ContractBuild>> = self
             .contracts
-            .into_par_iter()
+            .par_iter()
             .map(|(full_path, contract)| {
-                let process_output = crate::process::call(ProcessInput::new(
-                    full_path.clone(),
-                    contract,
-                    source_code_hash,
-                    bytecode_encoding == zkevm_assembly::RunningVmEncodingMode::Testing,
-                    evm_version,
-                    optimizer_settings.clone(),
-                    suppressed_warnings.clone(),
-                    debug_config.clone(),
-                ));
+                let process_output: anyhow::Result<ProcessOutput> =
+                    crate::process::call(ProcessInput::new(
+                        Cow::Borrowed(full_path),
+                        Cow::Borrowed(contract),
+                        source_code_hash,
+                        bytecode_encoding == zkevm_assembly::RunningVmEncodingMode::Testing,
+                        evm_version,
+                        optimizer_settings.clone(),
+                        llvm_options
+                            .iter()
+                            .map(|option| (*option).to_owned())
+                            .collect(),
+                        suppressed_warnings.clone(),
+                        debug_config.clone(),
+                    ));
 
-                (full_path, process_output.map(|output| output.build))
+                (
+                    full_path.to_owned(),
+                    process_output.map(|output| output.build),
+                )
             })
             .collect();
 
@@ -162,15 +173,27 @@ impl Project {
             );
         }
 
+        let mut errors = Vec::with_capacity(results.len());
         for (path, result) in results.into_iter() {
             match result {
                 Ok(contract) => {
                     build.contracts.insert(path, contract);
                 }
                 Err(error) => {
-                    anyhow::bail!("Contract `{}` compiling error: {:?}", path, error);
+                    errors.push((path, error));
                 }
             }
+        }
+
+        if !errors.is_empty() {
+            anyhow::bail!(
+                "{}",
+                errors
+                    .into_iter()
+                    .map(|(path, error)| format!("Contract `{path}`: {error}"))
+                    .collect::<Vec<String>>()
+                    .join("\n")
+            );
         }
 
         Ok(build)

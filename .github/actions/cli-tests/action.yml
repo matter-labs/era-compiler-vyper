@@ -17,7 +17,7 @@ runs:
       if: inputs.use-prebuilt-zkvyper == 'true'
       env:
         ZKVYPER_DOWNLOAD_URL: "https://github.com/matter-labs/era-compiler-vyper/releases/download"
-        ZKVYPER_VERSION: ${{ inputs.zkvyper-version }}
+        ZKVYPER_VERSION: ${{ inputs.zkvyper-version || '1.4.1' }}
       run: |
         OUTPUT=zkvyper
         case "${RUNNER_OS}-${RUNNER_ARCH}" in

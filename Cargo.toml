@@ -6,7 +6,7 @@ authors = [
 ]
 license = "MIT OR Apache-2.0"
 edition = "2021"
-description = "EraVM Vyper compiler"
+description = "Vyper compiler for ZKsync"
 links = "compiler-rt-zkvyper"
 
 [[bin]]
@@ -20,15 +20,14 @@ doctest = false
 structopt = { version = "0.3", default-features = false }
 colored = "2.1"
 anyhow = "1.0"
-which = "5.0"
+which = "6.0"
 path-slash = "0.2"
-rayon = "1.8"
+rayon = "1.10"
 
 serde = { version = "1.0", "features" = [ "derive" ] }
 serde_json = { version = "1.0", features = [ "arbitrary_precision" ] }
 semver = { version = "1.0", features = [ "serde" ] }
 lazy_static = "1.4"
-once_cell = "1.19"
 hex = "0.4"
 sha3 = "0.10"
 

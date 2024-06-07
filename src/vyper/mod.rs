@@ -7,9 +7,11 @@ pub mod standard_json;
 pub mod version;
 
 use std::collections::BTreeMap;
-use std::io::Write;
+use std::collections::HashMap;
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::OnceLock;
+use std::sync::RwLock;
 
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelIterator;
@@ -29,10 +31,11 @@ use self::version::Version;
 ///
 /// The Vyper compiler.
 ///
+#[derive(Debug, Clone)]
 pub struct Compiler {
     /// The binary executable name.
     pub executable: String,
-    /// The binary version.
+    /// The `vyper` compiler version.
     pub version: Version,
 }
 
@@ -54,17 +57,30 @@ impl Compiler {
     /// uses `vyper-<version>` format.
     ///
     pub fn new(executable: &str) -> anyhow::Result<Self> {
+        if let Some(executable) = Self::executables()
+            .read()
+            .expect("Sync")
+            .get(executable)
+            .cloned()
+        {
+            return Ok(executable);
+        }
+        let mut executables = Self::executables().write().expect("Sync");
+
         if let Err(error) = which::which(executable) {
             anyhow::bail!(
                 "The `{executable}` executable not found in ${{PATH}}: {}",
                 error
             );
         }
-        let version = Self::version(executable)?;
-        Ok(Self {
+        let version = Self::parse_version(executable)?;
+        let compiler = Self {
             executable: executable.to_owned(),
             version,
-        })
+        };
+
+        executables.insert(executable.to_owned(), compiler.clone());
+        Ok(compiler)
     }
 
     ///
@@ -74,6 +90,7 @@ impl Compiler {
         &self,
         paths: &[PathBuf],
         evm_version: Option<era_compiler_common::EVMVersion>,
+        optimize: bool,
     ) -> anyhow::Result<CombinedJson> {
         let mut command = std::process::Command::new(self.executable.as_str());
         if let Some(evm_version) = evm_version {
@@ -84,6 +101,9 @@ impl Compiler {
         command.arg("combined_json");
         command.args(paths);
         if self.version.default >= semver::Version::new(0, 3, 10) {
+            command.arg("--optimize");
+            command.arg("none");
+        } else if !optimize {
             command.arg("--no-optimize");
         }
         let output = command.output().map_err(|error| {
@@ -131,46 +151,41 @@ impl Compiler {
         if self.version.default >= semver::Version::new(0, 3, 10) {
             input.settings.optimize = false;
         }
-        let input_json = serde_json::to_vec(&input).expect("Always valid");
 
-        let process = command.spawn().map_err(|error| {
-            anyhow::anyhow!("{} subprocess spawning error: {:?}", self.executable, error)
+        let mut process = command.spawn().map_err(|error| {
+            anyhow::anyhow!("{} subprocess spawning error: {error:?}", self.executable)
         })?;
-        process
-            .stdin
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("{} stdin getting error", self.executable))?
-            .write_all(input_json.as_slice())
-            .map_err(|error| {
-                anyhow::anyhow!("{} stdin writing error: {:?}", self.executable, error)
-            })?;
-
-        let output = process.wait_with_output().map_err(|error| {
-            anyhow::anyhow!("{} subprocess output error: {:?}", self.executable, error)
+        let stdin = process.stdin.take().ok_or_else(|| {
+            anyhow::anyhow!("{:?} subprocess stdin getting error", self.executable)
         })?;
-        if !output.status.success() {
-            anyhow::bail!(
-                "{} error: {}",
-                self.executable,
-                String::from_utf8_lossy(output.stderr.as_slice()).to_string()
-            );
-        }
-
-        let mut output: StandardJsonOutput = era_compiler_common::deserialize_from_slice(
-            output.stdout.as_slice(),
-        )
-        .map_err(|error| {
+        serde_json::to_writer(stdin, &input).map_err(|error| {
             anyhow::anyhow!(
-                "{} subprocess output parsing error: {}\n{}",
-                self.executable,
-                error,
-                era_compiler_common::deserialize_from_slice::<serde_json::Value>(
-                    output.stdout.as_slice()
-                )
-                .map(|json| serde_json::to_string_pretty(&json).expect("Always valid"))
-                .unwrap_or_else(|_| String::from_utf8_lossy(output.stdout.as_slice()).to_string()),
+                "{} subprocess stdin writing error: {error:?}",
+                self.executable
             )
         })?;
+
+        let result = process.wait_with_output().map_err(|error| {
+            anyhow::anyhow!(
+                "{} subprocess output reading error: {error:?}",
+                self.executable
+            )
+        })?;
+        let stderr_message = String::from_utf8_lossy(result.stderr.as_slice());
+        let mut output = match era_compiler_common::deserialize_from_slice::<StandardJsonOutput>(
+            result.stdout.as_slice(),
+        ) {
+            Ok(output) => output,
+            Err(error) => {
+                anyhow::bail!(
+                    "{} subprocess stdout parsing error: {error:?} (stderr: {stderr_message})",
+                    self.executable
+                );
+            }
+        };
+        if !result.status.success() {
+            anyhow::bail!("{} error: {stderr_message}", self.executable);
+        }
 
         for (full_path, source) in input.sources.into_iter() {
             let last_slash_position = full_path.rfind('/');
@@ -222,7 +237,10 @@ impl Compiler {
         }
         command.arg("-f");
         command.arg("ir");
-        if !optimize || self.version.default >= semver::Version::new(0, 3, 10) {
+        if self.version.default >= semver::Version::new(0, 3, 10) {
+            command.arg("--optimize");
+            command.arg("none");
+        } else if !optimize {
             command.arg("--no-optimize");
         }
         command.arg(path);
@@ -263,7 +281,10 @@ impl Compiler {
         }
         command.arg("-f");
         command.arg("ir_json,metadata,method_identifiers,ast");
-        if !optimize || self.version.default >= semver::Version::new(0, 3, 10) {
+        if self.version.default >= semver::Version::new(0, 3, 10) {
+            command.arg("--optimize");
+            command.arg("none");
+        } else if !optimize {
             command.arg("--no-optimize");
         }
         command.args(paths.as_slice());
@@ -271,7 +292,6 @@ impl Compiler {
         let output = command.output().map_err(|error| {
             anyhow::anyhow!("{} subprocess error: {:?}", self.executable, error)
         })?;
-
         if !output.status.success() {
             anyhow::bail!(
                 "{} error: {}",
@@ -349,6 +369,7 @@ impl Compiler {
         command.arg("-f");
         command.arg(extra_output);
         command.arg(path);
+
         let output = command.output().map_err(|error| {
             anyhow::anyhow!("{} subprocess error: {:?}", self.executable, error)
         })?;
@@ -380,9 +401,17 @@ impl Compiler {
     }
 
     ///
+    /// Returns the global shared array of `vyper` executables.
+    ///
+    fn executables() -> &'static RwLock<HashMap<String, Self>> {
+        static EXECUTABLES: OnceLock<RwLock<HashMap<String, Compiler>>> = OnceLock::new();
+        EXECUTABLES.get_or_init(|| RwLock::new(HashMap::new()))
+    }
+
+    ///
     /// The `vyper --version` mini-parser.
     ///
-    fn version(executable: &str) -> anyhow::Result<Version> {
+    fn parse_version(executable: &str) -> anyhow::Result<Version> {
         let mut command = std::process::Command::new(executable);
         command.arg("--version");
         let output = command
