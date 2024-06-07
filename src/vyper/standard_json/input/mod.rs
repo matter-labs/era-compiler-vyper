@@ -43,7 +43,7 @@ impl Input {
         output_selection: BTreeMap<String, Vec<Selection>>,
         optimize: bool,
         fallback_to_optimizing_for_size: bool,
-        disable_system_request_memoization: bool,
+        llvm_options: Vec<String>,
     ) -> anyhow::Result<Self> {
         let sources = paths
             .into_par_iter()
@@ -63,7 +63,7 @@ impl Input {
                 output_selection,
                 optimize,
                 fallback_to_optimizing_for_size,
-                disable_system_request_memoization,
+                llvm_options,
             ),
         })
     }
@@ -79,7 +79,7 @@ impl Input {
         output_selection: BTreeMap<String, Vec<Selection>>,
         optimize: bool,
         fallback_to_optimizing_for_size: bool,
-        disable_system_request_memoization: bool,
+        llvm_options: Vec<String>,
     ) -> anyhow::Result<Self> {
         let sources = sources
             .into_iter()
@@ -94,7 +94,7 @@ impl Input {
                 output_selection,
                 optimize,
                 fallback_to_optimizing_for_size,
-                disable_system_request_memoization,
+                llvm_options,
             ),
         })
     }

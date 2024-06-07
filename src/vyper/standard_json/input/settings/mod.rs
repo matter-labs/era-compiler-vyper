@@ -25,9 +25,9 @@ pub struct Settings {
     /// Whether to try to recompile with -Oz if the bytecode is too large.
     #[serde(skip_serializing)]
     pub fallback_to_optimizing_for_size: Option<bool>,
-    /// Whether to disable the system request memoization.
+    /// The LLVM extra options.
     #[serde(skip_serializing)]
-    pub disable_system_request_memoization: Option<bool>,
+    pub llvm_options: Option<Vec<String>>,
 }
 
 impl Settings {
@@ -39,14 +39,14 @@ impl Settings {
         output_selection: BTreeMap<String, Vec<Selection>>,
         optimize: bool,
         fallback_to_optimizing_for_size: bool,
-        disable_system_request_memoization: bool,
+        llvm_options: Vec<String>,
     ) -> Self {
         Self {
             evm_version,
             output_selection,
             optimize,
             fallback_to_optimizing_for_size: Some(fallback_to_optimizing_for_size),
-            disable_system_request_memoization: Some(disable_system_request_memoization),
+            llvm_options: Some(llvm_options),
         }
     }
 }

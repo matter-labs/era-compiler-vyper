@@ -94,12 +94,6 @@ fn main_inner() -> anyhow::Result<()> {
     if arguments.fallback_to_optimizing_for_size {
         optimizer_settings.enable_fallback_to_size();
     }
-    if arguments.disable_system_request_memoization {
-        optimizer_settings.disable_system_request_memoization();
-    }
-    if let Some(value) = arguments.jump_table_density_threshold {
-        optimizer_settings.set_jump_table_density_threshold(value);
-    }
     optimizer_settings.is_verify_each_enabled = arguments.llvm_verify_each;
     optimizer_settings.is_debug_logging_enabled = arguments.llvm_debug_logging;
 

@@ -63,8 +63,8 @@ pub fn build_vyper(
         None,
         VyperStandardJsonInputSettingsSelection::generate_default(),
         true,
-        false,
-        false,
+        true,
+        vec![],
     )?;
 
     let output = vyper.standard_json(input)?;

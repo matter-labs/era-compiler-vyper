@@ -46,14 +46,6 @@ pub struct Arguments {
     #[structopt(long = "fallback-Oz")]
     pub fallback_to_optimizing_for_size: bool,
 
-    /// Disable the system request memoization.
-    #[structopt(long = "disable-system-request-memoization")]
-    pub disable_system_request_memoization: bool,
-
-    /// Set the jump table density threshold.
-    #[structopt(long = "jump-table-density-threshold")]
-    pub jump_table_density_threshold: Option<u32>,
-
     /// Pass arbitary space-separated options to LLVM.
     #[structopt(long = "llvm-options")]
     pub llvm_options: Option<String>,
@@ -179,16 +171,6 @@ impl Arguments {
 
             if self.fallback_to_optimizing_for_size {
                 anyhow::bail!("Falling back to -Oz is not supported in EraVM assembly mode.");
-            }
-            if self.disable_system_request_memoization {
-                anyhow::bail!(
-                    "Disabling the system request memoization is not supported in EraVM assembly mode."
-                );
-            }
-            if self.jump_table_density_threshold.is_some() {
-                anyhow::bail!(
-                    "Setting the jump table density threshold is not supported in EraVM assembly mode."
-                );
             }
         }
 
