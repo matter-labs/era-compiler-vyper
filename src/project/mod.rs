@@ -110,7 +110,7 @@ impl Project {
         self,
         evm_version: Option<era_compiler_common::EVMVersion>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
-        llvm_options: &[&str],
+        llvm_options: Vec<String>,
         include_metadata_hash: bool,
         bytecode_encoding: zkevm_assembly::RunningVmEncodingMode,
         suppressed_warnings: Vec<WarningType>,

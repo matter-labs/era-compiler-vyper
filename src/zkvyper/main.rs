@@ -97,10 +97,10 @@ fn main_inner() -> anyhow::Result<()> {
     optimizer_settings.is_verify_each_enabled = arguments.llvm_verify_each;
     optimizer_settings.is_debug_logging_enabled = arguments.llvm_debug_logging;
 
-    let llvm_options: Vec<&str> = arguments
+    let llvm_options: Vec<String> = arguments
         .llvm_options
         .as_ref()
-        .map(|options| options.split(' ').collect())
+        .map(|options| options.split(' ').map(|option| option.to_owned()).collect())
         .unwrap_or_default();
 
     let include_metadata_hash = match arguments.metadata_hash {
@@ -116,7 +116,7 @@ fn main_inner() -> anyhow::Result<()> {
         era_compiler_vyper::llvm_ir(
             arguments.input_files,
             optimizer_settings,
-            llvm_options.as_slice(),
+            llvm_options,
             include_metadata_hash,
             suppressed_warnings,
             debug_config,
@@ -124,7 +124,7 @@ fn main_inner() -> anyhow::Result<()> {
     } else if arguments.zkasm {
         era_compiler_vyper::zkasm(
             arguments.input_files,
-            llvm_options.as_slice(),
+            llvm_options,
             include_metadata_hash,
             suppressed_warnings,
             debug_config,
@@ -144,7 +144,7 @@ fn main_inner() -> anyhow::Result<()> {
                     evm_version,
                     !arguments.disable_vyper_optimizer,
                     optimizer_settings,
-                    llvm_options.as_slice(),
+                    llvm_options,
                     include_metadata_hash,
                     suppressed_warnings,
                     debug_config,
@@ -162,7 +162,7 @@ fn main_inner() -> anyhow::Result<()> {
                 evm_version,
                 !arguments.disable_vyper_optimizer,
                 optimizer_settings,
-                llvm_options.as_slice(),
+                llvm_options,
                 include_metadata_hash,
                 suppressed_warnings,
                 debug_config,
