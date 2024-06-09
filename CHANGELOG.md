@@ -12,6 +12,11 @@
 ### Changed
 
 - Updated to EraVM v1.5.0
+- Renamed the `zkasm` flag to `eravm`
+
+### Deprecated
+
+- `zkasm` alias of `eravm` flag
 
 ### Fixed
 

@@ -15,7 +15,7 @@ use structopt::StructOpt;
 ///
 #[derive(Debug, StructOpt)]
 #[structopt(
-    name = "The EraVM Vyper compiler",
+    name = "Vyper compiler for ZKsync",
     global_settings = &[structopt::clap::AppSettings::ArgRequiredElseHelp],
 )]
 pub struct Arguments {
@@ -84,8 +84,8 @@ pub struct Arguments {
     /// Only one input EraVM assembly file is allowed.
     /// Cannot be used with combined JSON modes.
     /// Use this mode at your own risk, as EraVM assembly input validation is not implemented.
-    #[structopt(long = "zkasm")]
-    pub zkasm: bool,
+    #[structopt(long = "eravm", alias = "zkasm")]
+    pub eravm_assembly: bool,
 
     /// Set metadata hash mode: `keccak256` | `none`.
     /// `keccak256` is enabled by default.
@@ -144,7 +144,7 @@ impl Arguments {
             anyhow::bail!("No other options are allowed in recursive mode.");
         }
 
-        let modes_count = [self.llvm_ir, self.zkasm, self.format.is_some()]
+        let modes_count = [self.llvm_ir, self.eravm_assembly, self.format.is_some()]
             .iter()
             .filter(|&&x| x)
             .count();
@@ -154,7 +154,7 @@ impl Arguments {
             );
         }
 
-        if self.llvm_ir || self.zkasm {
+        if self.llvm_ir || self.eravm_assembly {
             if self.vyper.is_some() {
                 anyhow::bail!("`vyper` is not used in LLVM IR and EraVM assembly modes.");
             }
@@ -164,7 +164,7 @@ impl Arguments {
             }
         }
 
-        if self.zkasm {
+        if self.eravm_assembly {
             if self.optimization.is_some() {
                 anyhow::bail!("LLVM optimizations are not supported in EraVM assembly mode.");
             }

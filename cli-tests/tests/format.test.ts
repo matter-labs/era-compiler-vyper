@@ -1,7 +1,6 @@
 import {executeCommand} from "../src/helper";
 import { paths } from '../src/entities';
 
-
 describe("Set of --format json tests", () => {
     const zkvyperCommand = 'zkvyper';
     const vyperCommand = 'vyper';

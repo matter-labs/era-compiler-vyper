@@ -1,8 +1,6 @@
-import {executeCommand, isDestinationExist, isFileEmpty, createTmpDirectory, pathToVyBinOutputFile, pathToVyAsmOutputFile} from "../src/helper";
+import {executeCommand, isDestinationExist, isFileEmpty, createTmpDirectory, pathToBinOutputFile, pathToEraVMAssemblyOutputFile} from "../src/helper";
 import { paths } from '../src/entities';
-import * as os from 'os';
 
-if (os.platform() !== 'win32') { //bugs on windows
 describe("Output dir", () => {
     const zkvyperCommand = 'zkvyper';
     const vyperCommand = 'vyper';
@@ -10,8 +8,12 @@ describe("Output dir", () => {
     //id1983
     describe("Default run with output dir", () => {
         const tmpDirZkVyper = createTmpDirectory();
-        const args = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${tmpDirZkVyper.name}"`]; // issue on windows
+        const args = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${tmpDirZkVyper.name}"`];
         const result = executeCommand(zkvyperCommand, args);
+
+        it("Output is empty", () => {
+            expect(result.output).not.toMatch(/(Refusing to overwrite)/i);
+        });
 
         it("Exit code = 0", () => {
             expect(result.exitCode).toBe(0);
@@ -21,30 +23,14 @@ describe("Output dir", () => {
             expect(isDestinationExist(tmpDirZkVyper.name)).toBe(true);
         });
 
-        it("Output files are created", () => { // a bug on windows
-            // Remove if () {} after the bugfix on win
-            if (os.platform() === 'win32') {
-                console.log("Expected file: " + pathToVyBinOutputFile(tmpDirZkVyper.name))
-                console.log("Actual file: " + executeCommand('dir', [tmpDirZkVyper.name, '/B']).output)
-            } else {
-                expect(isDestinationExist(pathToVyBinOutputFile(tmpDirZkVyper.name))).toBe(true);
-                expect(isDestinationExist(pathToVyAsmOutputFile(tmpDirZkVyper.name))).toBe(true);
-            }
-
+        it("Output files are created", () => {
+            expect(isDestinationExist(pathToBinOutputFile(tmpDirZkVyper.name))).toBe(true);
+            expect(isDestinationExist(pathToEraVMAssemblyOutputFile(tmpDirZkVyper.name))).toBe(true);
         });
 
         it("The output files are not empty", () => {
-            // Remove if () {} after the bugfix on win
-            if (os.platform() === 'win32') {
-                const args_cmd = [`"${paths.pathToVyBinOutputFile}"`];
-                console.log(`The output file: ${pathToVyBinOutputFile(tmpDirZkVyper.name)} contains: \n`
-                    + executeCommand('type', [pathToVyBinOutputFile(tmpDirZkVyper.name)]).output);
-                console.log(`The output file should contain: \n`
-                    + executeCommand(zkvyperCommand, args_cmd).output);
-            } else {
-                expect(isFileEmpty(pathToVyBinOutputFile(tmpDirZkVyper.name))).toBe(false);
-                expect(isFileEmpty(pathToVyAsmOutputFile(tmpDirZkVyper.name))).toBe(false);
-            }
+            expect(isFileEmpty(pathToBinOutputFile(tmpDirZkVyper.name))).toBe(false);
+            expect(isFileEmpty(pathToEraVMAssemblyOutputFile(tmpDirZkVyper.name))).toBe(false);
         });
 
         it("No 'Error'/'Warning'/'Fail' in the output", () => {
@@ -85,4 +71,3 @@ describe("Output dir", () => {
         });
     });
 });
-}

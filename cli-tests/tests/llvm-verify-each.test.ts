@@ -1,7 +1,6 @@
 import {executeCommand} from "../src/helper";
 import { paths } from '../src/entities';
 
-
 describe("Set of --llvm-verify-each tests", () => {
     const zkvyperCommand = 'zkvyper';
 

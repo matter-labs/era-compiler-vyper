@@ -2,10 +2,10 @@
 //! The contract.
 //!
 
+pub mod eravm_assembly;
 pub mod llvm_ir;
 pub mod metadata;
 pub mod vyper;
-pub mod zkasm;
 
 use serde::Deserialize;
 use serde::Serialize;
@@ -13,9 +13,9 @@ use serde::Serialize;
 use crate::build::contract::Contract as ContractBuild;
 use crate::warning_type::WarningType;
 
+use self::eravm_assembly::Contract as EraVMAssemblyContract;
 use self::llvm_ir::Contract as LLVMIRContract;
 use self::vyper::Contract as VyperContract;
-use self::zkasm::Contract as ZKASMContract;
 
 ///
 /// The contract.
@@ -27,7 +27,7 @@ pub enum Contract {
     /// The LLVM IR contract.
     LLVMIR(LLVMIRContract),
     /// The LLVM IR contract.
-    ZKASM(ZKASMContract),
+    ZKASM(EraVMAssemblyContract),
 }
 
 impl From<VyperContract> for Contract {
@@ -42,8 +42,8 @@ impl From<LLVMIRContract> for Contract {
     }
 }
 
-impl From<ZKASMContract> for Contract {
-    fn from(inner: ZKASMContract) -> Self {
+impl From<EraVMAssemblyContract> for Contract {
+    fn from(inner: EraVMAssemblyContract) -> Self {
         Self::ZKASM(inner)
     }
 }

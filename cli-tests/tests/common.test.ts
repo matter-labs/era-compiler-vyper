@@ -1,7 +1,6 @@
 import {executeCommand, isDestinationExist, isFileEmpty} from "../src/helper";
 import { paths } from '../src/entities';
 
-
 describe("Common tests", () => {
     const zkvyperCommand = 'zkvyper';
     const vyperCommand = 'vyper';
@@ -12,12 +11,13 @@ describe("Common tests", () => {
         const result = executeCommand(zkvyperCommand, args);
 
         it("Info with help is presented", () => {
-            expect(result.output).toMatch(/(the following arguments are required: input_files|Disable the system request memoization)/i);
+            expect(result.output).toMatch(/(Vyper compiler for ZKsync)/i);
         });
 
         it("Exit code = 1", () => {
             expect(result.exitCode).toBe(1);
         });
+
         xit("vyper exit code == zkvyper exit code", () => {
             const vyperResult = executeCommand(vyperCommand, args);
             expect(vyperResult.exitCode).toBe(result.exitCode); // 2 for vyper and 1 for zkvyper
@@ -26,7 +26,7 @@ describe("Common tests", () => {
 
     //id1978
     describe("Default run with a contract only", () => {
-        const args = [`"${paths.pathToBasicVyContract}"`]; // issue on windows
+        const args = [`"${paths.pathToBasicVyContract}"`];
         const result = executeCommand(zkvyperCommand, args);
 
         it("Exit code = 0", () => {
@@ -49,8 +49,12 @@ describe("Common tests", () => {
 
     //id1983
     describe("Default run a command from the help", () => {
-        const args = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${paths.pathToOutputDir}"`]; // issue on windows
-        const result = executeCommand(zkvyperCommand, args); 
+        const zkvyperArgs = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${paths.pathToOutputDir}"`];
+        const result = executeCommand(zkvyperCommand, zkvyperArgs);
+
+        it("Output is empty", () => {
+            expect(result.output).not.toMatch(/(Refusing to overwrite)/i);
+        });
 
         it("Exit code = 0", () => {
             expect(result.exitCode).toBe(0);
@@ -60,22 +64,21 @@ describe("Common tests", () => {
             expect(isDestinationExist(paths.pathToOutputDir)).toBe(true);
         });
 
-        if (process.platform !== "win32") {
-            it("Output file is created", () => { // a bug on windows
-                expect(isDestinationExist(paths.pathToVyBinOutputFile)).toBe(true);
-                expect(isDestinationExist(paths.pathToVyAsmOutputFile)).toBe(true);
-            });
-            it("The output file is not empty", () => {
-                expect(isFileEmpty(paths.pathToVyBinOutputFile)).toBe(false);
-            });
-        }
+        it("Output file is created", () => {
+            expect(isDestinationExist(paths.pathToBinOutputFile)).toBe(true);
+            expect(isDestinationExist(paths.pathToEraVMAssemblyOutputFile)).toBe(true);
+        });
+        it("The output file is not empty", () => {
+            expect(isFileEmpty(paths.pathToBinOutputFile)).toBe(false);
+        });
         
         it("No 'Error'/'Warning'/'Fail' in the output", () => {
             expect(result.output).not.toMatch(/([Ee]rror|[Ww]arning|[Ff]ail)/i);
         });
 
-        xit("vyper exit code == zkvyper exit code", () => {
-            const vyperResult = executeCommand(vyperCommand, args);
+        it("vyper exit code == zkvyper exit code", () => {
+            const vyperArgs = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${paths.pathToOutputFile}"`];
+            const vyperResult = executeCommand(vyperCommand, vyperArgs);
             expect(vyperResult.exitCode).toBe(result.exitCode);
         });
     });

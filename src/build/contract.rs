@@ -43,7 +43,7 @@ impl Contract {
         contract_path: &Path,
         overwrite: bool,
     ) -> anyhow::Result<()> {
-        let contract_name = Self::short_path(contract_path.to_str().expect("Always valid"));
+        let contract_name = Self::contract_name(contract_path.to_str().expect("Always valid"));
 
         let assembly_file_name = format!(
             "{}.{}",
@@ -114,11 +114,10 @@ impl Contract {
     }
 
     ///
-    /// Converts the full path to a short one.
+    /// Extracts the contract file name from the full path.
     ///
-    pub fn short_path(path: &str) -> &str {
-        path.rfind(std::path::MAIN_SEPARATOR)
-            .map(|delimiter| &path[delimiter + 1..])
-            .unwrap_or_else(|| path)
+    pub fn contract_name(path: &str) -> String {
+        let path = path.trim().replace('\\', "/");
+        path.split('/').last().expect("Always exists").to_owned()
     }
 }
