@@ -121,8 +121,8 @@ fn main_inner() -> anyhow::Result<()> {
             suppressed_warnings,
             debug_config,
         )
-    } else if arguments.zkasm {
-        era_compiler_vyper::zkasm(
+    } else if arguments.eravm_assembly {
+        era_compiler_vyper::eravm_assembly(
             arguments.input_files,
             llvm_options,
             include_metadata_hash,

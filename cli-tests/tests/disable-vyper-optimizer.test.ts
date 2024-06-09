@@ -1,7 +1,6 @@
 import {executeCommand} from "../src/helper";
 import { paths } from '../src/entities';
 
-
 describe("Set of --disable-vyper-optimizer tests", () => {
     const zkvyperCommand = 'zkvyper';
 

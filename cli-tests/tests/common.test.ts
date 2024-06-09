@@ -1,7 +1,6 @@
 import {executeCommand, isDestinationExist, isFileEmpty} from "../src/helper";
 import { paths } from '../src/entities';
 
-
 describe("Common tests", () => {
     const zkvyperCommand = 'zkvyper';
     const vyperCommand = 'vyper';
@@ -53,6 +52,7 @@ describe("Common tests", () => {
         const result = executeCommand(zkvyperCommand, zkvyperArgs);
 
         it("Exit code = 0", () => {
+            expect(result.output).toMatch(/(xxx)/i);
             expect(result.exitCode).toBe(0);
         });
 
@@ -61,11 +61,11 @@ describe("Common tests", () => {
         });
 
         it("Output file is created", () => {
-            expect(isDestinationExist(paths.pathToVyBinOutputFile)).toBe(true);
-            expect(isDestinationExist(paths.pathToVyAsmOutputFile)).toBe(true);
+            expect(isDestinationExist(paths.pathToBinOutputFile)).toBe(true);
+            expect(isDestinationExist(paths.pathToEraVMAssemblyOutputFile)).toBe(true);
         });
         it("The output file is not empty", () => {
-            expect(isFileEmpty(paths.pathToVyBinOutputFile)).toBe(false);
+            expect(isFileEmpty(paths.pathToBinOutputFile)).toBe(false);
         });
         
         it("No 'Error'/'Warning'/'Fail' in the output", () => {

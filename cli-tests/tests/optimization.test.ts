@@ -1,7 +1,6 @@
 import {executeCommand} from "../src/helper";
 import { paths } from '../src/entities';
 
-
 describe("Set of --optimization tests", () => {
     const zkvyperCommand = 'zkvyper';
     const optimization_args: string[] = [`0`, `1`, `2`, `3`, `s`, `z`];

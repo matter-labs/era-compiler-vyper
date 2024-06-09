@@ -19,8 +19,8 @@ use crate::process::input::Input as ProcessInput;
 use crate::process::output::Output as ProcessOutput;
 use crate::warning_type::WarningType;
 
+use self::contract::eravm_assembly::Contract as EraVMAssemblyContract;
 use self::contract::llvm_ir::Contract as LLVMIRContract;
-use self::contract::zkasm::Contract as ZKASMContract;
 use self::contract::Contract;
 
 ///
@@ -78,7 +78,7 @@ impl Project {
     ///
     /// Parses the EraVM assembly source code file and returns the source data.
     ///
-    pub fn try_from_zkasm_path(path: &Path) -> anyhow::Result<Self> {
+    pub fn try_from_eravm_assembly_path(path: &Path) -> anyhow::Result<Self> {
         let source_code = std::fs::read_to_string(path).map_err(|error| {
             anyhow::anyhow!("EraVM assembly file {:?} reading error: {}", path, error)
         })?;
@@ -89,7 +89,7 @@ impl Project {
         let mut project_contracts = BTreeMap::new();
         project_contracts.insert(
             path,
-            ZKASMContract::new(
+            EraVMAssemblyContract::new(
                 era_compiler_llvm_context::eravm_const::ZKEVM_VERSION,
                 source_code,
             )

@@ -83,7 +83,7 @@ pub fn llvm_ir(
 ///
 /// Runs the EraVM assembly mode.
 ///
-pub fn zkasm(
+pub fn eravm_assembly(
     mut input_files: Vec<PathBuf>,
     llvm_options: Vec<String>,
     include_metadata_hash: bool,
@@ -99,7 +99,7 @@ pub fn zkasm(
         ),
     };
 
-    let project = Project::try_from_zkasm_path(&path)?;
+    let project = Project::try_from_eravm_assembly_path(&path)?;
 
     let optimizer_settings = era_compiler_llvm_context::OptimizerSettings::none();
     let build = project.compile(

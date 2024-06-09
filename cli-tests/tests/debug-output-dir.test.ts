@@ -1,6 +1,5 @@
 import {executeCommand, isDestinationExist, createTmpDirectory, directoryContainsSubstring} from "../src/helper";
 import { paths } from '../src/entities';
-import * as os from 'os';
 import * as fs from 'fs';
 
 describe("Output dir", () => {
@@ -22,10 +21,10 @@ describe("Output dir", () => {
 
         it("It should contain filenames with specified substrings", () => {
             const expectedSubstrings = [
-                paths.illExtension,
-                paths.illOptimizedExtension,
-                paths.illUnOptimizedExtension,
-                paths.asmExtension
+                paths.llvmIRExtension,
+                paths.llvmIROptimizedExtension,
+                paths.llvmIRUnoptimizedExtension,
+                paths.eraVMAssemblyExtension
             ];
             const filenames = fs.readdirSync(tmpDirZkVyper.name);
 

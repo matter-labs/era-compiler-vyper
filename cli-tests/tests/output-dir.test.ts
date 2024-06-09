@@ -1,6 +1,5 @@
-import {executeCommand, isDestinationExist, isFileEmpty, createTmpDirectory, pathToVyBinOutputFile, pathToVyAsmOutputFile} from "../src/helper";
+import {executeCommand, isDestinationExist, isFileEmpty, createTmpDirectory, pathToBinOutputFile, pathToEraVMAssemblyOutputFile} from "../src/helper";
 import { paths } from '../src/entities';
-import * as os from 'os';
 
 describe("Output dir", () => {
     const zkvyperCommand = 'zkvyper';
@@ -22,13 +21,13 @@ describe("Output dir", () => {
         });
 
         it("Output files are created", () => {
-            expect(isDestinationExist(pathToVyBinOutputFile(tmpDirZkVyper.name))).toBe(true);
-            expect(isDestinationExist(pathToVyAsmOutputFile(tmpDirZkVyper.name))).toBe(true);
+            expect(isDestinationExist(pathToBinOutputFile(tmpDirZkVyper.name))).toBe(true);
+            expect(isDestinationExist(pathToEraVMAssemblyOutputFile(tmpDirZkVyper.name))).toBe(true);
         });
 
         it("The output files are not empty", () => {
-            expect(isFileEmpty(pathToVyBinOutputFile(tmpDirZkVyper.name))).toBe(false);
-            expect(isFileEmpty(pathToVyAsmOutputFile(tmpDirZkVyper.name))).toBe(false);
+            expect(isFileEmpty(pathToBinOutputFile(tmpDirZkVyper.name))).toBe(false);
+            expect(isFileEmpty(pathToEraVMAssemblyOutputFile(tmpDirZkVyper.name))).toBe(false);
         });
 
         it("No 'Error'/'Warning'/'Fail' in the output", () => {

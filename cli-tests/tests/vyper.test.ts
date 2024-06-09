@@ -10,7 +10,6 @@ describe("Set of --solc tests", () => {
         pathToCustomVyper = executeCommand('where', ['vyper']).output;
     }
 
-
     //id1942
     describe(`Run ${zkvyperCommand} with --vyper }`, () => {
         const args = [`${paths.pathToBasicVyContract}`, `--vyper`, `${pathToCustomVyper}`];

@@ -1,6 +1,5 @@
-import {executeCommand, isDestinationExist, isFileEmpty, createTmpDirectory, pathToVyBinOutputFile, pathToVyAsmOutputFile, createFiles} from "../src/helper";
+import {executeCommand, isDestinationExist, isFileEmpty, createTmpDirectory, pathToBinOutputFile, pathToEraVMAssemblyOutputFile, createFiles} from "../src/helper";
 import { paths } from '../src/entities';
-import * as os from 'os';
 
 describe("Overwrite output dir", () => {
     const zkvyperCommand = 'zkvyper';
@@ -14,7 +13,7 @@ describe("Overwrite output dir", () => {
         });
 
         // adding empty files to tmp dir
-        createFiles(tmpDirZkVyper.name, [`${paths.contractVyFilename}${paths.binExtension}`, `${paths.contractVyFilename}${paths.asmExtension}`])
+        createFiles(tmpDirZkVyper.name, [`${paths.contractVyFilename}${paths.binExtension}`, `${paths.contractVyFilename}${paths.eraVMAssemblyExtension}`])
 
         // trying to run a command to get a warning and verify an exit code
         const pre_args = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${tmpDirZkVyper.name}"`];
@@ -29,13 +28,14 @@ describe("Overwrite output dir", () => {
         const result = executeCommand(zkvyperCommand, args);
 
         it("Exit code = 0", () => {
+            expect(result.output).toMatch(/(xxx)/i);
             expect(result.exitCode).toBe(0);
         });
 
         // verify that files are not empty
         it("The output files are not empty", () => {
-            expect(isFileEmpty(pathToVyBinOutputFile(tmpDirZkVyper.name))).toBe(false);
-            expect(isFileEmpty(pathToVyAsmOutputFile(tmpDirZkVyper.name))).toBe(false);
+            expect(isFileEmpty(pathToBinOutputFile(tmpDirZkVyper.name))).toBe(false);
+            expect(isFileEmpty(pathToEraVMAssemblyOutputFile(tmpDirZkVyper.name))).toBe(false);
         });
 
         it("No 'Error'/'Warning'/'Fail' in the output", () => {

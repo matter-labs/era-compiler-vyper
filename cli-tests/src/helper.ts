@@ -3,7 +3,6 @@ import { spawnSync } from "child_process";
 import * as tmp from 'tmp';
 import { paths } from './entities';
 import * as path from 'path';
-import * as os from 'os';
 
 tmp.setGracefulCleanup();
 
@@ -69,20 +68,20 @@ export const createTmpDirectory = (name = 'tmp-XXXXXX'): tmp.DirResult => {
     return tmp.dirSync({ template: name, tmpdir: paths.pathToOutputDir, unsafeCleanup: true });
 };
 
-export const pathToVyBinOutputFile = (destination: string): string  => {
+export const pathToBinOutputFile = (destination: string): string  => {
     return path.join(destination, paths.contractVyFilename + paths.binExtension);
 };
 
-export const pathToVyAsmOutputFile = (destination: string): string  => {
-    return path.join(destination, paths.contractVyFilename + paths.asmExtension);
+export const pathToEraVMAssemblyOutputFile = (destination: string): string  => {
+    return path.join(destination, paths.contractVyFilename + paths.eraVMAssemblyExtension);
 };
 
 export const pathToVyIllOutputFile = (destination: string): string  => {
-    return path.join(destination, paths.contractVyFilename + paths.illExtension);
+    return path.join(destination, paths.contractVyFilename + paths.llvmIRExtension);
 };
 export const pathToVyOptimIllOutputFile = (destination: string): string  => {
-    return path.join(destination, paths.contractVyFilename + paths.illOptimizedExtension);
+    return path.join(destination, paths.contractVyFilename + paths.llvmIROptimizedExtension);
 };
 export const pathToVyUnOptimIllOutputFile = (destination: string): string  => {
-    return path.join(destination, paths.contractVyFilename + paths.illUnOptimizedExtension);
+    return path.join(destination, paths.contractVyFilename + paths.llvmIRUnoptimizedExtension);
 };
