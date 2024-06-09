@@ -26,7 +26,7 @@ describe("Common tests", () => {
 
     //id1978
     describe("Default run with a contract only", () => {
-        const args = [`"${paths.pathToBasicVyContract}"`]; // issue on windows
+        const args = [`"${paths.pathToBasicVyContract}"`];
         const result = executeCommand(zkvyperCommand, args);
 
         it("Exit code = 0", () => {
@@ -49,8 +49,8 @@ describe("Common tests", () => {
 
     //id1983
     describe("Default run a command from the help", () => {
-        const args = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${paths.pathToOutputDir}"`]; // issue on windows
-        const result = executeCommand(zkvyperCommand, args); 
+        const zkvyperArgs = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${paths.pathToOutputDir}"`];
+        const result = executeCommand(zkvyperCommand, zkvyperArgs);
 
         it("Exit code = 0", () => {
             expect(result.exitCode).toBe(0);
@@ -60,7 +60,7 @@ describe("Common tests", () => {
             expect(isDestinationExist(paths.pathToOutputDir)).toBe(true);
         });
 
-        it("Output file is created", () => { // a bug on windows
+        it("Output file is created", () => {
             expect(isDestinationExist(paths.pathToVyBinOutputFile)).toBe(true);
             expect(isDestinationExist(paths.pathToVyAsmOutputFile)).toBe(true);
         });
@@ -73,7 +73,8 @@ describe("Common tests", () => {
         });
 
         it("vyper exit code == zkvyper exit code", () => {
-            const vyperResult = executeCommand(vyperCommand, args);
+            const vyperArgs = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${paths.pathToOutputFile}"`];
+            const vyperResult = executeCommand(vyperCommand, vyperArgs);
             expect(vyperResult.exitCode).toBe(result.exitCode);
         });
     });

@@ -117,8 +117,6 @@ impl Contract {
     /// Converts the full path to a short one.
     ///
     pub fn short_path(path: &str) -> &str {
-        path.rfind(std::path::MAIN_SEPARATOR)
-            .map(|delimiter| &path[delimiter + 1..])
-            .unwrap_or_else(|| path)
+        path.split(std::path::MAIN_SEPARATOR).last().unwrap_or(path)
     }
 }

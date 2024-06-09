@@ -1,6 +1,7 @@
 import * as path from 'path';
 
 const outputDir = 'artifacts';
+const outputFile = 'out.bin';
 const binExtension = '.zbin';
 const asmExtension = '.zasm';
 const illExtension = '.lll';
@@ -14,6 +15,7 @@ const contractZkasmFilename = 'contract.zkasm';
 const contractJSONFilename = 'contract.json';
 const contractLLVMFilename = 'contract.ll';
 const pathToOutputDir = path.join( __dirname, '..', outputDir);
+const pathToOutputFile = path.join( __dirname, '..', outputFile);
 const pathToContracts = path.join( __dirname, '..', 'src', 'contracts');
 const pathToBasicVyContract = path.join(pathToContracts, 'vyper', contractVyFilename);
 const pathToBasicZkasmContract = path.join(pathToContracts, 'zkasm', contractZkasmFilename);
@@ -34,6 +36,7 @@ export const paths = {
   illUnOptimizedExtension: illUnOptimizedExtension,
   contractVyFilename: contractVyFilename,
   pathToOutputDir: pathToOutputDir,
+  pathToOutputFile: pathToOutputFile,
   pathToContracts: pathToContracts,
   pathToBasicVyContract: pathToBasicVyContract,
   pathToBasicZkasmContract: pathToBasicZkasmContract,
