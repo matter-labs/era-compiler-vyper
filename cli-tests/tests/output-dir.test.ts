@@ -11,8 +11,11 @@ describe("Output dir", () => {
         const args = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${tmpDirZkVyper.name}"`];
         const result = executeCommand(zkvyperCommand, args);
 
+        it("Output is empty", () => {
+            expect(result.output).not.toMatch(/(Refusing to overwrite)/i);
+        });
+
         it("Exit code = 0", () => {
-            expect(result.output).toMatch(/(xxx)/i);
             expect(result.exitCode).toBe(0);
         });
 

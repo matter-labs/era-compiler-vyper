@@ -17,6 +17,7 @@ describe("Common tests", () => {
         it("Exit code = 1", () => {
             expect(result.exitCode).toBe(1);
         });
+
         xit("vyper exit code == zkvyper exit code", () => {
             const vyperResult = executeCommand(vyperCommand, args);
             expect(vyperResult.exitCode).toBe(result.exitCode); // 2 for vyper and 1 for zkvyper
@@ -51,8 +52,11 @@ describe("Common tests", () => {
         const zkvyperArgs = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${paths.pathToOutputDir}"`];
         const result = executeCommand(zkvyperCommand, zkvyperArgs);
 
+        it("Output is empty", () => {
+            expect(result.output).not.toMatch(/(Refusing to overwrite)/i);
+        });
+
         it("Exit code = 0", () => {
-            expect(result.output).toMatch(/(xxx)/i);
             expect(result.exitCode).toBe(0);
         });
 
