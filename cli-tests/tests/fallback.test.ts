@@ -6,7 +6,6 @@ describe("Set of --fallback-Oz tests", () => {
     const zkvyperCommand = 'zkvyper';
 
     //id1938
-    //TODO: extend by using a case where this option gives a particular effect
     describe(`Run ${zkvyperCommand} with fallback-Oz option`, () => {
         const args = [`${paths.pathToBasicVyContract}`, `--fallback-Oz`];
         const result = executeCommand(zkvyperCommand, args);

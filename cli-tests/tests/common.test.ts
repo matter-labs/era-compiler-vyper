@@ -12,7 +12,7 @@ describe("Common tests", () => {
         const result = executeCommand(zkvyperCommand, args);
 
         it("Info with help is presented", () => {
-            expect(result.output).toMatch(/(the following arguments are required: input_files|Disable the system request memoization)/i);
+            expect(result.output).toMatch(/(Vyper compiler for ZKsync)/i);
         });
 
         it("Exit code = 1", () => {

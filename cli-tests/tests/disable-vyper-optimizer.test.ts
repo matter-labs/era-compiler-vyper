@@ -6,7 +6,6 @@ describe("Set of --disable-vyper-optimizer tests", () => {
     const zkvyperCommand = 'zkvyper';
 
     //id1939
-    //TODO: extend by using a case where this option gives a particular effect
     describe(`Run ${zkvyperCommand} with --disable-vyper-optimizer option`, () => {
         const args = [`${paths.pathToBasicVyContract}`, `--disable-vyper-optimizer`];
         const result = executeCommand(zkvyperCommand, args);

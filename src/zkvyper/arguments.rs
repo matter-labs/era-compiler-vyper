@@ -15,7 +15,7 @@ use structopt::StructOpt;
 ///
 #[derive(Debug, StructOpt)]
 #[structopt(
-    name = "The EraVM Vyper compiler",
+    name = "Vyper compiler for ZKsync",
     global_settings = &[structopt::clap::AppSettings::ArgRequiredElseHelp],
 )]
 pub struct Arguments {
