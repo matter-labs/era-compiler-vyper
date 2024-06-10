@@ -1,6 +1,6 @@
 # The `zkvyper` changelog
 
-## [Unreleased]
+## [1.5.0] - 2024-06-10
 
 ### Added
 
