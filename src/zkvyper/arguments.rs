@@ -137,11 +137,13 @@ impl Arguments {
     ///
     pub fn validate(&self) -> anyhow::Result<()> {
         if self.version && std::env::args().count() > 2 {
-            anyhow::bail!("No other options are allowed while getting the compiler version.");
+            anyhow::bail!(
+                "Error: No other options are allowed while getting the compiler version."
+            );
         }
 
         if self.recursive_process && std::env::args().count() > 2 {
-            anyhow::bail!("No other options are allowed in recursive mode.");
+            anyhow::bail!("Error: No other options are allowed in recursive mode.");
         }
 
         let modes_count = [self.llvm_ir, self.eravm_assembly, self.format.is_some()]
@@ -150,27 +152,33 @@ impl Arguments {
             .count();
         if modes_count > 1 {
             anyhow::bail!(
-                "Only one modes is allowed at the same time: Vyper, LLVM IR, EraVM assembly."
+                "Error: Only one modes is allowed at the same time: Vyper, LLVM IR, EraVM assembly."
             );
         }
 
         if self.llvm_ir || self.eravm_assembly {
             if self.vyper.is_some() {
-                anyhow::bail!("`vyper` is not used in LLVM IR and EraVM assembly modes.");
+                anyhow::bail!("Error: `vyper` is not used in LLVM IR and EraVM assembly modes.");
             }
 
             if self.evm_version.is_some() {
-                anyhow::bail!("EVM version is not used in LLVM IR and EraVM assembly modes.");
+                anyhow::bail!(
+                    "Error: EVM version is not used in LLVM IR and EraVM assembly modes."
+                );
             }
         }
 
         if self.eravm_assembly {
             if self.optimization.is_some() {
-                anyhow::bail!("LLVM optimizations are not supported in EraVM assembly mode.");
+                anyhow::bail!(
+                    "Error: LLVM optimizations are not supported in EraVM assembly mode."
+                );
             }
 
             if self.fallback_to_optimizing_for_size {
-                anyhow::bail!("Falling back to -Oz is not supported in EraVM assembly mode.");
+                anyhow::bail!(
+                    "Error: Falling back to -Oz is not supported in EraVM assembly mode."
+                );
             }
         }
 
@@ -193,7 +201,7 @@ impl Arguments {
     fn path_to_posix(path: &Path) -> anyhow::Result<PathBuf> {
         let path = path
             .to_slash()
-            .ok_or_else(|| anyhow::anyhow!("Input path {:?} POSIX conversion error", path))?
+            .ok_or_else(|| anyhow::anyhow!("Error: Input path {:?} POSIX conversion error", path))?
             .to_string();
         let path = PathBuf::from(path.as_str());
         Ok(path)
