@@ -8,10 +8,6 @@ pub mod function;
 
 use std::collections::BTreeMap;
 
-use serde::Deserialize;
-use serde::Serialize;
-
-use era_compiler_llvm_context::EraVMDependency;
 use era_compiler_llvm_context::EraVMWriteLLVM;
 use era_compiler_llvm_context::IContext;
 
@@ -28,7 +24,7 @@ use self::function::Function;
 ///
 /// The Vyper contract.
 ///
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Contract {
     /// The Vyper compiler version.
     pub version: semver::Version,
@@ -147,7 +143,6 @@ impl Contract {
             llvm_options,
             optimizer,
             Some(dependency_data),
-            metadata_hash.is_some(),
             debug_config,
         );
 
@@ -182,7 +177,7 @@ impl Contract {
 
 impl<D> EraVMWriteLLVM<D> for Contract
 where
-    D: EraVMDependency + Clone,
+    D: era_compiler_llvm_context::Dependency,
 {
     fn declare(
         &mut self,
@@ -320,16 +315,8 @@ where
     }
 }
 
-impl EraVMDependency for DependencyData {
-    fn compile(
-        _contract: Self,
-        _name: &str,
-        _optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
-        _llvm_options: &[String],
-        _enable_eravm_extensions: bool,
-        _include_metadata_hash: bool,
-        _debug_config: Option<era_compiler_llvm_context::DebugConfig>,
-    ) -> anyhow::Result<String> {
+impl era_compiler_llvm_context::Dependency for DependencyData {
+    fn get(&self, _name: &str) -> anyhow::Result<String> {
         Ok(crate::r#const::FORWARDER_CONTRACT_HASH.clone())
     }
 

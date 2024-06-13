@@ -129,7 +129,7 @@ impl Expression {
         context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         match self {
             Self::Instruction(inner) => inner.into_llvm_value(context),

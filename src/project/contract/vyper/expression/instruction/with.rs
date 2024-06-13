@@ -36,7 +36,7 @@ impl With {
         context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         let [identifier, value, block] = self.0;
         let identifier = identifier.try_into_identifier()?;

@@ -309,7 +309,7 @@ dependencies = [
 [[package]]
 name = "era-compiler-llvm-context"
 version = "1.5.0"
-source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=main#4aaaf2945f302cbbf70650e127b5176312dc210a"
+source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=az-remove-stdin-readers#066ccce270cda1411bb4d134fe2aa490320e4ab4"
 dependencies = [
  "anyhow",
  "era-compiler-common",
@@ -327,7 +327,7 @@ dependencies = [
 
 [[package]]
 name = "era-compiler-vyper"
-version = "1.5.0"
+version = "1.5.1"
 dependencies = [
  "anyhow",
  "colored",
