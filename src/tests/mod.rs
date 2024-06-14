@@ -72,6 +72,7 @@ pub fn build_vyper(
     let project = output.try_into_project(&vyper.version.default)?;
     let build = project.compile(
         None,
+        false,
         optimizer_settings,
         vec![],
         false,

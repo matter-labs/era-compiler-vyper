@@ -42,7 +42,6 @@ pub use self::warning_type::WarningType;
 
 mod tests;
 
-use std::io::Write;
 use std::path::PathBuf;
 
 ///
@@ -50,9 +49,10 @@ use std::path::PathBuf;
 ///
 pub fn llvm_ir(
     mut input_files: Vec<PathBuf>,
+    include_metadata_hash: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
-    include_metadata_hash: bool,
+    output_assembly: bool,
     suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
@@ -69,9 +69,10 @@ pub fn llvm_ir(
 
     let build = project.compile(
         None,
+        include_metadata_hash,
         optimizer_settings,
         llvm_options,
-        include_metadata_hash,
+        output_assembly,
         zkevm_assembly::RunningVmEncodingMode::Production,
         suppressed_warnings,
         debug_config,
@@ -85,8 +86,9 @@ pub fn llvm_ir(
 ///
 pub fn eravm_assembly(
     mut input_files: Vec<PathBuf>,
-    llvm_options: Vec<String>,
     include_metadata_hash: bool,
+    llvm_options: Vec<String>,
+    output_assembly: bool,
     suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
@@ -104,9 +106,10 @@ pub fn eravm_assembly(
     let optimizer_settings = era_compiler_llvm_context::OptimizerSettings::none();
     let build = project.compile(
         None,
+        include_metadata_hash,
         optimizer_settings,
         llvm_options,
-        include_metadata_hash,
+        output_assembly,
         zkevm_assembly::RunningVmEncodingMode::Production,
         suppressed_warnings,
         debug_config,
@@ -122,10 +125,11 @@ pub fn standard_output(
     input_files: Vec<PathBuf>,
     vyper: &VyperCompiler,
     evm_version: Option<era_compiler_common::EVMVersion>,
+    include_metadata_hash: bool,
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
-    include_metadata_hash: bool,
+    output_assembly: bool,
     suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
@@ -145,9 +149,10 @@ pub fn standard_output(
 
     let build = project.compile(
         evm_version,
+        include_metadata_hash,
         optimizer_settings,
         llvm_options,
-        include_metadata_hash,
+        output_assembly,
         zkevm_assembly::RunningVmEncodingMode::Production,
         suppressed_warnings,
         debug_config,
@@ -163,10 +168,11 @@ pub fn combined_json(
     input_files: Vec<PathBuf>,
     vyper: &VyperCompiler,
     evm_version: Option<era_compiler_common::EVMVersion>,
+    include_metadata_hash: bool,
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
-    include_metadata_hash: bool,
+    output_assembly: bool,
     suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     output_directory: Option<PathBuf>,
@@ -191,9 +197,10 @@ pub fn combined_json(
 
     let build = project.compile(
         evm_version,
+        include_metadata_hash,
         optimizer_settings,
         llvm_options,
-        include_metadata_hash,
+        output_assembly,
         zkevm_assembly::RunningVmEncodingMode::Production,
         suppressed_warnings,
         debug_config,
@@ -201,19 +208,16 @@ pub fn combined_json(
 
     let mut combined_json =
         vyper.combined_json(input_files.as_slice(), evm_version, vyper_optimizer_enabled)?;
-    build.write_to_combined_json(&mut combined_json, &zkvyper_version)?;
+    build.write_to_combined_json(&mut combined_json, &zkvyper_version, output_assembly)?;
 
     match output_directory {
         Some(output_directory) => {
             std::fs::create_dir_all(output_directory.as_path())?;
-
             combined_json.write_to_directory(output_directory.as_path(), overwrite)?;
         }
-        None => writeln!(
-            std::io::stdout(),
-            "{}",
-            serde_json::to_string(&combined_json).expect("Always valid")
-        )?,
+        None => {
+            serde_json::to_writer(std::io::stdout(), &combined_json).expect("Stdout writing error")
+        }
     }
-    std::process::exit(0);
+    std::process::exit(era_compiler_common::EXIT_CODE_SUCCESS);
 }

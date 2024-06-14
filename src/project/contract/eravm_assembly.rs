@@ -40,6 +40,7 @@ impl Contract {
         source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
+        output_assembly: bool,
         _suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
@@ -55,10 +56,11 @@ impl Contract {
             .keccak256()
         });
 
-        let build = era_compiler_llvm_context::eravm_build_assembly_text(
+        let build = era_compiler_llvm_context::from_eravm_assembly(
             contract_path,
-            self.source_code.as_str(),
+            self.source_code,
             metadata_hash,
+            output_assembly,
             debug_config.as_ref(),
         )?;
 

@@ -117,17 +117,19 @@ fn main_inner() -> anyhow::Result<()> {
     let build = if arguments.llvm_ir {
         era_compiler_vyper::llvm_ir(
             arguments.input_files,
+            include_metadata_hash,
             optimizer_settings,
             llvm_options,
-            include_metadata_hash,
+            arguments.output_assembly,
             suppressed_warnings,
             debug_config,
         )
     } else if arguments.eravm_assembly {
         era_compiler_vyper::eravm_assembly(
             arguments.input_files,
-            llvm_options,
             include_metadata_hash,
+            llvm_options,
+            arguments.output_assembly,
             suppressed_warnings,
             debug_config,
         )
@@ -144,10 +146,11 @@ fn main_inner() -> anyhow::Result<()> {
                     arguments.input_files,
                     &vyper,
                     evm_version,
+                    include_metadata_hash,
                     !arguments.disable_vyper_optimizer,
                     optimizer_settings,
                     llvm_options,
-                    include_metadata_hash,
+                    arguments.output_assembly,
                     suppressed_warnings,
                     debug_config,
                     arguments.output_directory,
@@ -162,10 +165,11 @@ fn main_inner() -> anyhow::Result<()> {
                 arguments.input_files,
                 &vyper,
                 evm_version,
+                include_metadata_hash,
                 !arguments.disable_vyper_optimizer,
                 optimizer_settings,
                 llvm_options,
-                include_metadata_hash,
+                arguments.output_assembly,
                 suppressed_warnings,
                 debug_config,
             ),

@@ -24,7 +24,7 @@ pub enum Contract {
     /// The LLVM IR contract.
     LLVMIR(LLVMIRContract),
     /// The LLVM IR contract.
-    ZKASM(EraVMAssemblyContract),
+    EraVMAssembly(EraVMAssemblyContract),
 }
 
 impl From<VyperContract> for Contract {
@@ -41,7 +41,7 @@ impl From<LLVMIRContract> for Contract {
 
 impl From<EraVMAssemblyContract> for Contract {
     fn from(inner: EraVMAssemblyContract) -> Self {
-        Self::ZKASM(inner)
+        Self::EraVMAssembly(inner)
     }
 }
 
@@ -56,6 +56,7 @@ impl Contract {
         evm_version: Option<era_compiler_common::EVMVersion>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
+        output_assembly: bool,
         suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
@@ -66,6 +67,7 @@ impl Contract {
                 evm_version,
                 optimizer_settings,
                 llvm_options,
+                output_assembly,
                 suppressed_warnings,
                 debug_config,
             ),
@@ -74,14 +76,16 @@ impl Contract {
                 source_code_hash,
                 optimizer_settings,
                 llvm_options,
+                output_assembly,
                 suppressed_warnings,
                 debug_config,
             ),
-            Self::ZKASM(inner) => inner.compile(
+            Self::EraVMAssembly(inner) => inner.compile(
                 contract_path,
                 source_code_hash,
                 optimizer_settings,
                 llvm_options,
+                output_assembly,
                 suppressed_warnings,
                 debug_config,
             ),
@@ -95,7 +99,7 @@ impl Contract {
         match self {
             Self::Vyper(inner) => inner.source_code.as_str(),
             Self::LLVMIR(inner) => inner.source_code.as_str(),
-            Self::ZKASM(inner) => inner.source_code.as_str(),
+            Self::EraVMAssembly(inner) => inner.source_code.as_str(),
         }
     }
 }

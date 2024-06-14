@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Assembly is now only returned if requested with `--output-assembly`
+
+### Fixed
+
+- Missing output with non-canonical input paths
+
 ## [1.5.0] - 2024-06-10
 
 ### Added

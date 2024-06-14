@@ -114,6 +114,7 @@ impl Contract {
         evm_version: Option<era_compiler_common::EVMVersion>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
+        output_assembly: bool,
         suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
@@ -162,7 +163,7 @@ impl Contract {
         })?;
 
         let is_minimal_proxy_used = context.vyper().is_minimal_proxy_used();
-        let mut build = context.build(contract_path, metadata_hash)?;
+        let mut build = context.build(contract_path, metadata_hash, output_assembly)?;
 
         if is_minimal_proxy_used {
             build.factory_dependencies.insert(

@@ -37,6 +37,7 @@ impl Contract {
         source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
+        output_assembly: bool,
         _suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
@@ -66,7 +67,7 @@ impl Contract {
             era_compiler_llvm_context::DummyDependency,
         >::new(&llvm, module, llvm_options, optimizer, None, debug_config);
 
-        let build = context.build(contract_path, metadata_hash)?;
+        let build = context.build(contract_path, metadata_hash, output_assembly)?;
 
         Ok(ContractBuild::new(build, vec![]))
     }

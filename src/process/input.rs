@@ -31,6 +31,8 @@ pub struct Input<'a> {
     pub optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     /// The extra LLVM arguments.
     pub llvm_options: Vec<String>,
+    /// Whether to output EraVM assembly.
+    pub output_assembly: bool,
     /// The suppressed warnings.
     pub suppressed_warnings: Vec<WarningType>,
     /// The debug output config.
@@ -49,6 +51,7 @@ impl<'a> Input<'a> {
         evm_version: Option<era_compiler_common::EVMVersion>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
+        output_assembly: bool,
         suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> Self {
@@ -60,6 +63,7 @@ impl<'a> Input<'a> {
             evm_version,
             optimizer_settings,
             llvm_options,
+            output_assembly,
             suppressed_warnings,
             debug_config,
         }

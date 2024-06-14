@@ -109,9 +109,10 @@ impl Project {
     pub fn compile(
         self,
         evm_version: Option<era_compiler_common::EVMVersion>,
+        include_metadata_hash: bool,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
-        include_metadata_hash: bool,
+        output_assembly: bool,
         bytecode_encoding: zkevm_assembly::RunningVmEncodingMode,
         suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
@@ -134,10 +135,8 @@ impl Project {
                         bytecode_encoding == zkevm_assembly::RunningVmEncodingMode::Testing,
                         evm_version,
                         optimizer_settings.clone(),
-                        llvm_options
-                            .iter()
-                            .map(|option| (*option).to_owned())
-                            .collect(),
+                        llvm_options.clone(),
+                        output_assembly,
                         suppressed_warnings.clone(),
                         debug_config.clone(),
                     ));
@@ -162,10 +161,14 @@ impl Project {
         });
         if is_minimal_proxy_used {
             let minimal_proxy_build = era_compiler_llvm_context::EraVMBuild::new(
-                crate::r#const::FORWARDER_CONTRACT_ASSEMBLY.to_owned(),
-                None,
                 crate::r#const::FORWARDER_CONTRACT_BYTECODE.clone(),
                 crate::r#const::FORWARDER_CONTRACT_HASH.clone(),
+                None,
+                if output_assembly {
+                    Some(crate::r#const::FORWARDER_CONTRACT_ASSEMBLY.to_owned())
+                } else {
+                    None
+                },
             );
             build.contracts.insert(
                 crate::r#const::MINIMAL_PROXY_CONTRACT_NAME.to_owned(),

@@ -45,27 +45,29 @@ impl Contract {
     ) -> anyhow::Result<()> {
         let contract_name = Self::contract_name(contract_path.to_str().expect("Always valid"));
 
-        let assembly_file_name = format!(
-            "{}.{}",
-            contract_name,
-            era_compiler_common::EXTENSION_ERAVM_ASSEMBLY
-        );
-        let mut assembly_file_path = output_directory.to_owned();
-        assembly_file_path.push(assembly_file_name);
-
-        if assembly_file_path.exists() && !overwrite {
-            anyhow::bail!(
-                "Refusing to overwrite an existing file {assembly_file_path:?} (use --overwrite to force).",
+        if let Some(assembly) = self.build.assembly {
+            let assembly_file_name = format!(
+                "{}.{}",
+                contract_name,
+                era_compiler_common::EXTENSION_ERAVM_ASSEMBLY
             );
-        } else {
-            File::create(&assembly_file_path)
-                .map_err(|error| {
-                    anyhow::anyhow!("File {:?} creating error: {}", assembly_file_path, error)
-                })?
-                .write_all(self.build.assembly_text.as_bytes())
-                .map_err(|error| {
-                    anyhow::anyhow!("File {:?} writing error: {}", assembly_file_path, error)
-                })?;
+            let mut assembly_file_path = output_directory.to_owned();
+            assembly_file_path.push(assembly_file_name);
+
+            if assembly_file_path.exists() && !overwrite {
+                anyhow::bail!(
+                    "Refusing to overwrite an existing file {assembly_file_path:?} (use --overwrite to force).",
+                );
+            } else {
+                File::create(&assembly_file_path)
+                    .map_err(|error| {
+                        anyhow::anyhow!("File {:?} creating error: {}", assembly_file_path, error)
+                    })?
+                    .write_all(assembly.as_bytes())
+                    .map_err(|error| {
+                        anyhow::anyhow!("File {:?} writing error: {}", assembly_file_path, error)
+                    })?;
+            }
         }
 
         let binary_file_name = format!(
@@ -106,7 +108,7 @@ impl Contract {
         combined_json_contract
             .bytecode_runtime
             .clone_from(&combined_json_contract.bytecode);
-
+        combined_json_contract.assembly = self.build.assembly;
         combined_json_contract.warnings = Some(self.warnings);
         combined_json_contract.factory_deps = Some(self.build.factory_dependencies);
 

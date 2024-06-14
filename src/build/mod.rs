@@ -49,6 +49,7 @@ impl Build {
         self,
         combined_json: &mut CombinedJson,
         zkvyper_version: &semver::Version,
+        output_assembly: bool,
     ) -> anyhow::Result<()> {
         for (path, contract) in self.contracts.into_iter() {
             let combined_json_contract =
@@ -56,6 +57,13 @@ impl Build {
                     .contracts
                     .iter_mut()
                     .find_map(|(json_path, contract)| {
+                        let path = PathBuf::from(path.as_str())
+                            .canonicalize()
+                            .expect("Path canonicalization error");
+                        let json_path = PathBuf::from(json_path.as_str())
+                            .canonicalize()
+                            .expect("Path canonicalization error");
+
                         if path.ends_with(json_path) {
                             Some(contract)
                         } else {
@@ -69,9 +77,10 @@ impl Build {
                 }
                 None => {
                     if path.as_str() == crate::r#const::MINIMAL_PROXY_CONTRACT_NAME {
-                        combined_json
-                            .contracts
-                            .insert(path, CombinedJsonContract::new_minimal_proxy());
+                        combined_json.contracts.insert(
+                            path,
+                            CombinedJsonContract::new_minimal_proxy(output_assembly),
+                        );
                     }
                 }
             }

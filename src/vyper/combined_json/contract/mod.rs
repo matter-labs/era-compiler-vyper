@@ -28,6 +28,10 @@ pub struct Contract {
     /// The `vyper` hexadecimal binary runtime part output.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bytecode_runtime: Option<String>,
+
+    /// The EraVM text assembly.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub assembly: Option<String>,
     /// The compilation warnings.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub warnings: Option<Vec<Warning>>,
@@ -40,7 +44,7 @@ impl Contract {
     ///
     /// Creates a minimal proxy.
     ///
-    pub fn new_minimal_proxy() -> Self {
+    pub fn new_minimal_proxy(output_assembly: bool) -> Self {
         Self {
             method_identifiers: Some(BTreeMap::new()),
             abi: Some(serde_json::Value::Object(serde_json::Map::default())),
@@ -50,6 +54,12 @@ impl Contract {
             bytecode_runtime: Some(hex::encode(
                 crate::r#const::FORWARDER_CONTRACT_BYTECODE.as_slice(),
             )),
+
+            assembly: if output_assembly {
+                Some(crate::r#const::FORWARDER_CONTRACT_ASSEMBLY.to_owned())
+            } else {
+                None
+            },
             warnings: Some(Vec::new()),
             factory_deps: Some(BTreeMap::new()),
         }
