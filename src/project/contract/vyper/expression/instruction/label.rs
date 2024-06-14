@@ -105,7 +105,7 @@ impl Label {
         context: &mut era_compiler_llvm_context::EraVMContext<D>,
     ) -> anyhow::Result<()>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         if self.is_empty() || self.can_block_be_ignored() {
             return Ok(());
@@ -164,7 +164,7 @@ impl Label {
         context: &mut era_compiler_llvm_context::EraVMContext<D>,
     ) -> anyhow::Result<()>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         if self.is_empty() || self.can_block_be_ignored() {
             return Ok(());

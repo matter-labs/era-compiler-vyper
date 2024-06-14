@@ -24,7 +24,9 @@ fn main() -> anyhow::Result<()> {
     std::process::exit(match main_inner() {
         Ok(()) => era_compiler_common::EXIT_CODE_SUCCESS,
         Err(error) => {
-            writeln!(std::io::stderr(), "{error}")?;
+            std::io::stderr()
+                .write_all(error.to_string().as_bytes())
+                .expect("Stderr writing error");
             era_compiler_common::EXIT_CODE_FAILURE
         }
     })
@@ -62,7 +64,7 @@ fn main_inner() -> anyhow::Result<()> {
     }
 
     if arguments.recursive_process {
-        return era_compiler_vyper::run_process();
+        return era_compiler_vyper::run_recursive();
     }
 
     let debug_config = match arguments.debug_output_directory {

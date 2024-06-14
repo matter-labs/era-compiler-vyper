@@ -2,9 +2,6 @@
 //! The LLVM IR contract.
 //!
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use crate::build::contract::Contract as ContractBuild;
 use crate::project::contract::metadata::Metadata as ContractMetadata;
 use crate::warning_type::WarningType;
@@ -12,7 +9,7 @@ use crate::warning_type::WarningType;
 ///
 /// The LLVM IR contract.
 ///
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Contract {
     /// The LLVM framework version.
     pub version: semver::Version,
@@ -66,16 +63,8 @@ impl Contract {
             .create_module_from_ir(memory_buffer)
             .map_err(|error| anyhow::anyhow!(error.to_string()))?;
         let context = era_compiler_llvm_context::EraVMContext::<
-            era_compiler_llvm_context::EraVMDummyDependency,
-        >::new(
-            &llvm,
-            module,
-            llvm_options,
-            optimizer,
-            None,
-            metadata_hash.is_some(),
-            debug_config,
-        );
+            era_compiler_llvm_context::DummyDependency,
+        >::new(&llvm, module, llvm_options, optimizer, None, debug_config);
 
         let build = context.build(contract_path, metadata_hash)?;
 

@@ -152,7 +152,7 @@ impl Seq {
         context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         let (mut labels, expressions) = self.drain_and_split();
 
@@ -178,7 +178,7 @@ impl Seq {
 
 impl<D> era_compiler_llvm_context::EraVMWriteLLVM<D> for Seq
 where
-    D: era_compiler_llvm_context::EraVMDependency + Clone,
+    D: era_compiler_llvm_context::Dependency,
 {
     fn into_llvm(
         mut self,

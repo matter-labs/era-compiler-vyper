@@ -18,7 +18,7 @@ pub fn create<'ctx, D>(
     salt: Option<inkwell::values::IntValue<'ctx>>,
 ) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>>
 where
-    D: era_compiler_llvm_context::EraVMDependency + Clone,
+    D: era_compiler_llvm_context::Dependency,
 {
     let create_minimal_proxy_to_block = context.append_basic_block("create_minimal_proxy_to_block");
     let create_from_blueprint_block = context.append_basic_block("create_from_blueprint_block");
@@ -66,7 +66,7 @@ fn create_minimal_proxy_to<'ctx, D>(
     salt: Option<inkwell::values::IntValue<'ctx>>,
 ) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>>
 where
-    D: era_compiler_llvm_context::EraVMDependency + Clone,
+    D: era_compiler_llvm_context::Dependency,
 {
     let success_block = context.append_basic_block("create_success_block");
     let failure_block = context.append_basic_block("create_failure_block");
@@ -117,7 +117,7 @@ where
         hash_input_offset,
         "create_hash_input_offset_pointer",
     )?;
-    let hash = context.compile_dependency(crate::r#const::MINIMAL_PROXY_CONTRACT_NAME)?;
+    let hash = context.get_dependency_data(crate::r#const::MINIMAL_PROXY_CONTRACT_NAME)?;
     context.build_store(
         hash_input_offset_pointer,
         context.field_const_str_hex(hash.as_str()),
@@ -207,7 +207,7 @@ fn create_from_blueprint<'ctx, D>(
     salt: Option<inkwell::values::IntValue<'ctx>>,
 ) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>>
 where
-    D: era_compiler_llvm_context::EraVMDependency + Clone,
+    D: era_compiler_llvm_context::Dependency,
 {
     let success_block = context.append_basic_block("create_from_blueprint_success_block");
     let failure_block = context.append_basic_block("create_from_blueprint_failure_block");

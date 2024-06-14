@@ -23,11 +23,11 @@ pub fn run() -> anyhow::Result<()> {
     let input_json = std::io::read_to_string(std::io::stdin()).expect("Stdin reading error");
     let input: Input = era_compiler_common::deserialize_from_str(input_json.as_str())
         .expect("Stdin reading error");
-
     if input.enable_test_encoding {
         zkevm_assembly::set_encoding_mode(zkevm_assembly::RunningVmEncodingMode::Testing);
     }
-    let result = input.contract.into_owned().compile(
+
+    let build = input.contract.into_owned().compile(
         input.full_path.as_str(),
         input.source_code_hash,
         input.evm_version,
@@ -35,24 +35,14 @@ pub fn run() -> anyhow::Result<()> {
         input.llvm_options,
         input.suppressed_warnings,
         input.debug_config,
-    );
+    )?;
 
-    match result {
-        Ok(build) => {
-            let output = Output::new(build);
-            let output_json = serde_json::to_vec(&output).expect("Always valid");
-            std::io::stdout()
-                .write_all(output_json.as_slice())
-                .expect("Stdout writing error");
-            Ok(())
-        }
-        Err(error) => {
-            std::io::stderr()
-                .write_all(error.to_string().as_bytes())
-                .expect("Stderr writing error");
-            Err(error)
-        }
-    }
+    let output = Output::new(build);
+    let output_json = serde_json::to_vec(&output).expect("Always valid");
+    std::io::stdout()
+        .write_all(output_json.as_slice())
+        .expect("Stdout writing error");
+    Ok(())
 }
 
 ///
@@ -92,7 +82,7 @@ where
     })?;
     let stderr_message = String::from_utf8_lossy(result.stderr.as_slice());
     if !result.status.success() {
-        anyhow::bail!("{stderr_message}");
+        anyhow::bail!("{}", stderr_message.trim());
     }
     let output = match era_compiler_common::deserialize_from_slice::<O>(result.stdout.as_slice()) {
         Ok(output) => output,

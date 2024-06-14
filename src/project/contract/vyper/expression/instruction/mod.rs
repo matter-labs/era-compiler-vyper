@@ -331,7 +331,7 @@ impl Instruction {
         context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
     ) -> anyhow::Result<[inkwell::values::BasicValueEnum<'ctx>; N]>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         let debug_string = format!("`{arguments:?}`");
 
@@ -366,7 +366,7 @@ impl Instruction {
         context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
     ) -> anyhow::Result<[era_compiler_llvm_context::Value<'ctx>; N]>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         let debug_string = format!("`{arguments:?}`");
 
@@ -445,7 +445,7 @@ impl Instruction {
         context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         match self {
             Self::With(inner) => inner.into_llvm_value(context),
@@ -1596,7 +1596,7 @@ impl Instruction {
         arguments: &[Box<Expression>; 2],
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         if let Expression::Instruction(Instruction::EXTCODESIZE(extcodesize_arguments)) =
             *(arguments[0].clone())

@@ -4,7 +4,6 @@
 
 use inkwell::types::BasicType;
 
-use era_compiler_llvm_context::EraVMDependency;
 use era_compiler_llvm_context::EraVMWriteLLVM;
 use era_compiler_llvm_context::IContext;
 
@@ -39,7 +38,7 @@ impl Function {
 
 impl<D> EraVMWriteLLVM<D> for Function
 where
-    D: EraVMDependency + Clone,
+    D: era_compiler_llvm_context::Dependency,
 {
     fn declare(
         &mut self,

@@ -38,7 +38,7 @@ impl Repeat {
         context: &mut era_compiler_llvm_context::EraVMContext<D>,
     ) -> anyhow::Result<()>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         let index_identifier = self.0.remove(0).try_into_identifier()?;
         let start = self.0.remove(0);

@@ -2,7 +2,6 @@
 //! The Vyper contract metadata.
 //!
 
-use serde::Serialize;
 use sha3::Digest;
 
 ///
@@ -10,7 +9,7 @@ use sha3::Digest;
 ///
 /// Is used to append the metadata hash to the contract bytecode.
 ///
-#[derive(Debug, Serialize)]
+#[derive(Debug, serde::Serialize)]
 pub struct Metadata<'a> {
     /// The source code hash.
     pub source_hash: &'a [u8; era_compiler_common::BYTE_LENGTH_FIELD],

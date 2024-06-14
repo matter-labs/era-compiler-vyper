@@ -7,9 +7,6 @@ pub mod llvm_ir;
 pub mod metadata;
 pub mod vyper;
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use crate::build::contract::Contract as ContractBuild;
 use crate::warning_type::WarningType;
 
@@ -20,7 +17,7 @@ use self::vyper::Contract as VyperContract;
 ///
 /// The contract.
 ///
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum Contract {
     /// The Vyper contract.
     Vyper(VyperContract),

@@ -20,7 +20,7 @@ pub use self::metadata::function::Function as FunctionMetadata;
 pub use self::metadata::Metadata;
 pub use self::process::input::Input as ProcessInput;
 pub use self::process::output::Output as ProcessOutput;
-pub use self::process::run as run_process;
+pub use self::process::run as run_recursive;
 pub use self::process::EXECUTABLE;
 pub use self::project::contract::Contract;
 pub use self::project::Project;

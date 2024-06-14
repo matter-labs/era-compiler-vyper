@@ -41,7 +41,7 @@ impl If {
         context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         let main_block = context.append_basic_block("if_main");
         let join_block = context.append_basic_block("if_join");
