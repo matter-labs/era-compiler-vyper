@@ -75,13 +75,14 @@ impl Build {
                 Some(combined_json_contract) => {
                     contract.write_to_combined_json(combined_json_contract)?
                 }
+                None if path.as_str() == crate::r#const::MINIMAL_PROXY_CONTRACT_NAME => {
+                    combined_json.contracts.insert(
+                        path,
+                        CombinedJsonContract::new_minimal_proxy(output_assembly),
+                    );
+                }
                 None => {
-                    if path.as_str() == crate::r#const::MINIMAL_PROXY_CONTRACT_NAME {
-                        combined_json.contracts.insert(
-                            path,
-                            CombinedJsonContract::new_minimal_proxy(output_assembly),
-                        );
-                    }
+                    anyhow::bail!("Contract `{path}` not found in the project");
                 }
             }
         }
