@@ -5,6 +5,7 @@
 ### Changed
 
 - Assembly is now only returned if requested with `--output-assembly`
+- Updated to Rust v1.79.0
 
 ### Fixed
 
@@ -23,6 +24,7 @@
 
 - Updated to EraVM v1.5.0
 - Renamed the `zkasm` flag to `eravm`
+- Updated to Rust v1.78.0
 
 ### Deprecated
 
