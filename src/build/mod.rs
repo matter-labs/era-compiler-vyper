@@ -8,6 +8,8 @@ use std::collections::BTreeMap;
 use std::path::Path;
 use std::path::PathBuf;
 
+use normpath::PathExt;
+
 use crate::vyper::combined_json::contract::Contract as CombinedJsonContract;
 use crate::vyper::combined_json::CombinedJson;
 
@@ -58,11 +60,11 @@ impl Build {
                     .iter_mut()
                     .find_map(|(json_path, contract)| {
                         let path = PathBuf::from(path.as_str())
-                            .canonicalize()
-                            .expect("Path canonicalization error");
+                            .normalize()
+                            .expect("Path normalization error");
                         let json_path = PathBuf::from(json_path.as_str())
                             .canonicalize()
-                            .expect("Path canonicalization error");
+                            .expect("Path normalization error");
 
                         if path.ends_with(json_path) {
                             Some(contract)

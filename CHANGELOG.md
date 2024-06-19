@@ -9,7 +9,7 @@
 
 ### Fixed
 
-- Missing output with non-canonical input paths
+- Missing output with non-canonical input paths in combined JSON output
 
 ## [1.5.0] - 2024-06-10
 

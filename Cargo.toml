@@ -22,6 +22,7 @@ colored = "2.1"
 anyhow = "1.0"
 which = "6.0"
 path-slash = "0.2"
+normpath = "1.2"
 rayon = "1.10"
 
 serde = { version = "1.0", "features" = [ "derive" ] }
