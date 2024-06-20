@@ -38,7 +38,6 @@ describe("Overwrite output dir", () => {
         // verify that files are not empty
         it("The output files are not empty", () => {
             expect(isFileEmpty(pathToBinOutputFile(tmpDirZkVyper.name))).toBe(false);
-            expect(isFileEmpty(pathToEraVMAssemblyOutputFile(tmpDirZkVyper.name))).toBe(false);
         });
 
         it("No 'Error'/'Warning'/'Fail' in the output", () => {
