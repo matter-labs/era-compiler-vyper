@@ -44,10 +44,11 @@ impl Compiler {
     pub const DEFAULT_EXECUTABLE_NAME: &'static str = "vyper";
 
     /// The supported versions of `vyper`.
-    pub const SUPPORTED_VERSIONS: [semver::Version; 3] = [
+    pub const SUPPORTED_VERSIONS: [semver::Version; 4] = [
         semver::Version::new(0, 3, 3),
         semver::Version::new(0, 3, 9),
         semver::Version::new(0, 3, 10),
+        semver::Version::new(0, 4, 0),
     ];
 
     ///

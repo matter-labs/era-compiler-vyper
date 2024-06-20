@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- The vyper v0.4.0 support
+
 ### Changed
 
 - Assembly is now only returned if requested with `--output-assembly`
