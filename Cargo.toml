@@ -18,7 +18,6 @@ doctest = false
 
 [dependencies]
 structopt = { version = "0.3", default-features = false }
-colored = "2.1"
 anyhow = "1.0"
 which = "6.0"
 path-slash = "0.2"

@@ -49,7 +49,7 @@ describe("Common tests", () => {
 
     //id1983
     describe("Default run a command from the help", () => {
-        const zkvyperArgs = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${paths.pathToOutputDir}"`];
+        const zkvyperArgs = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${paths.pathToOutputDir}"`, `--output-assembly`];
         const result = executeCommand(zkvyperCommand, zkvyperArgs);
 
         it("Output is empty", () => {
@@ -70,7 +70,7 @@ describe("Common tests", () => {
         it("The output file is not empty", () => {
             expect(isFileEmpty(paths.pathToBinOutputFile)).toBe(false);
         });
-        
+
         it("No 'Error'/'Warning'/'Fail' in the output", () => {
             expect(result.output).not.toMatch(/([Ee]rror|[Ww]arning|[Ff]ail)/i);
         });
