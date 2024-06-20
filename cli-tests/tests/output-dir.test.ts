@@ -8,7 +8,7 @@ describe("Output dir", () => {
     //id1983
     describe("Default run with output dir", () => {
         const tmpDirZkVyper = createTmpDirectory();
-        const args = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${tmpDirZkVyper.name}"`];
+        const args = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${tmpDirZkVyper.name}"`, `--output-assembly`];
         const result = executeCommand(zkvyperCommand, args);
 
         it("Output is empty", () => {

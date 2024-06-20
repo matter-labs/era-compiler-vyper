@@ -24,7 +24,7 @@ describe("Overwrite output dir", () => {
         });
 
         // trying to add a flag and verify that command passed with 0 exit code
-        const args = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${tmpDirZkVyper.name}"`, `--overwrite`];
+        const args = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${tmpDirZkVyper.name}"`, `--overwrite`, `--output-assembly`];
         const result = executeCommand(zkvyperCommand, args);
 
         it("Output is empty", () => {
