@@ -63,7 +63,7 @@ impl Build {
                             .normalize()
                             .expect("Path normalization error");
                         let json_path = PathBuf::from(json_path.as_str())
-                            .canonicalize()
+                            .normalize()
                             .expect("Path normalization error");
 
                         if path.ends_with(json_path) {

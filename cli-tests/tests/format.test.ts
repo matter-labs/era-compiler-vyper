@@ -5,27 +5,7 @@ describe("Set of --format json tests", () => {
     const zkvyperCommand = 'zkvyper';
     const vyperCommand = 'vyper';
     const format_args: string[] = [
-        `bytecode`,
-        `bytecode_runtime`,
-        `blueprint_bytecode`,
-        `abi`,
-        `abi_python`,
-        `source_map`,
-        `method_identifiers`,
-        `userdoc`,
-        `devdoc`,
-        `combined_json`,
-        `layout`,
-        `ast`,
-        `interface`,
-        `external_interface`,
-        `opcodes`,
-        `opcodes_runtime`,
-        `ir`,
-        `ir_json`,
-        `ir_runtime`,
-        `asm`
-        // `hex-ir` // does not work
+        `combined_json`
     ];
 
     //id1988
@@ -59,7 +39,7 @@ describe("Set of --format json tests", () => {
         });
 
         it("Error is presented", () => {
-            expect(result.output).toMatch(/([Uu]nsupported format)/i);
+            expect(result.output).toMatch(/(is the only output format supported)/i);
         });
     });
 

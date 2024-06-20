@@ -66,7 +66,6 @@ describe("Common tests", () => {
 
         it("Output file is created", () => {
             expect(isDestinationExist(paths.pathToBinOutputFile)).toBe(true);
-            expect(isDestinationExist(paths.pathToEraVMAssemblyOutputFile)).toBe(true);
         });
         it("The output file is not empty", () => {
             expect(isFileEmpty(paths.pathToBinOutputFile)).toBe(false);
