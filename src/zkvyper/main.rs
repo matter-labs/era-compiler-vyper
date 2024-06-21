@@ -157,12 +157,12 @@ fn main_inner() -> anyhow::Result<()> {
                 )?;
                 return Ok(());
             }
-            Some(format) => {
+            Some(format) if format.split(',').any(|element| element == "combined_json") => {
                 anyhow::bail!(
-                    "`combined_json` is the only output format supported, found `{format}`"
+                    "`combined_json` cannot be requested together with other output: consider removing it from `{format}`"
                 );
             }
-            None => era_compiler_vyper::standard_output(
+            Some(_) | None => era_compiler_vyper::standard_output(
                 arguments.input_files,
                 &vyper,
                 evm_version,
