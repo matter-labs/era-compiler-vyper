@@ -1,5 +1,5 @@
 //!
-//! The compiler warning type.
+//! The compiler message type.
 //!
 
 use std::str::FromStr;
@@ -8,10 +8,10 @@ use serde::Deserialize;
 use serde::Serialize;
 
 ///
-/// The compiler warning type.
+/// The compiler message type.
 ///
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum WarningType {
+pub enum MessageType {
     /// The warning for eponymous feature.
     EcRecover,
     /// The warning for eponymous feature.
@@ -20,9 +20,9 @@ pub enum WarningType {
     TxOrigin,
 }
 
-impl WarningType {
+impl MessageType {
     ///
-    /// Converts string arguments into an array of warnings.
+    /// Converts string arguments into an array of messages.
     ///
     pub fn try_from_strings(strings: &[String]) -> Result<Vec<Self>, anyhow::Error> {
         strings
@@ -32,7 +32,7 @@ impl WarningType {
     }
 }
 
-impl FromStr for WarningType {
+impl FromStr for MessageType {
     type Err = anyhow::Error;
 
     fn from_str(string: &str) -> Result<Self, Self::Err> {
@@ -40,7 +40,7 @@ impl FromStr for WarningType {
             "ecrecover" => Ok(Self::EcRecover),
             "extcodesize" => Ok(Self::ExtCodeSize),
             "txorigin" => Ok(Self::TxOrigin),
-            _ => Err(anyhow::anyhow!("Invalid warning: {}", string)),
+            _ => Err(anyhow::anyhow!("Invalid message type: {string}")),
         }
     }
 }

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- The support for compiling multiple files in Yul, LLVM IR, and EraVM assembly modes
+
 ### Changed
 
 - Assembly is now only returned if requested with `--output-assembly`

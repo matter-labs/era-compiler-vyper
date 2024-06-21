@@ -6,8 +6,8 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::build::contract::Contract as ContractBuild;
+use crate::message_type::MessageType;
 use crate::project::contract::metadata::Metadata as ContractMetadata;
-use crate::warning_type::WarningType;
 
 ///
 /// The EraVM assembly contract.
@@ -41,7 +41,7 @@ impl Contract {
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
         output_assembly: bool,
-        _suppressed_warnings: Vec<WarningType>,
+        _suppressed_messages: Vec<MessageType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
         let metadata_hash = source_code_hash.map(|source_code_hash| {

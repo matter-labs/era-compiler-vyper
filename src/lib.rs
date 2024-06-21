@@ -8,14 +8,15 @@
 
 pub(crate) mod build;
 pub(crate) mod r#const;
+pub(crate) mod message_type;
 pub(crate) mod metadata;
 pub(crate) mod process;
 pub(crate) mod project;
 pub(crate) mod vyper;
-pub(crate) mod warning_type;
 
 pub use self::build::contract::Contract as ContractBuild;
 pub use self::build::Build;
+pub use self::message_type::MessageType;
 pub use self::metadata::function::Function as FunctionMetadata;
 pub use self::metadata::Metadata;
 pub use self::process::input::Input as ProcessInput;
@@ -38,34 +39,26 @@ pub use self::vyper::standard_json::output::error::Error as VyperCompilerStandar
 pub use self::vyper::standard_json::output::Output as VyperCompilerStandardOutputJson;
 pub use self::vyper::version::Version as VyperVersion;
 pub use self::vyper::Compiler as VyperCompiler;
-pub use self::warning_type::WarningType;
 
 mod tests;
 
+use std::path::Path;
 use std::path::PathBuf;
 
 ///
 /// Runs the LLVM IR mode.
 ///
 pub fn llvm_ir(
-    mut input_files: Vec<PathBuf>,
+    input_files: Vec<PathBuf>,
     include_metadata_hash: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
     output_assembly: bool,
-    suppressed_warnings: Vec<WarningType>,
+    suppressed_messages: Vec<MessageType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
-    let path = match input_files.len() {
-        1 => input_files.remove(0),
-        0 => anyhow::bail!("The input file is missing"),
-        length => anyhow::bail!(
-            "Only one input file is allowed in LLVM IR mode, but found {}",
-            length
-        ),
-    };
-
-    let project = Project::try_from_llvm_ir_path(&path)?;
+    let paths: Vec<&Path> = input_files.iter().map(|path| path.as_path()).collect();
+    let project = Project::try_from_llvm_ir_paths(paths.as_slice())?;
 
     let build = project.compile(
         None,
@@ -74,7 +67,7 @@ pub fn llvm_ir(
         llvm_options,
         output_assembly,
         zkevm_assembly::RunningVmEncodingMode::Production,
-        suppressed_warnings,
+        suppressed_messages,
         debug_config,
     )?;
 
@@ -85,23 +78,15 @@ pub fn llvm_ir(
 /// Runs the EraVM assembly mode.
 ///
 pub fn eravm_assembly(
-    mut input_files: Vec<PathBuf>,
+    input_files: Vec<PathBuf>,
     include_metadata_hash: bool,
     llvm_options: Vec<String>,
     output_assembly: bool,
-    suppressed_warnings: Vec<WarningType>,
+    suppressed_messages: Vec<MessageType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
-    let path = match input_files.len() {
-        1 => input_files.remove(0),
-        0 => anyhow::bail!("The input file is missing"),
-        length => anyhow::bail!(
-            "Only one input file is allowed in EraVM assembly mode, but found {}",
-            length
-        ),
-    };
-
-    let project = Project::try_from_eravm_assembly_path(&path)?;
+    let paths: Vec<&Path> = input_files.iter().map(|path| path.as_path()).collect();
+    let project = Project::try_from_eravm_assembly_paths(paths.as_slice())?;
 
     let optimizer_settings = era_compiler_llvm_context::OptimizerSettings::none();
     let build = project.compile(
@@ -111,7 +96,7 @@ pub fn eravm_assembly(
         llvm_options,
         output_assembly,
         zkevm_assembly::RunningVmEncodingMode::Production,
-        suppressed_warnings,
+        suppressed_messages,
         debug_config,
     )?;
 
@@ -130,7 +115,7 @@ pub fn standard_output(
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
     output_assembly: bool,
-    suppressed_warnings: Vec<WarningType>,
+    suppressed_messages: Vec<MessageType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
     if let Some(ref debug_config) = debug_config {
@@ -154,7 +139,7 @@ pub fn standard_output(
         llvm_options,
         output_assembly,
         zkevm_assembly::RunningVmEncodingMode::Production,
-        suppressed_warnings,
+        suppressed_messages,
         debug_config,
     )?;
 
@@ -173,7 +158,7 @@ pub fn combined_json(
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
     output_assembly: bool,
-    suppressed_warnings: Vec<WarningType>,
+    suppressed_messages: Vec<MessageType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     output_directory: Option<PathBuf>,
     overwrite: bool,
@@ -202,7 +187,7 @@ pub fn combined_json(
         llvm_options,
         output_assembly,
         zkevm_assembly::RunningVmEncodingMode::Production,
-        suppressed_warnings,
+        suppressed_messages,
         debug_config,
     )?;
 
@@ -212,7 +197,6 @@ pub fn combined_json(
 
     match output_directory {
         Some(output_directory) => {
-            std::fs::create_dir_all(output_directory.as_path())?;
             combined_json.write_to_directory(output_directory.as_path(), overwrite)?;
         }
         None => {

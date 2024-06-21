@@ -11,13 +11,19 @@ use std::path::Path;
 
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
+use sha3::digest::FixedOutput;
 use sha3::Digest;
 
 use crate::build::contract::Contract as ContractBuild;
 use crate::build::Build;
+use crate::message_type::MessageType;
+use crate::metadata::Metadata as SourceMetadata;
 use crate::process::input::Input as ProcessInput;
 use crate::process::output::Output as ProcessOutput;
-use crate::warning_type::WarningType;
+use crate::project::contract::vyper::ast::AST as VyperAST;
+use crate::project::contract::vyper::Contract as VyperContract;
+use crate::project::contract::Contract as ProjectContract;
+use crate::vyper::standard_json::output::Output as VyperStandardJsonOutput;
 
 use self::contract::eravm_assembly::Contract as EraVMAssemblyContract;
 use self::contract::llvm_ir::Contract as LLVMIRContract;
@@ -40,11 +46,14 @@ impl Project {
     ///
     /// A shortcut constructor.
     ///
-    pub fn new(
-        version: semver::Version,
-        source_code_hash: [u8; era_compiler_common::BYTE_LENGTH_FIELD],
-        contracts: BTreeMap<String, Contract>,
-    ) -> Self {
+    pub fn new(version: semver::Version, contracts: BTreeMap<String, Contract>) -> Self {
+        let mut source_code_hasher = sha3::Keccak256::new();
+        for (_path, contract) in contracts.iter() {
+            source_code_hasher.update(contract.source_code().as_bytes());
+        }
+        let source_code_hash: [u8; era_compiler_common::BYTE_LENGTH_FIELD] =
+            source_code_hasher.finalize_fixed().into();
+
         Self {
             version,
             source_code_hash,
@@ -53,53 +62,104 @@ impl Project {
     }
 
     ///
-    /// Parses the LLVM IR source code file and returns the source data.
+    /// Converts Vyper standard JSON output into a project.
     ///
-    pub fn try_from_llvm_ir_path(path: &Path) -> anyhow::Result<Self> {
-        let source_code = std::fs::read_to_string(path)
-            .map_err(|error| anyhow::anyhow!("LLVM IR file {:?} reading error: {}", path, error))?;
-        let path = path.to_string_lossy().to_string();
+    pub fn try_from_standard_json(
+        mut standard_json: VyperStandardJsonOutput,
+        version: &semver::Version,
+    ) -> anyhow::Result<Self> {
+        let files = match standard_json.contracts.take() {
+            Some(files) => files,
+            None => {
+                anyhow::bail!(
+                    "{}",
+                    standard_json
+                        .errors
+                        .as_ref()
+                        .map(|errors| serde_json::to_string_pretty(errors).expect("Always valid"))
+                        .unwrap_or_else(|| "Unknown project assembling error".to_owned())
+                );
+            }
+        };
 
-        let source_code_hash = sha3::Keccak256::digest(source_code.as_bytes()).into();
+        let mut project_contracts: BTreeMap<String, ProjectContract> = BTreeMap::new();
+        for (path, file) in files.into_iter() {
+            for (name, contract) in file.into_iter() {
+                let full_path = format!("{path}:{name}");
 
-        let mut project_contracts = BTreeMap::new();
-        project_contracts.insert(
-            path,
-            LLVMIRContract::new(era_compiler_llvm_context::LLVM_VERSION, source_code).into(),
-        );
+                let ast = standard_json
+                    .sources
+                    .as_ref()
+                    .and_then(|sources| sources.get(&path).cloned())
+                    .ok_or_else(|| anyhow::anyhow!("No AST for contract {}", full_path))?;
+                let ast = VyperAST::new(full_path.clone(), ast);
+
+                let project_contract = VyperContract::new(
+                    version.to_owned(),
+                    contract.source_code.expect("Must be set by the tester"),
+                    SourceMetadata::default(),
+                    contract.ir,
+                    contract.evm.abi,
+                    ast,
+                );
+                project_contracts.insert(full_path, project_contract.into());
+            }
+        }
+
+        Ok(Self::new(version.to_owned(), project_contracts))
+    }
+
+    ///
+    /// Reads LLVM IR source code files and returns the project.
+    ///
+    pub fn try_from_llvm_ir_paths(paths: &[&Path]) -> anyhow::Result<Self> {
+        let contracts = paths
+            .iter()
+            .map(|path| {
+                let source_code = std::fs::read_to_string(path).map_err(|error| {
+                    anyhow::anyhow!("LLVM IR file {path:?} reading error: {error}")
+                })?;
+                let path = path.to_string_lossy().to_string();
+
+                let contract =
+                    LLVMIRContract::new(era_compiler_llvm_context::LLVM_VERSION, source_code)
+                        .into();
+
+                Ok((path, contract))
+            })
+            .collect::<anyhow::Result<BTreeMap<String, Contract>>>()?;
 
         Ok(Self::new(
             era_compiler_llvm_context::LLVM_VERSION,
-            source_code_hash,
-            project_contracts,
+            contracts,
         ))
     }
 
     ///
-    /// Parses the EraVM assembly source code file and returns the source data.
+    /// Reads EraVM assembly source code files and returns the project.
     ///
-    pub fn try_from_eravm_assembly_path(path: &Path) -> anyhow::Result<Self> {
-        let source_code = std::fs::read_to_string(path).map_err(|error| {
-            anyhow::anyhow!("EraVM assembly file {:?} reading error: {}", path, error)
-        })?;
-        let path = path.to_string_lossy().to_string();
+    pub fn try_from_eravm_assembly_paths(paths: &[&Path]) -> anyhow::Result<Self> {
+        let contracts = paths
+            .iter()
+            .map(|path| {
+                let source_code = std::fs::read_to_string(path).map_err(|error| {
+                    anyhow::anyhow!("EraVM assembly file {path:?} reading error: {error}")
+                })?;
+                let path = path.to_string_lossy().to_string();
 
-        let source_code_hash = sha3::Keccak256::digest(source_code.as_bytes()).into();
+                let contract = EraVMAssemblyContract::new(
+                    era_compiler_llvm_context::eravm_const::ZKEVM_VERSION,
+                    source_code,
+                )
+                .into();
 
-        let mut project_contracts = BTreeMap::new();
-        project_contracts.insert(
-            path,
-            EraVMAssemblyContract::new(
-                era_compiler_llvm_context::eravm_const::ZKEVM_VERSION,
-                source_code,
-            )
-            .into(),
-        );
+                Ok((path, contract))
+            })
+            .collect::<anyhow::Result<BTreeMap<String, Contract>>>()?;
 
         Ok(Self::new(
             era_compiler_llvm_context::eravm_const::ZKEVM_VERSION,
-            source_code_hash,
-            project_contracts,
+            contracts,
         ))
     }
 
@@ -114,7 +174,7 @@ impl Project {
         llvm_options: Vec<String>,
         output_assembly: bool,
         bytecode_encoding: zkevm_assembly::RunningVmEncodingMode,
-        suppressed_warnings: Vec<WarningType>,
+        suppressed_messages: Vec<MessageType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<Build> {
         let mut build = Build::default();
@@ -137,7 +197,7 @@ impl Project {
                         optimizer_settings.clone(),
                         llvm_options.clone(),
                         output_assembly,
-                        suppressed_warnings.clone(),
+                        suppressed_messages.clone(),
                         debug_config.clone(),
                     ));
 
