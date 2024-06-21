@@ -34,7 +34,7 @@ pub fn run() -> anyhow::Result<()> {
         input.optimizer_settings,
         input.llvm_options,
         input.output_assembly,
-        input.suppressed_warnings,
+        input.suppressed_messages,
         input.debug_config,
     )?;
 

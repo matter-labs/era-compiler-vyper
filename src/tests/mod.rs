@@ -14,6 +14,7 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use crate::build::Build;
+use crate::project::Project;
 use crate::vyper::standard_json::input::settings::selection::Selection as VyperStandardJsonInputSettingsSelection;
 use crate::vyper::standard_json::input::Input as VyperStandardJsonInput;
 use crate::vyper::Compiler as VyperCompiler;
@@ -69,7 +70,7 @@ pub fn build_vyper(
 
     let output = vyper.standard_json(input)?;
 
-    let project = output.try_into_project(&vyper.version.default)?;
+    let project = Project::try_from_standard_json(output, &vyper.version.default)?;
     let build = project.compile(
         None,
         false,

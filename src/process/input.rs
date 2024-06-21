@@ -9,8 +9,8 @@ use std::borrow::Cow;
 use serde::Deserialize;
 use serde::Serialize;
 
+use crate::message_type::MessageType;
 use crate::project::contract::Contract;
-use crate::warning_type::WarningType;
 
 ///
 /// The input data.
@@ -33,8 +33,8 @@ pub struct Input<'a> {
     pub llvm_options: Vec<String>,
     /// Whether to output EraVM assembly.
     pub output_assembly: bool,
-    /// The suppressed warnings.
-    pub suppressed_warnings: Vec<WarningType>,
+    /// The suppressed messages.
+    pub suppressed_messages: Vec<MessageType>,
     /// The debug output config.
     pub debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 }
@@ -52,7 +52,7 @@ impl<'a> Input<'a> {
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
         output_assembly: bool,
-        suppressed_warnings: Vec<WarningType>,
+        suppressed_messages: Vec<MessageType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> Self {
         Self {
@@ -64,7 +64,7 @@ impl<'a> Input<'a> {
             optimizer_settings,
             llvm_options,
             output_assembly,
-            suppressed_warnings,
+            suppressed_messages,
             debug_config,
         }
     }

@@ -5,8 +5,8 @@
 use serde::Deserialize;
 use serde::Serialize;
 
+use crate::message_type::MessageType;
 use crate::vyper::combined_json::contract::warning::Warning as CombinedJsonContractWarning;
-use crate::warning_type::WarningType;
 
 ///
 /// The Vyper contract AST.
@@ -33,20 +33,20 @@ impl AST {
     pub fn get_messages(
         &self,
         ast: &serde_json::Value,
-        suppressed_warnings: &[WarningType],
+        suppressed_messages: &[MessageType],
     ) -> Vec<CombinedJsonContractWarning> {
         let mut messages = Vec::new();
-        if !suppressed_warnings.contains(&WarningType::EcRecover) {
+        if !suppressed_messages.contains(&MessageType::EcRecover) {
             if let Some(message) = self.check_ecrecover(ast) {
                 messages.push(message);
             }
         }
-        if !suppressed_warnings.contains(&WarningType::ExtCodeSize) {
+        if !suppressed_messages.contains(&MessageType::ExtCodeSize) {
             if let Some(message) = self.check_extcodesize(ast) {
                 messages.push(message);
             }
         }
-        if !suppressed_warnings.contains(&WarningType::TxOrigin) {
+        if !suppressed_messages.contains(&MessageType::TxOrigin) {
             if let Some(message) = self.check_tx_origin(ast) {
                 messages.push(message);
             }
@@ -55,12 +55,12 @@ impl AST {
         match ast {
             serde_json::Value::Array(array) => {
                 for element in array.iter() {
-                    messages.extend(self.get_messages(element, suppressed_warnings));
+                    messages.extend(self.get_messages(element, suppressed_messages));
                 }
             }
             serde_json::Value::Object(object) => {
                 for (_key, value) in object.iter() {
-                    messages.extend(self.get_messages(value, suppressed_warnings));
+                    messages.extend(self.get_messages(value, suppressed_messages));
                 }
             }
             _ => {}

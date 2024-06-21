@@ -5,7 +5,6 @@
 pub mod arguments;
 
 use std::io::Write;
-use std::path::PathBuf;
 use std::str::FromStr;
 
 use self::arguments::Arguments;
@@ -77,8 +76,8 @@ fn main_inner() -> anyhow::Result<()> {
         None => None,
     };
 
-    let suppressed_warnings = match arguments.suppress_warnings {
-        Some(warnings) => era_compiler_vyper::WarningType::try_from_strings(warnings.as_slice())?,
+    let suppressed_messages = match arguments.suppress_warnings {
+        Some(warnings) => era_compiler_vyper::MessageType::try_from_strings(warnings.as_slice())?,
         None => vec![],
     };
 
@@ -121,7 +120,7 @@ fn main_inner() -> anyhow::Result<()> {
             optimizer_settings,
             llvm_options,
             arguments.output_assembly,
-            suppressed_warnings,
+            suppressed_messages,
             debug_config,
         )
     } else if arguments.eravm_assembly {
@@ -130,7 +129,7 @@ fn main_inner() -> anyhow::Result<()> {
             include_metadata_hash,
             llvm_options,
             arguments.output_assembly,
-            suppressed_warnings,
+            suppressed_messages,
             debug_config,
         )
     } else {
@@ -151,19 +150,19 @@ fn main_inner() -> anyhow::Result<()> {
                     optimizer_settings,
                     llvm_options,
                     arguments.output_assembly,
-                    suppressed_warnings,
+                    suppressed_messages,
                     debug_config,
                     arguments.output_directory,
                     arguments.overwrite,
                 )?;
                 return Ok(());
             }
-            Some(format) => {
+            Some(format) if format.split(',').any(|element| element == "combined_json") => {
                 anyhow::bail!(
-                    "`combined_json` is the only output format supported, found `{format}`"
+                    "`combined_json` cannot be requested together with other output: consider removing it from `{format}`"
                 );
             }
-            None => era_compiler_vyper::standard_output(
+            Some(_) | None => era_compiler_vyper::standard_output(
                 arguments.input_files,
                 &vyper,
                 evm_version,
@@ -172,7 +171,7 @@ fn main_inner() -> anyhow::Result<()> {
                 optimizer_settings,
                 llvm_options,
                 arguments.output_assembly,
-                suppressed_warnings,
+                suppressed_messages,
                 debug_config,
             ),
         }
@@ -180,38 +179,14 @@ fn main_inner() -> anyhow::Result<()> {
 
     match arguments.output_directory {
         Some(output_directory) => {
-            for (_path, contract) in build.contracts.iter() {
-                for warning in contract.warnings.iter() {
-                    writeln!(std::io::stderr(), "\n{}", warning)?;
-                }
-            }
-
-            std::fs::create_dir_all(output_directory.as_path())?;
-
             build.write_to_directory(output_directory.as_path(), arguments.overwrite)?;
         }
         None => {
-            for (path, contract) in build.contracts.into_iter() {
-                writeln!(std::io::stderr(), "Contract `{path}`:")?;
-                for warning in contract.warnings.iter() {
-                    writeln!(std::io::stderr(), "\n{}", warning)?;
-                }
-
-                let bytecode_string = hex::encode(contract.build.bytecode);
-                writeln!(std::io::stdout(), "0x{bytecode_string}")?;
-
-                if let Some(format) = arguments.format.as_deref() {
-                    let vyper = era_compiler_vyper::VyperCompiler::new(
-                        arguments
-                            .vyper
-                            .as_deref()
-                            .unwrap_or(era_compiler_vyper::VyperCompiler::DEFAULT_EXECUTABLE_NAME),
-                    )?;
-                    let extra_output =
-                        vyper.extra_output(PathBuf::from(path).as_path(), evm_version, format)?;
-                    writeln!(std::io::stdout(), "\n{extra_output}")?;
-                }
-            }
+            build.write_to_terminal(
+                arguments.format.as_deref(),
+                arguments.vyper.as_deref(),
+                evm_version,
+            )?;
         }
     }
 
