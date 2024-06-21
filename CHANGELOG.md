@@ -9,6 +9,7 @@
 ### Changed
 
 - Assembly is now only returned if requested with `--output-assembly`
+- Renamed the `zkasm` flag to `eravm-assembly`
 - Updated to Rust v1.79.0
 
 ### Fixed

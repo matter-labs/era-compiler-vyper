@@ -42,6 +42,7 @@ pub use self::vyper::Compiler as VyperCompiler;
 
 mod tests;
 
+use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -57,6 +58,10 @@ pub fn llvm_ir(
     suppressed_messages: Vec<MessageType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
+    if input_files.is_empty() {
+        writeln!(std::io::stderr(), "No input sources provided").expect("Stderr writing error");
+    }
+
     let paths: Vec<&Path> = input_files.iter().map(|path| path.as_path()).collect();
     let project = Project::try_from_llvm_ir_paths(paths.as_slice())?;
 
@@ -70,7 +75,6 @@ pub fn llvm_ir(
         suppressed_messages,
         debug_config,
     )?;
-
     Ok(build)
 }
 
@@ -85,10 +89,14 @@ pub fn eravm_assembly(
     suppressed_messages: Vec<MessageType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
+    if input_files.is_empty() {
+        writeln!(std::io::stderr(), "No input sources provided").expect("Stderr writing error");
+    }
+
     let paths: Vec<&Path> = input_files.iter().map(|path| path.as_path()).collect();
     let project = Project::try_from_eravm_assembly_paths(paths.as_slice())?;
 
-    let optimizer_settings = era_compiler_llvm_context::OptimizerSettings::none();
+    let optimizer_settings = era_compiler_llvm_context::OptimizerSettings::cycles();
     let build = project.compile(
         None,
         include_metadata_hash,
@@ -99,7 +107,6 @@ pub fn eravm_assembly(
         suppressed_messages,
         debug_config,
     )?;
-
     Ok(build)
 }
 
@@ -142,7 +149,6 @@ pub fn standard_output(
         suppressed_messages,
         debug_config,
     )?;
-
     Ok(build)
 }
 

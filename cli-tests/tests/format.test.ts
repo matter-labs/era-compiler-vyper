@@ -49,7 +49,7 @@ describe("Set of --format json tests", () => {
     }
 
     //id1989
-    describe(`Run ${zkvyperCommand} with Unsupported format and --format option`, () => {
+    describe(`Run ${zkvyperCommand} with unsupported format and --format option`, () => {
         const args = [`${paths.pathToBasicVyContract}`, `-f`, `llvm`];
         const result = executeCommand(zkvyperCommand, args);
 
@@ -58,7 +58,7 @@ describe("Set of --format json tests", () => {
         });
 
         it("Error is presented", () => {
-            expect(result.output).toMatch(/(is the only output format supported)/i);
+            expect(result.output).toMatch(/(Unsupported format type)/i);
         });
     });
 
