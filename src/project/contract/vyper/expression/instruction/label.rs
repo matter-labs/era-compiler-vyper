@@ -5,6 +5,7 @@
 use std::collections::BTreeMap;
 
 use inkwell::values::BasicValue;
+use regex::Regex;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -42,6 +43,15 @@ impl Label {
     }
 
     ///
+    /// Whether the label is a constructor block.
+    ///
+    pub fn is_constructor_block(label: &str) -> bool {
+        Regex::new(format!("^{}[0-9_]+init", crate::r#const::FUNCTION_PREFIX_EXTERNAL).as_str())
+            .expect("Always valid")
+            .is_match(label)
+    }
+
+    ///
     /// Checks whether the label is empty. If it is, nothing is generated.
     ///
     pub fn is_empty(&self) -> bool {
@@ -54,12 +64,12 @@ impl Label {
     /// The cleanup block cannot be ignored in deploy code, because `vyper` generates jumps to them.
     ///
     pub fn can_block_be_ignored(&self) -> bool {
-        let label_name = match self.0.first().expect("Always exists").try_into_identifier() {
+        let label_name = match self.name() {
             Ok(identifier) => identifier,
             Err(_) => return true,
         };
 
-        if label_name.starts_with("external___init")
+        if Self::is_constructor_block(label_name.as_str())
             && label_name.ends_with(crate::r#const::LABEL_SUFFIX_CLEANUP)
         {
             return false;
@@ -111,11 +121,7 @@ impl Label {
             return Ok(());
         }
 
-        let label_name = self
-            .0
-            .first()
-            .expect("Always exists")
-            .try_into_identifier()?;
+        let label_name = self.name()?;
         context.append_basic_block(label_name.as_str());
 
         context.set_basic_block(context.current_function().borrow().entry_block());
@@ -196,7 +202,7 @@ impl Label {
                 .build_unconditional_branch(context.current_function().borrow().return_block())?;
         }
 
-        if label_name.starts_with("external___init")
+        if Self::is_constructor_block(label_name.as_str())
             && label_name.ends_with(crate::r#const::LABEL_SUFFIX_CLEANUP)
             && is_block_empty_sequence
         {

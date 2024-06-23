@@ -36,11 +36,11 @@ impl Goto {
     {
         let function = context
             .get_function(label_name.as_str())
-            .ok_or_else(|| anyhow::anyhow!("Function `{}` does not exist", label_name))?;
+            .ok_or_else(|| anyhow::anyhow!("Function `{label_name}` does not exist"))?;
 
         let mut arguments = Vec::new();
         for expression in self.0.into_iter() {
-            if let Expression::Identifier(ref identifier) = expression {
+            if let Ok(identifier) = expression.try_into_identifier() {
                 if identifier.starts_with(crate::r#const::LABEL_DESTINATION_PREFIX) {
                     continue;
                 }

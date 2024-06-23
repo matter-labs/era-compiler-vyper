@@ -208,7 +208,7 @@ where
         {
             context
                 .get_function(name)
-                .expect("Always exists")
+                .ok_or_else(|| anyhow::anyhow!("Function `{name}` does not exist"))?
                 .borrow_mut()
                 .set_vyper_data(era_compiler_llvm_context::EraVMFunctionVyperData::default());
         }
@@ -284,7 +284,7 @@ where
                     .function_info
                     .iter()
                     .find_map(|(name, function)| {
-                        if metadata_label == function.ir_identifier.as_str() {
+                        if metadata_label == function.ir_identifier().as_str() {
                             Some(name.to_owned())
                         } else {
                             None

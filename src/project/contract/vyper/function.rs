@@ -50,7 +50,7 @@ where
             .starts_with(crate::r#const::FUNCTION_PREFIX_INTERNAL)
         {
             if let Some(ref metadata) = self.metadata {
-                if !metadata.return_type.is_empty() && metadata.return_type != "None" {
+                if !metadata.return_type().is_empty() && metadata.return_type() != "None" {
                     argument_types.push(context.field_type().as_basic_type_enum());
                 }
             }
