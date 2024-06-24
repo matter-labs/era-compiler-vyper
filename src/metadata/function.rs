@@ -38,6 +38,8 @@ impl Function {
     /// Returns the normalized IR identifier.
     ///
     pub fn ir_identifier(&self) -> String {
-        self.ir_identifier.replace(' ', "_")
+        self.ir_identifier
+            .replace(' ', "_")
+            .replace(['(', ')', '[', ']', ','], "$")
     }
 }

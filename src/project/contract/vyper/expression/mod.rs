@@ -86,7 +86,9 @@ impl Expression {
     ///
     pub fn try_into_identifier(&self) -> anyhow::Result<String> {
         match self {
-            Self::Identifier(string) => Ok(string.replace(' ', "_")),
+            Self::Identifier(string) => Ok(string
+                .replace(' ', "_")
+                .replace(['(', ')', '[', ']', ','], "$")),
             expression => anyhow::bail!("Expected identifier, found `{expression:?}`"),
         }
     }
