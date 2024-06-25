@@ -146,6 +146,7 @@ fn main_inner() -> anyhow::Result<()> {
                     arguments.input_files,
                     &vyper,
                     evm_version,
+                    arguments.enable_decimals,
                     include_metadata_hash,
                     !arguments.disable_vyper_optimizer,
                     optimizer_settings,
@@ -167,6 +168,7 @@ fn main_inner() -> anyhow::Result<()> {
                 arguments.input_files,
                 &vyper,
                 evm_version,
+                arguments.enable_decimals,
                 include_metadata_hash,
                 !arguments.disable_vyper_optimizer,
                 optimizer_settings,
@@ -207,8 +209,12 @@ fn main_inner() -> anyhow::Result<()> {
                             .as_deref()
                             .unwrap_or(era_compiler_vyper::VyperCompiler::DEFAULT_EXECUTABLE_NAME),
                     )?;
-                    let extra_output =
-                        vyper.extra_output(PathBuf::from(path).as_path(), evm_version, format)?;
+                    let extra_output = vyper.extra_output(
+                        PathBuf::from(path).as_path(),
+                        evm_version,
+                        arguments.enable_decimals,
+                        format,
+                    )?;
                     writeln!(std::io::stdout(), "\n{extra_output}")?;
                 }
             }

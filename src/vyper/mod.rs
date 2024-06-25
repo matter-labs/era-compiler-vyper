@@ -91,12 +91,16 @@ impl Compiler {
         &self,
         paths: &[PathBuf],
         evm_version: Option<era_compiler_common::EVMVersion>,
+        enable_decimals: bool,
         optimize: bool,
     ) -> anyhow::Result<CombinedJson> {
         let mut command = std::process::Command::new(self.executable.as_str());
         if let Some(evm_version) = evm_version {
             command.arg("--evm-version");
             command.arg(evm_version.to_string());
+        }
+        if enable_decimals {
+            command.arg("--enable-decimals");
         }
         command.arg("-f");
         command.arg("combined_json");
@@ -143,10 +147,14 @@ impl Compiler {
     pub fn standard_json(
         &self,
         mut input: StandardJsonInput,
+        enable_decimals: bool,
     ) -> anyhow::Result<StandardJsonOutput> {
         let mut command = std::process::Command::new(self.executable.as_str());
         command.stdin(std::process::Stdio::piped());
         command.stdout(std::process::Stdio::piped());
+        if enable_decimals {
+            command.arg("--enable-decimals");
+        }
         command.arg("--standard-json");
 
         if self.version.default >= semver::Version::new(0, 3, 10) {
@@ -229,12 +237,16 @@ impl Compiler {
         &self,
         path: &Path,
         evm_version: Option<era_compiler_common::EVMVersion>,
+        enable_decimals: bool,
         optimize: bool,
     ) -> anyhow::Result<String> {
         let mut command = std::process::Command::new(self.executable.as_str());
         if let Some(evm_version) = evm_version {
             command.arg("--evm-version");
             command.arg(evm_version.to_string());
+        }
+        if enable_decimals {
+            command.arg("--enable-decimals");
         }
         command.arg("-f");
         command.arg("ir");
@@ -271,6 +283,7 @@ impl Compiler {
         version: &semver::Version,
         mut paths: Vec<PathBuf>,
         evm_version: Option<era_compiler_common::EVMVersion>,
+        enable_decimals: bool,
         optimize: bool,
     ) -> anyhow::Result<Project> {
         paths.sort();
@@ -279,6 +292,9 @@ impl Compiler {
         if let Some(evm_version) = evm_version {
             command.arg("--evm-version");
             command.arg(evm_version.to_string());
+        }
+        if enable_decimals {
+            command.arg("--enable-decimals");
         }
         command.arg("-f");
         command.arg("ir_json,metadata,method_identifiers,ast");
@@ -360,12 +376,16 @@ impl Compiler {
         &self,
         path: &Path,
         evm_version: Option<era_compiler_common::EVMVersion>,
+        enable_decimals: bool,
         extra_output: &str,
     ) -> anyhow::Result<String> {
         let mut command = std::process::Command::new(self.executable.as_str());
         if let Some(evm_version) = evm_version {
             command.arg("--evm-version");
             command.arg(evm_version.to_string());
+        }
+        if enable_decimals {
+            command.arg("--enable-decimals");
         }
         command.arg("-f");
         command.arg(extra_output);

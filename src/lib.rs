@@ -125,6 +125,7 @@ pub fn standard_output(
     input_files: Vec<PathBuf>,
     vyper: &VyperCompiler,
     evm_version: Option<era_compiler_common::EVMVersion>,
+    enable_decimals: bool,
     include_metadata_hash: bool,
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
@@ -135,7 +136,7 @@ pub fn standard_output(
 ) -> anyhow::Result<Build> {
     if let Some(ref debug_config) = debug_config {
         for path in input_files.iter() {
-            let lll_debug = vyper.lll_debug(path.as_path(), evm_version, true)?;
+            let lll_debug = vyper.lll_debug(path.as_path(), evm_version, enable_decimals, true)?;
             debug_config.dump_lll(path.to_string_lossy().as_ref(), None, lll_debug.as_str())?;
         }
     }
@@ -144,6 +145,7 @@ pub fn standard_output(
         &vyper.version.default,
         input_files,
         evm_version,
+        enable_decimals,
         vyper_optimizer_enabled,
     )?;
 
@@ -168,6 +170,7 @@ pub fn combined_json(
     input_files: Vec<PathBuf>,
     vyper: &VyperCompiler,
     evm_version: Option<era_compiler_common::EVMVersion>,
+    enable_decimals: bool,
     include_metadata_hash: bool,
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
@@ -182,8 +185,12 @@ pub fn combined_json(
 
     if let Some(ref debug_config) = debug_config {
         for path in input_files.iter() {
-            let lll_debug =
-                vyper.lll_debug(path.as_path(), evm_version, vyper_optimizer_enabled)?;
+            let lll_debug = vyper.lll_debug(
+                path.as_path(),
+                evm_version,
+                enable_decimals,
+                vyper_optimizer_enabled,
+            )?;
             debug_config.dump_lll(path.to_string_lossy().as_ref(), None, lll_debug.as_str())?;
         }
     }
@@ -192,6 +199,7 @@ pub fn combined_json(
         &vyper.version.default,
         input_files.clone(),
         evm_version,
+        enable_decimals,
         vyper_optimizer_enabled,
     )?;
 
@@ -206,8 +214,12 @@ pub fn combined_json(
         debug_config,
     )?;
 
-    let mut combined_json =
-        vyper.combined_json(input_files.as_slice(), evm_version, vyper_optimizer_enabled)?;
+    let mut combined_json = vyper.combined_json(
+        input_files.as_slice(),
+        evm_version,
+        enable_decimals,
+        vyper_optimizer_enabled,
+    )?;
     build.write_to_combined_json(&mut combined_json, &zkvyper_version, output_assembly)?;
 
     match output_directory {

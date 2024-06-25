@@ -5,6 +5,7 @@
 ### Added
 
 - The vyper v0.4.0 support
+- The `--enable-decimals` parameter
 
 ### Changed
 

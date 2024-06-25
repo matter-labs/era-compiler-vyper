@@ -67,7 +67,7 @@ pub fn build_vyper(
         vec![],
     )?;
 
-    let output = vyper.standard_json(input)?;
+    let output = vyper.standard_json(input, true)?;
 
     let project = output.try_into_project(&vyper.version.default)?;
     let build = project.compile(

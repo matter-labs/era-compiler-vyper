@@ -64,6 +64,11 @@ pub struct Arguments {
     #[structopt(long = "evm-version")]
     pub evm_version: Option<String>,
 
+    /// Enables decimals in the underlying `vyper` compiler.
+    /// Only available in `vyper` v0.4.0 and later.
+    #[structopt(long = "enable-decimals")]
+    pub enable_decimals: bool,
+
     /// An extra output format string.
     /// See `vyper --help` for available options including combined JSON mode.
     #[structopt(short = "f")]
