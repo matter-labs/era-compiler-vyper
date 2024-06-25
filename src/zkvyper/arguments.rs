@@ -89,7 +89,7 @@ pub struct Arguments {
     /// Only one input EraVM assembly file is allowed.
     /// Cannot be used with combined JSON modes.
     /// Use this mode at your own risk, as EraVM assembly input validation is not implemented.
-    #[structopt(long = "eravm", alias = "zkasm")]
+    #[structopt(long = "eravm-assembly")]
     pub eravm_assembly: bool,
 
     /// Set metadata hash mode: `keccak256` | `none`.

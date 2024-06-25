@@ -57,6 +57,7 @@ impl CombinedJson {
             );
         }
 
+        std::fs::create_dir_all(output_directory)?;
         File::create(&file_path)
             .map_err(|error| anyhow::anyhow!("File {:?} creating error: {}", file_path, error))?
             .write_all(serde_json::to_vec(&self).expect("Always valid").as_slice())

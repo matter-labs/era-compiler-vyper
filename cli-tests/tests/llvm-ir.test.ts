@@ -19,16 +19,16 @@ describe("Set of --llvm-ir tests", () => {
     });
 
     //id1963:II
-    describe(`Run only with --llvm-ir options`, () => {
+    describe(`Run with only --llvm-ir option`, () => {
         const args = [`--llvm-ir`];
         const result = executeCommand(zkvyperCommand, args);
 
-        it("Valid command exit code = 1", () => {
-            expect(result.exitCode).toBe(1);
+        it("Valid command exit code = 0", () => {
+            expect(result.exitCode).toBe(0);
         });
 
         it("Error is presented", () => {
-            expect(result.output).toMatch(/(input file is missing)/i);
+            expect(result.output).toMatch(/(No input sources provided)/i);
         });
     });
 

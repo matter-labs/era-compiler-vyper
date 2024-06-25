@@ -16,8 +16,6 @@ use std::sync::RwLock;
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
-use sha3::digest::FixedOutput;
-use sha3::Digest;
 
 use crate::project::contract::vyper::Contract as VyperContract;
 use crate::project::contract::Contract;
@@ -99,7 +97,7 @@ impl Compiler {
             command.arg("--evm-version");
             command.arg(evm_version.to_string());
         }
-        if enable_decimals {
+        if enable_decimals && self.version.default >= semver::Version::new(0, 4, 0) {
             command.arg("--enable-decimals");
         }
         command.arg("-f");
@@ -152,7 +150,7 @@ impl Compiler {
         let mut command = std::process::Command::new(self.executable.as_str());
         command.stdin(std::process::Stdio::piped());
         command.stdout(std::process::Stdio::piped());
-        if enable_decimals {
+        if enable_decimals && self.version.default >= semver::Version::new(0, 4, 0) {
             command.arg("--enable-decimals");
         }
         command.arg("--standard-json");
@@ -245,7 +243,7 @@ impl Compiler {
             command.arg("--evm-version");
             command.arg(evm_version.to_string());
         }
-        if enable_decimals {
+        if enable_decimals && self.version.default >= semver::Version::new(0, 4, 0) {
             command.arg("--enable-decimals");
         }
         command.arg("-f");
@@ -293,7 +291,7 @@ impl Compiler {
             command.arg("--evm-version");
             command.arg(evm_version.to_string());
         }
-        if enable_decimals {
+        if enable_decimals && self.version.default >= semver::Version::new(0, 4, 0) {
             command.arg("--enable-decimals");
         }
         command.arg("-f");
@@ -357,14 +355,7 @@ impl Compiler {
                     Ok::<BTreeMap<String, Contract>, anyhow::Error>(accumulator)
                 })?;
 
-        let mut source_code_hasher = sha3::Keccak256::new();
-        for (_path, contract) in contracts.iter() {
-            source_code_hasher.update(contract.source_code().as_bytes());
-        }
-        let source_code_hash: [u8; era_compiler_common::BYTE_LENGTH_FIELD] =
-            source_code_hasher.finalize_fixed().into();
-
-        let project = Project::new(version.to_owned(), source_code_hash, contracts);
+        let project = Project::new(version.to_owned(), contracts);
 
         Ok(project)
     }
@@ -384,7 +375,7 @@ impl Compiler {
             command.arg("--evm-version");
             command.arg(evm_version.to_string());
         }
-        if enable_decimals {
+        if enable_decimals && self.version.default >= semver::Version::new(0, 4, 0) {
             command.arg("--enable-decimals");
         }
         command.arg("-f");
