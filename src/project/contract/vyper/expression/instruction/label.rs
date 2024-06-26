@@ -5,7 +5,6 @@
 use std::collections::BTreeMap;
 
 use inkwell::values::BasicValue;
-use regex::Regex;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -46,9 +45,8 @@ impl Label {
     /// Whether the label is a constructor block.
     ///
     pub fn is_constructor_block(label: &str) -> bool {
-        Regex::new(format!("^{}[0-9_]+init", crate::r#const::FUNCTION_PREFIX_EXTERNAL).as_str())
-            .expect("Always valid")
-            .is_match(label)
+        label.starts_with(crate::r#const::FUNCTION_PREFIX_EXTERNAL)
+            && label.contains(crate::r#const::FUNCTION_NAME_CONSTRUCTOR)
     }
 
     ///
@@ -134,7 +132,6 @@ impl Label {
                         continue;
                     }
                     label_arguments.push(name.clone());
-                    dbg!(&label_arguments);
 
                     let pointer = context.build_alloca(context.field_type(), name.as_str())?;
                     let value =

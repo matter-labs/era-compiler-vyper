@@ -329,7 +329,6 @@ dependencies = [
  "normpath",
  "path-slash",
  "rayon",
- "regex",
  "semver",
  "serde",
  "serde_json",

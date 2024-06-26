@@ -4,11 +4,11 @@ inputs:
   vyper-version:
     description: 'Version of vyper compiler to download.'
     required: false
-    default: '0.3.10'
+    default: '0.4.0'
   vyper-commit:
     description: 'Commit of vyper compiler to download.'
     required: false
-    default: '91361694'
+    default: 'e9db8d9f'
 runs:
   using: "composite"
   steps:
@@ -16,8 +16,8 @@ runs:
       shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
       env:
         VYPER_DOWNLOAD_URL: "https://github.com/vyperlang/vyper/releases/download"
-        VYPER_VERSION: ${{ inputs.vyper-version || '0.3.10' }}
-        VYPER_COMMIT: ${{ inputs.vyper-commit || '91361694' }}
+        VYPER_VERSION: ${{ inputs.vyper-version || '0.4.0' }}
+        VYPER_COMMIT: ${{ inputs.vyper-commit || 'e9db8d9f' }}
       run: |
         VYPER_DOWNLOAD_FILENAME="vyper.${VYPER_VERSION}+commit.${VYPER_COMMIT}"
         case "$RUNNER_OS" in
