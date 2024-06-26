@@ -23,7 +23,7 @@ We recommend at least 4 GB of RAM available for the build process.
 ## Delivery Methods
 
 1. **Install via npm**:
-   * Use [ZKsync CLI](https://era.zksync.io/docs/tools/zksync-cli/) to obtain a compiler package and prepare a project environment. After the installation you can modify a hardhat configuration file in the project and specify `zkvyper` version there. Use `npx hardhat compile` or `yarn hardhat compile` to compile. [@matterlabs/hardhat-zksync-vyper](https://era.zksync.io/docs/tools/hardhat/getting-started.html) package will be used from npm repo.
+   * Use [ZKsync CLI](https://docs.zksync.io/build/tooling/zksync-cli/) to obtain a compiler package and prepare a project environment. After the installation you can modify a hardhat configuration file in the project and specify `zkvyper` version there. Use `npx hardhat compile` or `yarn hardhat compile` to compile. [@matterlabs/hardhat-zksync-vyper](https://docs.zksync.io/build/tooling/hardhat/getting-started) package will be used from npm repo.
 2. **Download prebuilt binaries**:
    * Download [v0.3.3, v0.3.9, or v0.3.10 of the Vyper compiler](https://github.com/vyperlang/vyper/releases) and [zkvyper](https://github.com/matter-labs/zkvyper-bin) binaries directly from GitHub. Use the CLI or Hardhat to compile contracts.
 3. **Build binaries from sources**:
@@ -63,7 +63,7 @@ We recommend at least 4 GB of RAM available for the build process.
 <details>
 <summary>2. Install Rust.</summary>
 
-   * Follow the latest [official instructions]((https://www.rust-lang.org/tools/install)):
+   * Follow the latest [official instructions]https://www.rust-lang.org/tools/install:
       ```shell
       curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
       . ${HOME}/.cargo/env
@@ -215,7 +215,7 @@ at your option.
 
 ## Resources
 
-- [ZKsync Era compiler toolchain documentation](https://era.zksync.io/docs/api/compiler-toolchain)
+- [ZKsync Era compiler toolchain documentation](https://docs.zksync.io/zk-stack/components/compiler/toolchain)
 - [Vyper v0.3.3 documentation](https://vyper.readthedocs.io/en/v0.3.3/)
 - [Vyper v0.3.9 documentation](https://vyper.readthedocs.io/en/v0.3.9/)
 - [Vyper v0.3.10 documentation](https://vyper.readthedocs.io/en/v0.3.10/)
