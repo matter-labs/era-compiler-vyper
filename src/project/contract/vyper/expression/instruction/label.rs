@@ -122,7 +122,7 @@ impl Label {
         }
 
         let label_name = self.name()?;
-        context.append_basic_block(label_name.as_str());
+        context.append_basic_block(Expression::safe_label(label_name.as_str()).as_str());
 
         context.set_basic_block(context.current_function().borrow().entry_block());
         let mut label_arguments = Vec::new();
@@ -134,6 +134,7 @@ impl Label {
                         continue;
                     }
                     label_arguments.push(name.clone());
+                    dbg!(&label_arguments);
 
                     let pointer = context.build_alloca(context.field_type(), name.as_str())?;
                     let value =
@@ -190,7 +191,10 @@ impl Label {
             .value
             .get_basic_blocks()
             .iter()
-            .find(|block| block.get_name().to_string_lossy() == label_name)
+            .find(|block| {
+                block.get_name().to_string_lossy()
+                    == Expression::safe_label(label_name.as_str()).as_str()
+            })
             .copied()
             .ok_or_else(|| anyhow::anyhow!("Block `{}` does not exist", label_name))?;
 

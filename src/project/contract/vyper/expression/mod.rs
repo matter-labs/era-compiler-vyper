@@ -86,11 +86,18 @@ impl Expression {
     ///
     pub fn try_into_identifier(&self) -> anyhow::Result<String> {
         match self {
-            Self::Identifier(string) => Ok(string
-                .replace(' ', "_")
-                .replace(['(', ')', '[', ']', ','], "$")),
+            Self::Identifier(identifier) => Ok(identifier.to_owned()),
             expression => anyhow::bail!("Expected identifier, found `{expression:?}`"),
         }
+    }
+
+    ///
+    /// Converts the string into a normalized label.
+    ///
+    pub fn safe_label(label: &str) -> String {
+        let identifier = label.replace(['(', ')', '[', ']', ',', ' '], "_");
+        let hash = era_compiler_llvm_context::eravm_utils::keccak256(identifier.as_bytes());
+        format!("{identifier}_{hash}")
     }
 
     ///

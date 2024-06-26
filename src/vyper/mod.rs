@@ -22,6 +22,7 @@ use crate::project::contract::Contract;
 use crate::project::Project;
 
 use self::combined_json::CombinedJson;
+use self::standard_json::input::settings::optimize::Optimize as StandardJsonInputSettingsOptimize;
 use self::standard_json::input::Input as StandardJsonInput;
 use self::standard_json::output::Output as StandardJsonOutput;
 use self::version::Version;
@@ -156,7 +157,7 @@ impl Compiler {
         command.arg("--standard-json");
 
         if self.version.default >= semver::Version::new(0, 3, 10) {
-            input.settings.optimize = false;
+            input.settings.optimize = StandardJsonInputSettingsOptimize::None;
         }
 
         let mut process = command.spawn().map_err(|error| {

@@ -77,7 +77,10 @@ impl Goto {
             .value
             .get_basic_blocks()
             .iter()
-            .find(|block| block.get_name().to_string_lossy() == label_name)
+            .find(|block| {
+                block.get_name().to_string_lossy()
+                    == Expression::safe_label(label_name.as_str()).as_str()
+            })
             .copied()
             .ok_or_else(|| anyhow::anyhow!("Block `{}` does not exist", label_name))?;
 
@@ -121,6 +124,6 @@ impl Goto {
             return self.into_block_call(context, label_name);
         }
 
-        self.into_function_call(context, label_name)
+        self.into_function_call(context, Expression::safe_label(label_name.as_str()))
     }
 }

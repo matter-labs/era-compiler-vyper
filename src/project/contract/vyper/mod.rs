@@ -284,7 +284,7 @@ where
                     .function_info
                     .iter()
                     .find_map(|(name, function)| {
-                        if metadata_label == function.ir_identifier().as_str() {
+                        if Expression::safe_label(metadata_label) == function.ir_identifier() {
                             Some(name.to_owned())
                         } else {
                             None
@@ -298,7 +298,10 @@ where
                     .cloned(),
                 None => None,
             };
-            functions.push((Function::new(label, metadata, expression), code_type));
+            functions.push((
+                Function::new(Expression::safe_label(label.as_str()), metadata, expression),
+                code_type,
+            ));
         }
         for (function, _code_type) in functions.iter_mut() {
             function.declare(context)?;

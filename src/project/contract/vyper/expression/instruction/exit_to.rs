@@ -43,7 +43,9 @@ impl ExitTo {
             .value
             .get_basic_blocks()
             .iter()
-            .find(|block| block.get_name().to_string_lossy() == label_name)
+            .find(|block| {
+                block.get_name().to_string_lossy() == Expression::safe_label(label_name).as_str()
+            })
             .copied()
             .ok_or_else(|| anyhow::anyhow!("Block `{}` does not exist", label_name))?;
 
