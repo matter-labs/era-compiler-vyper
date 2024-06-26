@@ -15,6 +15,7 @@ use std::path::PathBuf;
 
 use crate::build::Build;
 use crate::project::Project;
+use crate::vyper::standard_json::input::settings::optimize::Optimize as VyperStandardJsonInputSettingsOptimize;
 use crate::vyper::standard_json::input::settings::selection::Selection as VyperStandardJsonInputSettingsSelection;
 use crate::vyper::standard_json::input::Input as VyperStandardJsonInput;
 use crate::vyper::Compiler as VyperCompiler;
@@ -63,7 +64,8 @@ pub fn build_vyper(
         sources.clone(),
         None,
         VyperStandardJsonInputSettingsSelection::generate_default(),
-        true,
+        VyperStandardJsonInputSettingsOptimize::None,
+        vyper.version.default >= VyperCompiler::FIRST_VERSION_ENABLE_DECIMALS_SUPPORT,
         true,
         vec![],
     )?;

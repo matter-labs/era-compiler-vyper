@@ -22,6 +22,7 @@ use crate::project::contract::Contract;
 use crate::project::Project;
 
 use self::combined_json::CombinedJson;
+use self::standard_json::input::settings::optimize::Optimize as StandardJsonInputSettingsOptimize;
 use self::standard_json::input::Input as StandardJsonInput;
 use self::standard_json::output::Output as StandardJsonOutput;
 use self::version::Version;
@@ -42,11 +43,16 @@ impl Compiler {
     pub const DEFAULT_EXECUTABLE_NAME: &'static str = "vyper";
 
     /// The supported versions of `vyper`.
-    pub const SUPPORTED_VERSIONS: [semver::Version; 3] = [
+    pub const SUPPORTED_VERSIONS: [semver::Version; 4] = [
         semver::Version::new(0, 3, 3),
         semver::Version::new(0, 3, 9),
         semver::Version::new(0, 3, 10),
+        semver::Version::new(0, 4, 0),
     ];
+
+    /// The first version supporting `--enable-decimals`.
+    pub const FIRST_VERSION_ENABLE_DECIMALS_SUPPORT: semver::Version =
+        semver::Version::new(0, 4, 0);
 
     ///
     /// A shortcut constructor.
@@ -88,12 +94,16 @@ impl Compiler {
         &self,
         paths: &[PathBuf],
         evm_version: Option<era_compiler_common::EVMVersion>,
+        enable_decimals: bool,
         optimize: bool,
     ) -> anyhow::Result<CombinedJson> {
         let mut command = std::process::Command::new(self.executable.as_str());
         if let Some(evm_version) = evm_version {
             command.arg("--evm-version");
             command.arg(evm_version.to_string());
+        }
+        if enable_decimals && self.version.default >= Self::FIRST_VERSION_ENABLE_DECIMALS_SUPPORT {
+            command.arg("--enable-decimals");
         }
         command.arg("-f");
         command.arg("combined_json");
@@ -147,7 +157,7 @@ impl Compiler {
         command.arg("--standard-json");
 
         if self.version.default >= semver::Version::new(0, 3, 10) {
-            input.settings.optimize = false;
+            input.settings.optimize = StandardJsonInputSettingsOptimize::None;
         }
 
         let mut process = command.spawn().map_err(|error| {
@@ -226,12 +236,16 @@ impl Compiler {
         &self,
         path: &Path,
         evm_version: Option<era_compiler_common::EVMVersion>,
+        enable_decimals: bool,
         optimize: bool,
     ) -> anyhow::Result<String> {
         let mut command = std::process::Command::new(self.executable.as_str());
         if let Some(evm_version) = evm_version {
             command.arg("--evm-version");
             command.arg(evm_version.to_string());
+        }
+        if enable_decimals && self.version.default >= Self::FIRST_VERSION_ENABLE_DECIMALS_SUPPORT {
+            command.arg("--enable-decimals");
         }
         command.arg("-f");
         command.arg("ir");
@@ -268,6 +282,7 @@ impl Compiler {
         version: &semver::Version,
         mut paths: Vec<PathBuf>,
         evm_version: Option<era_compiler_common::EVMVersion>,
+        enable_decimals: bool,
         optimize: bool,
     ) -> anyhow::Result<Project> {
         paths.sort();
@@ -276,6 +291,9 @@ impl Compiler {
         if let Some(evm_version) = evm_version {
             command.arg("--evm-version");
             command.arg(evm_version.to_string());
+        }
+        if enable_decimals && self.version.default >= Self::FIRST_VERSION_ENABLE_DECIMALS_SUPPORT {
+            command.arg("--enable-decimals");
         }
         command.arg("-f");
         command.arg("ir_json,metadata,method_identifiers,ast");
@@ -350,12 +368,16 @@ impl Compiler {
         &self,
         path: &Path,
         evm_version: Option<era_compiler_common::EVMVersion>,
+        enable_decimals: bool,
         extra_output: &str,
     ) -> anyhow::Result<String> {
         let mut command = std::process::Command::new(self.executable.as_str());
         if let Some(evm_version) = evm_version {
             command.arg("--evm-version");
             command.arg(evm_version.to_string());
+        }
+        if enable_decimals && self.version.default >= Self::FIRST_VERSION_ENABLE_DECIMALS_SUPPORT {
+            command.arg("--enable-decimals");
         }
         command.arg("-f");
         command.arg(extra_output);

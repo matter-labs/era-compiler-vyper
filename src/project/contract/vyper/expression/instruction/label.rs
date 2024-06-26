@@ -42,6 +42,14 @@ impl Label {
     }
 
     ///
+    /// Whether the label is a constructor block.
+    ///
+    pub fn is_constructor_block(label: &str) -> bool {
+        label.starts_with(crate::r#const::FUNCTION_PREFIX_EXTERNAL)
+            && label.contains(crate::r#const::FUNCTION_NAME_CONSTRUCTOR)
+    }
+
+    ///
     /// Checks whether the label is empty. If it is, nothing is generated.
     ///
     pub fn is_empty(&self) -> bool {
@@ -54,12 +62,12 @@ impl Label {
     /// The cleanup block cannot be ignored in deploy code, because `vyper` generates jumps to them.
     ///
     pub fn can_block_be_ignored(&self) -> bool {
-        let label_name = match self.0.first().expect("Always exists").try_into_identifier() {
+        let label_name = match self.name() {
             Ok(identifier) => identifier,
             Err(_) => return true,
         };
 
-        if label_name.starts_with("external___init")
+        if Self::is_constructor_block(label_name.as_str())
             && label_name.ends_with(crate::r#const::LABEL_SUFFIX_CLEANUP)
         {
             return false;
@@ -111,12 +119,8 @@ impl Label {
             return Ok(());
         }
 
-        let label_name = self
-            .0
-            .first()
-            .expect("Always exists")
-            .try_into_identifier()?;
-        context.append_basic_block(label_name.as_str());
+        let label_name = self.name()?;
+        context.append_basic_block(Expression::safe_label(label_name.as_str()).as_str());
 
         context.set_basic_block(context.current_function().borrow().entry_block());
         let mut label_arguments = Vec::new();
@@ -184,7 +188,10 @@ impl Label {
             .value
             .get_basic_blocks()
             .iter()
-            .find(|block| block.get_name().to_string_lossy() == label_name)
+            .find(|block| {
+                block.get_name().to_string_lossy()
+                    == Expression::safe_label(label_name.as_str()).as_str()
+            })
             .copied()
             .ok_or_else(|| anyhow::anyhow!("Block `{}` does not exist", label_name))?;
 
@@ -196,7 +203,7 @@ impl Label {
                 .build_unconditional_branch(context.current_function().borrow().return_block())?;
         }
 
-        if label_name.starts_with("external___init")
+        if Self::is_constructor_block(label_name.as_str())
             && label_name.ends_with(crate::r#const::LABEL_SUFFIX_CLEANUP)
             && is_block_empty_sequence
         {

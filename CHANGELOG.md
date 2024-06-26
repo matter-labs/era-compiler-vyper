@@ -4,6 +4,8 @@
 
 ### Added
 
+- The vyper v0.4.0 support
+- The `--enable-decimals` parameter
 - The support for compiling multiple files in Yul, LLVM IR, and EraVM assembly modes
 
 ### Changed

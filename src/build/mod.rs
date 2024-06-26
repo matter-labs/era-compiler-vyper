@@ -35,6 +35,7 @@ impl Build {
         format: Option<&str>,
         vyper_path: Option<&str>,
         evm_version: Option<era_compiler_common::EVMVersion>,
+        enable_decimals: bool,
     ) -> anyhow::Result<()> {
         for (path, contract) in self.contracts.into_iter() {
             for warning in contract.warnings.iter() {
@@ -50,8 +51,12 @@ impl Build {
                 let vyper = VyperCompiler::new(
                     vyper_path.unwrap_or(VyperCompiler::DEFAULT_EXECUTABLE_NAME),
                 )?;
-                let extra_output =
-                    vyper.extra_output(PathBuf::from(path).as_path(), evm_version, format)?;
+                let extra_output = vyper.extra_output(
+                    PathBuf::from(path).as_path(),
+                    evm_version,
+                    enable_decimals,
+                    format,
+                )?;
                 writeln!(std::io::stdout(), "\n{extra_output}")?;
             }
         }

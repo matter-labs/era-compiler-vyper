@@ -20,6 +20,9 @@ pub const OFFSET_FREE_VAR_SPACE2: usize =
 pub const OFFSET_NON_RESERVED: usize =
     OFFSET_FREE_VAR_SPACE2 + era_compiler_common::BYTE_LENGTH_FIELD;
 
+/// The constructor function name.
+pub const FUNCTION_NAME_CONSTRUCTOR: &str = "__init__";
+
 /// The default label destination prefix.
 pub const LABEL_DESTINATION_PREFIX: &str = "_sym_";
 

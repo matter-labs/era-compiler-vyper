@@ -145,6 +145,7 @@ fn main_inner() -> anyhow::Result<()> {
                     arguments.input_files,
                     &vyper,
                     evm_version,
+                    arguments.enable_decimals,
                     include_metadata_hash,
                     !arguments.disable_vyper_optimizer,
                     optimizer_settings,
@@ -166,6 +167,7 @@ fn main_inner() -> anyhow::Result<()> {
                 arguments.input_files,
                 &vyper,
                 evm_version,
+                arguments.enable_decimals,
                 include_metadata_hash,
                 !arguments.disable_vyper_optimizer,
                 optimizer_settings,
@@ -186,6 +188,7 @@ fn main_inner() -> anyhow::Result<()> {
                 arguments.format.as_deref(),
                 arguments.vyper.as_deref(),
                 evm_version,
+                arguments.enable_decimals,
             )?;
         }
     }

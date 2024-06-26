@@ -1,7 +1,7 @@
-# @version ^0.3.0
+# @version ^0.4.0
 
 greet: public(String[100])
 
-@external
+@deploy
 def __init__():
     self.greet = "Hello World"
