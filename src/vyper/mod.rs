@@ -49,6 +49,10 @@ impl Compiler {
         semver::Version::new(0, 4, 0),
     ];
 
+    /// The first version supporting `--enable-decimals`.
+    pub const FIRST_VERSION_ENABLE_DECIMALS_SUPPORT: semver::Version =
+        semver::Version::new(0, 4, 0);
+
     ///
     /// A shortcut constructor.
     ///
@@ -97,7 +101,7 @@ impl Compiler {
             command.arg("--evm-version");
             command.arg(evm_version.to_string());
         }
-        if enable_decimals && self.version.default >= semver::Version::new(0, 4, 0) {
+        if enable_decimals && self.version.default >= Self::FIRST_VERSION_ENABLE_DECIMALS_SUPPORT {
             command.arg("--enable-decimals");
         }
         command.arg("-f");
@@ -145,14 +149,10 @@ impl Compiler {
     pub fn standard_json(
         &self,
         mut input: StandardJsonInput,
-        enable_decimals: bool,
     ) -> anyhow::Result<StandardJsonOutput> {
         let mut command = std::process::Command::new(self.executable.as_str());
         command.stdin(std::process::Stdio::piped());
         command.stdout(std::process::Stdio::piped());
-        if enable_decimals && self.version.default >= semver::Version::new(0, 4, 0) {
-            command.arg("--enable-decimals");
-        }
         command.arg("--standard-json");
 
         if self.version.default >= semver::Version::new(0, 3, 10) {
@@ -243,7 +243,7 @@ impl Compiler {
             command.arg("--evm-version");
             command.arg(evm_version.to_string());
         }
-        if enable_decimals && self.version.default >= semver::Version::new(0, 4, 0) {
+        if enable_decimals && self.version.default >= Self::FIRST_VERSION_ENABLE_DECIMALS_SUPPORT {
             command.arg("--enable-decimals");
         }
         command.arg("-f");
@@ -291,7 +291,7 @@ impl Compiler {
             command.arg("--evm-version");
             command.arg(evm_version.to_string());
         }
-        if enable_decimals && self.version.default >= semver::Version::new(0, 4, 0) {
+        if enable_decimals && self.version.default >= Self::FIRST_VERSION_ENABLE_DECIMALS_SUPPORT {
             command.arg("--enable-decimals");
         }
         command.arg("-f");
@@ -375,7 +375,7 @@ impl Compiler {
             command.arg("--evm-version");
             command.arg(evm_version.to_string());
         }
-        if enable_decimals && self.version.default >= semver::Version::new(0, 4, 0) {
+        if enable_decimals && self.version.default >= Self::FIRST_VERSION_ENABLE_DECIMALS_SUPPORT {
             command.arg("--enable-decimals");
         }
         command.arg("-f");

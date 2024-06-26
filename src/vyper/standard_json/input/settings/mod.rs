@@ -22,6 +22,9 @@ pub struct Settings {
     pub output_selection: BTreeMap<String, Vec<Selection>>,
     /// Whether the optimizer is enabled.
     pub optimize: bool,
+    /// Whether to enable decimals.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enable_decimals: Option<bool>,
     /// Whether to try to recompile with -Oz if the bytecode is too large.
     #[serde(skip_serializing)]
     pub fallback_to_optimizing_for_size: Option<bool>,
@@ -38,6 +41,7 @@ impl Settings {
         evm_version: Option<era_compiler_common::EVMVersion>,
         output_selection: BTreeMap<String, Vec<Selection>>,
         optimize: bool,
+        enable_decimals: bool,
         fallback_to_optimizing_for_size: bool,
         llvm_options: Vec<String>,
     ) -> Self {
@@ -45,6 +49,11 @@ impl Settings {
             evm_version,
             output_selection,
             optimize,
+            enable_decimals: if enable_decimals {
+                Some(enable_decimals)
+            } else {
+                None
+            },
             fallback_to_optimizing_for_size: Some(fallback_to_optimizing_for_size),
             llvm_options: Some(llvm_options),
         }

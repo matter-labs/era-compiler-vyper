@@ -42,6 +42,7 @@ impl Input {
         evm_version: Option<era_compiler_common::EVMVersion>,
         output_selection: BTreeMap<String, Vec<Selection>>,
         optimize: bool,
+        enable_decimals: bool,
         fallback_to_optimizing_for_size: bool,
         llvm_options: Vec<String>,
     ) -> anyhow::Result<Self> {
@@ -62,6 +63,7 @@ impl Input {
                 evm_version,
                 output_selection,
                 optimize,
+                enable_decimals,
                 fallback_to_optimizing_for_size,
                 llvm_options,
             ),
@@ -78,6 +80,7 @@ impl Input {
         evm_version: Option<era_compiler_common::EVMVersion>,
         output_selection: BTreeMap<String, Vec<Selection>>,
         optimize: bool,
+        enable_decimals: bool,
         fallback_to_optimizing_for_size: bool,
         llvm_options: Vec<String>,
     ) -> anyhow::Result<Self> {
@@ -93,6 +96,7 @@ impl Input {
                 evm_version,
                 output_selection,
                 optimize,
+                enable_decimals,
                 fallback_to_optimizing_for_size,
                 llvm_options,
             ),

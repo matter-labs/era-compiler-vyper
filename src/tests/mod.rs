@@ -64,11 +64,12 @@ pub fn build_vyper(
         None,
         VyperStandardJsonInputSettingsSelection::generate_default(),
         true,
+        vyper.version.default >= VyperCompiler::FIRST_VERSION_ENABLE_DECIMALS_SUPPORT,
         true,
         vec![],
     )?;
 
-    let output = vyper.standard_json(input, true)?;
+    let output = vyper.standard_json(input)?;
 
     let project = Project::try_from_standard_json(output, &vyper.version.default)?;
     let build = project.compile(
