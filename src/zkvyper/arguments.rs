@@ -109,7 +109,7 @@ pub struct Arguments {
     /// Suppress specified warnings.
     /// Available arguments: `ecrecover`, `extcodesize`, `txorigin`.
     #[structopt(long = "suppress-warnings")]
-    pub suppress_warnings: Option<Vec<String>>,
+    pub suppressed_warnings: Option<Vec<String>>,
 
     /// Set the `verify-each` option in LLVM.
     /// Only for testing and debugging.

@@ -4,6 +4,23 @@
 
 #![cfg(test)]
 
+#[test]
+fn default_0_3_3() {
+    default(semver::Version::new(0, 3, 3));
+}
+#[test]
+fn default_0_3_9() {
+    default(semver::Version::new(0, 3, 9));
+}
+#[test]
+fn default_0_3_10() {
+    default(semver::Version::new(0, 3, 10));
+}
+#[test]
+fn default_0_4_0() {
+    default(semver::Version::new(0, 4, 0));
+}
+
 pub const SOURCE_CODE: &str = r#"
 struct Todo:
     text: String[100]
@@ -42,23 +59,22 @@ def toggleCompleted(_index: uint256):
     self.todos[_index].completed = not self.todos[_index].completed
 "#;
 
-#[test]
-fn default() {
+fn default(version: semver::Version) {
     let build_unoptimized = super::build_vyper(
         SOURCE_CODE,
-        None,
+        &version,
         era_compiler_llvm_context::OptimizerSettings::none(),
     )
     .expect("Build failure");
     let build_optimized_for_cycles = super::build_vyper(
         SOURCE_CODE,
-        None,
+        &version,
         era_compiler_llvm_context::OptimizerSettings::cycles(),
     )
     .expect("Build failure");
     let build_optimized_for_size = super::build_vyper(
         SOURCE_CODE,
-        None,
+        &version,
         era_compiler_llvm_context::OptimizerSettings::size(),
     )
     .expect("Build failure");

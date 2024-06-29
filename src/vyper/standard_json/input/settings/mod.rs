@@ -17,6 +17,7 @@ use self::selection::Selection;
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
     /// The EVM version. The latest is the most lightweight, but must be ignored by `vyper`.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub evm_version: Option<era_compiler_common::EVMVersion>,
     /// The output selection filters.
     pub output_selection: BTreeMap<String, Vec<Selection>>,
@@ -25,6 +26,7 @@ pub struct Settings {
     /// Whether to enable decimals.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub enable_decimals: Option<bool>,
+
     /// Whether to try to recompile with -Oz if the bytecode is too large.
     #[serde(skip_serializing)]
     pub fallback_to_optimizing_for_size: Option<bool>,

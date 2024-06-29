@@ -4,13 +4,10 @@
 
 use std::collections::BTreeMap;
 
-use serde::Deserialize;
-use serde::Serialize;
-
 ///
 /// The `vyper --standard-json` expected output selection.
 ///
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Selection {
     /// The AST.
     #[serde(rename = "ast")]

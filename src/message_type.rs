@@ -4,18 +4,11 @@
 
 use std::str::FromStr;
 
-use serde::Deserialize;
-use serde::Serialize;
-
 ///
 /// The compiler message type.
 ///
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum MessageType {
-    /// The warning for eponymous feature.
-    EcRecover,
-    /// The warning for eponymous feature.
-    ExtCodeSize,
     /// The warning for eponymous feature.
     TxOrigin,
 }
@@ -37,8 +30,6 @@ impl FromStr for MessageType {
 
     fn from_str(string: &str) -> Result<Self, Self::Err> {
         match string {
-            "ecrecover" => Ok(Self::EcRecover),
-            "extcodesize" => Ok(Self::ExtCodeSize),
             "txorigin" => Ok(Self::TxOrigin),
             _ => Err(anyhow::anyhow!("Invalid message type: {string}")),
         }

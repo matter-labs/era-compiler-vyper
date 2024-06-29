@@ -2,13 +2,10 @@
 //! The `vyper --standard-json` output error.
 //!
 
-use serde::Deserialize;
-use serde::Serialize;
-
 ///
 /// The `vyper --standard-json` output error.
 ///
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Error {
     /// The error message.

@@ -7,8 +7,6 @@ pub mod instruction;
 use std::collections::BTreeMap;
 
 use inkwell::values::BasicValue;
-use serde::Deserialize;
-use serde::Serialize;
 use serde_json::Number;
 
 use era_compiler_llvm_context::IContext;
@@ -19,7 +17,7 @@ use self::instruction::Instruction;
 ///
 /// The LLL IR JSON expression.
 ///
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
 #[serde(untagged)]
 pub enum Expression {
     /// The LLL IR instruction.

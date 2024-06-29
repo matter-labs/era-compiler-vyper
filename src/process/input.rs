@@ -6,16 +6,13 @@
 
 use std::borrow::Cow;
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use crate::message_type::MessageType;
 use crate::project::contract::Contract;
 
 ///
 /// The input data.
 ///
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Input<'a> {
     /// The contract full path.
     pub full_path: Cow<'a, String>,

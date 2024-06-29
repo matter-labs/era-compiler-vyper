@@ -4,11 +4,8 @@
 
 use std::collections::BTreeMap;
 
-use inkwell::values::BasicValue;
-use serde::Deserialize;
-use serde::Serialize;
-
 use era_compiler_llvm_context::IContext;
+use inkwell::values::BasicValue;
 
 use crate::project::contract::vyper::expression::instruction::Instruction;
 use crate::project::contract::vyper::expression::Expression;
@@ -16,7 +13,7 @@ use crate::project::contract::vyper::expression::Expression;
 ///
 /// The Vyper LLL-specific `label` instruction.
 ///
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct Label(Vec<Expression>);
 
 impl Label {

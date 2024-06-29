@@ -5,38 +5,23 @@
 #![cfg(test)]
 
 #[test]
-fn ecrecover() {
-    let source_code = r#"
-@external
-@view
-def test(hash: bytes32, v: uint256, r:uint256, s:uint256) -> address:
-    return ecrecover(hash, v, r, s)
-"#;
-
-    assert!(super::check_warning(
-        source_code,
-        "Warning: It looks like you are using 'ecrecover' to validate a signature of a user account."
-    )
-    .expect("Test failure"));
+fn tx_origin_0_3_3() {
+    tx_origin(semver::Version::new(0, 3, 3));
+}
+#[test]
+fn tx_origin_0_3_9() {
+    tx_origin(semver::Version::new(0, 3, 9));
+}
+#[test]
+fn tx_origin_0_3_10() {
+    tx_origin(semver::Version::new(0, 3, 10));
+}
+#[test]
+fn tx_origin_0_4_0() {
+    tx_origin(semver::Version::new(0, 4, 0));
 }
 
-#[test]
-fn extcodesize() {
-    let source_code = r#"
-@external
-def test(addr: address) -> bool:
-    return addr.is_contract
-"#;
-
-    assert!(super::check_warning(
-        source_code,
-        "Warning: Your code or one of its dependencies uses the 'extcodesize' instruction, which is"
-    )
-    .expect("Test failure"));
-}
-
-#[test]
-fn tx_origin() {
+fn tx_origin(version: semver::Version) {
     let source_code = r#"
 @external
 def test() -> address:
@@ -44,8 +29,9 @@ def test() -> address:
 "#;
 
     assert!(super::check_warning(
-    source_code,
-    "Warning: You are checking for 'tx.origin' in your code, which might lead to unexpected behavior."
-)
-.expect("Test failure"));
+        source_code,
+        &version,
+        "You are checking for 'tx.origin', which may lead to unexpected behavior."
+    )
+    .expect("Test failure"));
 }

@@ -2,16 +2,13 @@
 //! The `revert` instruction.
 //!
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use crate::project::contract::vyper::expression::instruction::Instruction;
 use crate::project::contract::vyper::expression::Expression;
 
 ///
 /// The `revert` instruction.
 ///
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct Revert([Box<Expression>; 2]);
 
 impl Default for Revert {

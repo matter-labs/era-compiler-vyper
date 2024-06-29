@@ -76,7 +76,7 @@ fn main_inner() -> anyhow::Result<()> {
         None => None,
     };
 
-    let suppressed_messages = match arguments.suppress_warnings {
+    let suppressed_messages = match arguments.suppressed_warnings {
         Some(warnings) => era_compiler_vyper::MessageType::try_from_strings(warnings.as_slice())?,
         None => vec![],
     };
