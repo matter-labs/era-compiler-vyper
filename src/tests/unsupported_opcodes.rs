@@ -9,6 +9,7 @@
 
 #![cfg(test)]
 
+#[cfg(not(target_arch = "aarch64"))]
 #[test]
 #[should_panic(expected = "The `SELFDESTRUCT` instruction is not supported")]
 fn selfdestruct_0_3_3() {

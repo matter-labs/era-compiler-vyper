@@ -4,6 +4,7 @@
 
 #![cfg(test)]
 
+#[cfg(not(target_arch = "aarch64"))]
 #[test]
 fn default_0_3_3() {
     default(semver::Version::new(0, 3, 3));

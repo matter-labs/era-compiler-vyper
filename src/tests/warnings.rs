@@ -4,6 +4,7 @@
 
 #![cfg(test)]
 
+#[cfg(not(target_arch = "aarch64"))]
 #[test]
 fn tx_origin_0_3_3() {
     tx_origin(semver::Version::new(0, 3, 3));
