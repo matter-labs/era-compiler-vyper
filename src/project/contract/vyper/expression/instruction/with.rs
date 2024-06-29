@@ -4,9 +4,6 @@
 
 use std::collections::BTreeMap;
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use era_compiler_llvm_context::IContext;
 
 use crate::project::contract::vyper::expression::Expression;
@@ -14,7 +11,7 @@ use crate::project::contract::vyper::expression::Expression;
 ///
 /// The Vyper LLL-specific `with` instruction.
 ///
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct With([Box<Expression>; 3]);
 
 impl With {

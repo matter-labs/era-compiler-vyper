@@ -2,9 +2,6 @@
 //! The `deploy` instruction.
 //!
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use crate::project::contract::vyper::expression::instruction::seq::Seq as SeqInstruction;
 use crate::project::contract::vyper::expression::instruction::Instruction;
 use crate::project::contract::vyper::expression::Expression;
@@ -18,7 +15,7 @@ use crate::project::contract::vyper::expression::Expression;
 /// Since the deploy and runtime code in ZKsync are not separated, they are flattened and
 /// translated as entities of the same level with branching in the contract entry.
 ///
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct Deploy(Vec<Expression>);
 
 impl Deploy {

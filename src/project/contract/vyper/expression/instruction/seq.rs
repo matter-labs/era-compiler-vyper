@@ -4,9 +4,6 @@
 
 use std::collections::BTreeMap;
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use era_compiler_llvm_context::IContext;
 
 use crate::project::contract::vyper::expression::instruction::label::Label as LabelInstruction;
@@ -23,7 +20,7 @@ use crate::project::contract::vyper::expression::Expression;
 /// Among the methods there are tools of extracting the runtime code from the deploy code's
 /// return statement and some logic of hoisting the contract methods to the upper levels.
 ///
-#[derive(Debug, Default, Serialize, Deserialize, Clone)]
+#[derive(Debug, Default, serde::Serialize, serde::Deserialize, Clone)]
 pub struct Seq(Vec<Expression>);
 
 impl Seq {

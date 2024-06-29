@@ -21,38 +21,23 @@ use crate::vyper::standard_json::input::Input as VyperStandardJsonInput;
 use crate::vyper::Compiler as VyperCompiler;
 
 ///
-/// Checks if the required tools are installed in the system.
-///
-fn check_dependencies() {
-    for executable in [
-        crate::r#const::DEFAULT_EXECUTABLE_NAME,
-        VyperCompiler::DEFAULT_EXECUTABLE_NAME,
-    ]
-    .iter()
-    {
-        assert!(
-            which::which(executable).is_ok(),
-            "The `{executable}` executable not found in ${{PATH}}"
-        );
-    }
-}
-
-///
 /// Builds a test Vyper project.
 ///
 pub fn build_vyper(
     source_code: &str,
-    version_filter: Option<(semver::Version, &str)>,
+    version: &semver::Version,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
 ) -> anyhow::Result<Build> {
     check_dependencies();
 
-    let vyper = VyperCompiler::new(VyperCompiler::DEFAULT_EXECUTABLE_NAME)?;
-    if let Some((version, message)) = version_filter {
-        if vyper.version.default != version {
-            panic!("{}", message);
-        }
-    }
+    let vyper = VyperCompiler::new(
+        format!(
+            "{}-{version}{}",
+            VyperCompiler::DEFAULT_EXECUTABLE_NAME,
+            std::env::consts::EXE_SUFFIX
+        )
+        .as_str(),
+    )?;
 
     inkwell::support::enable_llvm_pretty_stack_trace();
     era_compiler_llvm_context::initialize_target(era_compiler_llvm_context::Target::EraVM);
@@ -90,10 +75,14 @@ pub fn build_vyper(
 ///
 /// Checks if the specified `warning` was emitted during the `source_code` compilation.
 ///
-pub fn check_warning(source_code: &str, warning: &str) -> anyhow::Result<bool> {
+pub fn check_warning(
+    source_code: &str,
+    version: &semver::Version,
+    warning: &str,
+) -> anyhow::Result<bool> {
     let build = build_vyper(
         source_code,
-        None,
+        version,
         era_compiler_llvm_context::OptimizerSettings::none(),
     )?;
     for (_path, contract) in build.contracts.iter() {
@@ -104,4 +93,21 @@ pub fn check_warning(source_code: &str, warning: &str) -> anyhow::Result<bool> {
         }
     }
     Ok(false)
+}
+
+///
+/// Checks if the required tools are installed in the system.
+///
+fn check_dependencies() {
+    for version in VyperCompiler::SUPPORTED_VERSIONS.into_iter() {
+        let executable = format!(
+            "{}-{version}{}",
+            VyperCompiler::DEFAULT_EXECUTABLE_NAME,
+            std::env::consts::EXE_SUFFIX
+        );
+        assert!(
+            which::which(executable.as_str()).is_ok(),
+            "The `{executable}` executable not found in ${{PATH}}"
+        );
+    }
 }

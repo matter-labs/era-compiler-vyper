@@ -6,15 +6,12 @@ pub mod warning;
 
 use std::collections::BTreeMap;
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use self::warning::Warning;
 
 ///
 /// The contract.
 ///
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Contract {
     /// The `vyper` method identifiers output.
     #[serde(skip_serializing_if = "Option::is_none")]

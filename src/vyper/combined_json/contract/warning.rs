@@ -2,13 +2,10 @@
 //! The `vyper --combined-json` contract warning.
 //!
 
-use serde::Deserialize;
-use serde::Serialize;
-
 ///
 /// The contract.
 ///
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Warning {
     /// The file path.
     pub file: String,

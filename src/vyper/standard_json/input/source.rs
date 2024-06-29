@@ -5,12 +5,10 @@
 use std::io::Read;
 use std::path::Path;
 
-use serde::Serialize;
-
 ///
 /// The `vyper --standard-json` input source.
 ///
-#[derive(Debug, Serialize)]
+#[derive(Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Source {
     /// The source code file content.

@@ -11,7 +11,6 @@ use std::path::PathBuf;
 
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
-use serde::Serialize;
 
 use self::language::Language;
 use self::settings::optimize::Optimize;
@@ -22,7 +21,7 @@ use self::source::Source;
 ///
 /// The `vyper --standard-json` input.
 ///
-#[derive(Debug, Serialize)]
+#[derive(Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Input {
     /// The input language.

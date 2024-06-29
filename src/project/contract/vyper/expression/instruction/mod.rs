@@ -21,11 +21,8 @@ pub mod with;
 
 use std::collections::BTreeMap;
 
-use inkwell::values::BasicValue;
-use serde::Deserialize;
-use serde::Serialize;
-
 use era_compiler_llvm_context::IContext;
+use inkwell::values::BasicValue;
 
 use crate::project::contract::vyper::expression::Expression;
 
@@ -45,7 +42,7 @@ use self::with::With;
 ///
 /// The LLL IR instruction.
 ///
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum Instruction {
     /// The LLL IR `with` expression.

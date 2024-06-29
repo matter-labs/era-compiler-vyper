@@ -4,12 +4,10 @@
 
 use std::collections::BTreeMap;
 
-use serde::Deserialize;
-
 ///
 /// The `vyper --standard-json` output contract EVM data.
 ///
-#[derive(Debug, Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 pub struct EVM {
     /// The contract ABI.
     #[serde(rename = "methodIdentifiers")]

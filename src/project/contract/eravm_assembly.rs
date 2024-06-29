@@ -2,9 +2,6 @@
 //! The EraVM assembly contract.
 //!
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use crate::build::contract::Contract as ContractBuild;
 use crate::message_type::MessageType;
 use crate::project::contract::metadata::Metadata as ContractMetadata;
@@ -12,7 +9,7 @@ use crate::project::contract::metadata::Metadata as ContractMetadata;
 ///
 /// The EraVM assembly contract.
 ///
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct Contract {
     /// The EraVM version.
     pub version: semver::Version,

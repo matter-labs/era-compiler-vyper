@@ -8,8 +8,6 @@ const llvmIRExtension = '.ll';
 const llvmIROptimizedExtension = '.optimized.ll';
 const llvmIRUnoptimizedExtension = '.unoptimized.ll';
 const contractVyFilename = 'contract.vy';
-const contractEcRecover = 'ecrecover.vy';
-const contractExtCode = 'extcode.vy';
 const contractTxOrigin = 'txorigin.vy';
 const contractEraVMAssemblyFilename = 'contract.zasm';
 const contractJSONFilename = 'contract.json';
@@ -19,8 +17,6 @@ const pathToOutputFile = path.join( __dirname, '..', outputFile);
 const pathToContracts = path.join( __dirname, '..', 'src', 'contracts');
 const pathToBasicVyContract = path.join(pathToContracts, 'vyper', contractVyFilename);
 const pathToBasicEraVMAssemblyContract = path.join(pathToContracts, 'eravm', contractEraVMAssemblyFilename);
-const pathToEcRecoverContract = path.join(pathToContracts, 'vyper', contractEcRecover);
-const pathToExtCodeContract = path.join(pathToContracts, 'vyper', contractExtCode);
 const pathToTxOriginContract = path.join(pathToContracts, 'vyper', contractTxOrigin);
 const pathToJSONContract = path.join(pathToContracts, 'json', contractJSONFilename);
 const pathToLLVMContract = path.join(pathToContracts, 'llvm', contractLLVMFilename);
@@ -41,8 +37,6 @@ export const paths = {
   pathToBasicVyContract: pathToBasicVyContract,
   pathToBasicEraVMAssemblyContract: pathToBasicEraVMAssemblyContract,
   pathToTxOriginContract: pathToTxOriginContract,
-  pathToExtCodeContract: pathToExtCodeContract,
-  pathToEcRecoverContract: pathToEcRecoverContract,
   pathToJSONContract: pathToJSONContract,
   pathToLLVMContract: pathToLLVMContract,
   pathToBinOutputFile: pathToBinOutputFile,

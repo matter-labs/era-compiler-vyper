@@ -9,15 +9,12 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use self::contract::Contract;
 
 ///
 /// The `vyper --combined-json` output.
 ///
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct CombinedJson {
     /// The contract entries.
     #[serde(flatten)]
