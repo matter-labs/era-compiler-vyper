@@ -31,7 +31,12 @@ pub fn build_vyper(
     check_dependencies();
 
     let vyper = VyperCompiler::new(
-        format!("{}-{version}", VyperCompiler::DEFAULT_EXECUTABLE_NAME).as_str(),
+        format!(
+            "{}-{version}{}",
+            VyperCompiler::DEFAULT_EXECUTABLE_NAME,
+            std::env::consts::EXE_SUFFIX
+        )
+        .as_str(),
     )?;
 
     inkwell::support::enable_llvm_pretty_stack_trace();
@@ -95,7 +100,11 @@ pub fn check_warning(
 ///
 fn check_dependencies() {
     for version in VyperCompiler::SUPPORTED_VERSIONS.into_iter() {
-        let executable = format!("{}-{version}", VyperCompiler::DEFAULT_EXECUTABLE_NAME);
+        let executable = format!(
+            "{}-{version}{}",
+            VyperCompiler::DEFAULT_EXECUTABLE_NAME,
+            std::env::consts::EXE_SUFFIX
+        );
         assert!(
             which::which(executable.as_str()).is_ok(),
             "The `{executable}` executable not found in ${{PATH}}"
