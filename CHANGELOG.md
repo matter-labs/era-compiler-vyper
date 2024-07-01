@@ -1,5 +1,15 @@
 # The `zkvyper` changelog
 
+## [1.5.2] - 2024-07-01
+
+### Fixed
+
+- Path normalization error with the internal minimal proxy contract
+
+### Removed
+
+- Obsolete warnings for `extcodesize` and `ecrecover`
+
 ## [1.5.1] - 2024-06-27
 
 ### Added
