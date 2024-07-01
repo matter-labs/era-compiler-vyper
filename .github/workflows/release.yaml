@@ -102,7 +102,9 @@ jobs:
 
   prepare-release:
     name: Prepare release
-    runs-on: ubuntu-latest
+    runs-on: matterlabs-ci-runner
+    container:
+      image: matterlabs/llvm_runner:ubuntu22-llvm17-latest
     needs: build
     steps:
       - name: Checkout source
@@ -120,7 +122,8 @@ jobs:
       - name: Identify release name
         id: release
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+          if [ '${{ github.event_name }}' = 'workflow_dispatch' ]; then
             VERSION_OR_SHA=$(git rev-parse --short HEAD)
             echo "version_or_sha=${VERSION_OR_SHA}" >> $GITHUB_OUTPUT
             echo "full_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
@@ -130,6 +133,25 @@ jobs:
             echo "version_or_sha=${VERSION_OR_SHA}" >> $GITHUB_OUTPUT
             echo "release_title=${VERSION_OR_SHA}" >> $GITHUB_OUTPUT
           fi
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release*
+          path: releases
+
+      - name: Prepare universal macos binary
+        if: github.ref_type == 'tag' || (inputs.release_macos_amd64 && inputs.release_macos_arm64)
+        env:
+          MACOSX_UNIVERSAL_SUFFIX: "macosx"
+        run: |
+          OUTDIR="./releases/release-${MACOSX_UNIVERSAL_SUFFIX}/${MACOSX_UNIVERSAL_SUFFIX}"
+          mkdir -p "${OUTDIR}"
+          [ ! -z "$GITHUB_REF_NAME" ] && TAG_SUFFIX="-v${GITHUB_REF_NAME}"
+          OUTPUT="${OUTDIR}/zkvyper-${MACOSX_UNIVERSAL_SUFFIX}${TAG_SUFFIX}"
+          llvm-lipo -create -output "${OUTPUT}" \
+            ./releases/release-macosx-amd64/macosx-amd64/zkvyper-macosx-amd64${TAG_SUFFIX} \
+            ./releases/release-macosx-arm64/macosx-arm64/zkvyper-macosx-arm64${TAG_SUFFIX}
 
       - name: Get changelog
         if: github.ref_type == 'tag'
