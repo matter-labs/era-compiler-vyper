@@ -104,12 +104,8 @@ impl Build {
                     .contracts
                     .iter_mut()
                     .find_map(|(json_path, contract)| {
-                        let path = PathBuf::from(path.as_str())
-                            .normalize()
-                            .expect("Path normalization error");
-                        let json_path = PathBuf::from(json_path.as_str())
-                            .normalize()
-                            .expect("Path normalization error");
+                        let path = PathBuf::from(path.as_str()).normalize().ok()?;
+                        let json_path = PathBuf::from(json_path.as_str()).normalize().ok()?;
 
                         if path.ends_with(json_path) {
                             Some(contract)
