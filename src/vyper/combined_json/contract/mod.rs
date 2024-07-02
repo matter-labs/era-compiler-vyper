@@ -22,9 +22,6 @@ pub struct Contract {
     /// The `vyper` hexadecimal binary output.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bytecode: Option<String>,
-    /// The `vyper` hexadecimal binary runtime part output.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub bytecode_runtime: Option<String>,
 
     /// The EraVM text assembly.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -39,21 +36,36 @@ pub struct Contract {
 
 impl Contract {
     ///
+    /// A shortcut constructor.
+    ///
+    pub fn new(
+        method_identifiers: Option<BTreeMap<String, String>>,
+        abi: Option<serde_json::Value>,
+    ) -> Self {
+        Self {
+            method_identifiers,
+            abi,
+            bytecode: None,
+
+            assembly: None,
+            warnings: None,
+            factory_deps: None,
+        }
+    }
+
+    ///
     /// Creates a minimal proxy.
     ///
     pub fn new_minimal_proxy(output_assembly: bool) -> Self {
         Self {
-            method_identifiers: Some(BTreeMap::new()),
-            abi: Some(serde_json::Value::Object(serde_json::Map::default())),
+            method_identifiers: None,
+            abi: None,
             bytecode: Some(hex::encode(
-                crate::r#const::FORWARDER_CONTRACT_BYTECODE.as_slice(),
-            )),
-            bytecode_runtime: Some(hex::encode(
-                crate::r#const::FORWARDER_CONTRACT_BYTECODE.as_slice(),
+                crate::r#const::MINIMAL_PROXY_CONTRACT_BYTECODE.as_slice(),
             )),
 
             assembly: if output_assembly {
-                Some(crate::r#const::FORWARDER_CONTRACT_ASSEMBLY.to_owned())
+                Some(crate::r#const::MINIMAL_PROXY_CONTRACT_ASSEMBLY.to_owned())
             } else {
                 None
             },
@@ -71,7 +83,7 @@ impl Contract {
     pub fn entry(&self, entry: &str) -> u32 {
         self.method_identifiers
             .as_ref()
-            .expect("Always exists")
+            .expect("Method identifiers not available")
             .iter()
             .find_map(|(contract_entry, hash)| {
                 if contract_entry.starts_with(&(entry.to_owned() + "(")) {

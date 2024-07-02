@@ -32,10 +32,14 @@ pub struct Contract {
     pub source_code: String,
     /// The source metadata.
     pub source_metadata: SourceMetadata,
-    /// The inner expression.
-    pub expression: Expression,
-    /// The contract ABI data.
-    pub abi: BTreeMap<String, String>,
+    /// The stringified IR.
+    pub ir_string: String,
+    /// The LLL IR parsed from JSON.
+    pub ir: Expression,
+    /// The contract ABI.
+    pub abi: serde_json::Value,
+    /// The contract method identifiers.
+    pub method_identifiers: BTreeMap<String, String>,
     /// The contract AST.
     pub ast: AST,
     /// The dependency data.
@@ -43,9 +47,6 @@ pub struct Contract {
 }
 
 impl Contract {
-    /// The number of vyper compiler output lines per contract.
-    pub const EXPECTED_LINES: usize = 4;
-
     ///
     /// A shortcut constructor.
     ///
@@ -53,16 +54,20 @@ impl Contract {
         version: semver::Version,
         source_code: String,
         source_metadata: SourceMetadata,
-        expression: Expression,
-        abi: BTreeMap<String, String>,
+        ir_string: String,
+        ir: Expression,
+        abi: serde_json::Value,
+        method_identifiers: BTreeMap<String, String>,
         ast: AST,
     ) -> Self {
         Self {
             version,
             source_code,
             source_metadata,
-            expression,
+            ir_string,
+            ir,
             abi,
+            method_identifiers,
             ast,
             dependency_data: DependencyData::default(),
         }
@@ -81,25 +86,21 @@ impl Contract {
         source_code: String,
         mut lines: Vec<&str>,
     ) -> anyhow::Result<Self> {
-        if lines.len() != Self::EXPECTED_LINES {
-            anyhow::bail!(
-                "Expected {} lines with JSONs, found {}",
-                Self::EXPECTED_LINES,
-                lines.len()
-            );
-        }
-
-        let expression: Expression = era_compiler_common::deserialize_from_str(lines.remove(0))?;
+        let ir_string = lines.remove(0).to_owned();
+        let ir: Expression = era_compiler_common::deserialize_from_str(lines.remove(0))?;
         let metadata: SourceMetadata = serde_json::from_str(lines.remove(0))?;
-        let abi: BTreeMap<String, String> = serde_json::from_str(lines.remove(0))?;
         let ast: AST = serde_json::from_str(lines.remove(0))?;
+        let abi: serde_json::Value = serde_json::from_str(lines.remove(0))?;
+        let method_identifiers: BTreeMap<String, String> = serde_json::from_str(lines.remove(0))?;
 
         Ok(Self::new(
             version,
             source_code,
             metadata,
-            expression,
+            ir_string,
+            ir,
             abi,
+            method_identifiers,
             ast,
         ))
     }
@@ -147,6 +148,9 @@ impl Contract {
             debug_config,
         );
 
+        let method_identifiers = std::mem::take(&mut self.method_identifiers);
+        let abi = std::mem::take(&mut self.abi);
+
         self.declare(&mut context).map_err(|error| {
             anyhow::anyhow!(
                 "The contract `{}` LLVM IR generator declaration pass error: {}",
@@ -167,12 +171,17 @@ impl Contract {
 
         if is_minimal_proxy_used {
             build.factory_dependencies.insert(
-                crate::r#const::FORWARDER_CONTRACT_HASH.clone(),
+                crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.clone(),
                 crate::r#const::MINIMAL_PROXY_CONTRACT_NAME.to_owned(),
             );
         }
 
-        Ok(ContractBuild::new(build, warnings))
+        Ok(ContractBuild::new(
+            build,
+            Some(method_identifiers),
+            Some(abi),
+            warnings,
+        ))
     }
 }
 
@@ -225,8 +234,8 @@ where
         context: &mut era_compiler_llvm_context::EraVMContext<D>,
     ) -> anyhow::Result<()> {
         let (mut runtime_code, immutables_size) =
-            self.expression.extract_runtime_code()?.unwrap_or_default();
-        let mut deploy_code = self.expression.try_into_deploy_code()?;
+            self.ir.extract_runtime_code()?.unwrap_or_default();
+        let mut deploy_code = self.ir.try_into_deploy_code()?;
 
         match immutables_size {
             Expression::IntegerLiteral(number) => {
@@ -321,7 +330,7 @@ where
 
 impl era_compiler_llvm_context::Dependency for DependencyData {
     fn get(&self, _name: &str) -> anyhow::Result<String> {
-        Ok(crate::r#const::FORWARDER_CONTRACT_HASH.clone())
+        Ok(crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.clone())
     }
 
     fn resolve_path(&self, _identifier: &str) -> anyhow::Result<String> {

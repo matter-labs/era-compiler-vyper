@@ -1,5 +1,11 @@
 # The `zkvyper` changelog
 
+## [Unreleased]
+
+### Fixed
+
+- The redundant `vyper -f combined_json` call increasing the compilation time
+
 ## [1.5.2] - 2024-07-01
 
 ### Fixed

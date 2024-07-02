@@ -98,8 +98,10 @@ impl Project {
                     version.to_owned(),
                     contract.source_code.expect("Must be set by the tester"),
                     SourceMetadata::default(),
+                    String::new(),
                     contract.ir,
-                    contract.evm.abi,
+                    serde_json::Value::Null,
+                    contract.evm.method_identifiers,
                     ast,
                 );
                 project_contracts.insert(full_path, project_contract.into());
@@ -215,24 +217,24 @@ impl Project {
                     contract
                         .build
                         .factory_dependencies
-                        .contains_key(crate::r#const::FORWARDER_CONTRACT_HASH.as_str())
+                        .contains_key(crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.as_str())
                 })
                 .unwrap_or_default()
         });
         if is_minimal_proxy_used {
             let minimal_proxy_build = era_compiler_llvm_context::EraVMBuild::new(
-                crate::r#const::FORWARDER_CONTRACT_BYTECODE.clone(),
-                crate::r#const::FORWARDER_CONTRACT_HASH.clone(),
+                crate::r#const::MINIMAL_PROXY_CONTRACT_BYTECODE.clone(),
+                crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.clone(),
                 None,
                 if output_assembly {
-                    Some(crate::r#const::FORWARDER_CONTRACT_ASSEMBLY.to_owned())
+                    Some(crate::r#const::MINIMAL_PROXY_CONTRACT_ASSEMBLY.to_owned())
                 } else {
                     None
                 },
             );
             build.contracts.insert(
                 crate::r#const::MINIMAL_PROXY_CONTRACT_NAME.to_owned(),
-                ContractBuild::new(minimal_proxy_build, vec![]),
+                ContractBuild::new_minimal_proxy(minimal_proxy_build),
             );
         }
 
