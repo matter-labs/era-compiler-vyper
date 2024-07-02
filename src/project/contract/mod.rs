@@ -102,4 +102,14 @@ impl Contract {
             Self::EraVMAssembly(inner) => inner.source_code.as_str(),
         }
     }
+
+    ///
+    /// Returns the stringified IR reference.
+    ///
+    pub fn ir_string(&self) -> Option<&str> {
+        match self {
+            Self::Vyper(inner) => Some(inner.ir_string.as_str()),
+            _ => None,
+        }
+    }
 }

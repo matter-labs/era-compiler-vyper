@@ -14,26 +14,34 @@ use self::contract::Contract;
 ///
 /// The `vyper --combined-json` output.
 ///
-#[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct CombinedJson {
     /// The contract entries.
     #[serde(flatten)]
     pub contracts: BTreeMap<String, Contract>,
     /// The `vyper` compiler version.
-    pub version: String,
-    /// The `zkvyper` compiler version.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub zk_version: Option<String>,
+    pub version: Option<String>,
+
+    /// The `zkvyper` compiler version.
+    pub zk_version: String,
 }
 
 impl CombinedJson {
     ///
-    /// Removes EVM artifacts to prevent their accidental usage.
+    /// A shortcut constructor.
     ///
-    pub fn remove_evm(&mut self) {
-        for (_, contract) in self.contracts.iter_mut() {
-            contract.bytecode = None;
-            contract.bytecode_runtime = None;
+    /// Contracts with ABI and method identifiers must be provided here.
+    ///
+    pub fn new(
+        contracts: BTreeMap<String, Contract>,
+        version: Option<&semver::Version>,
+        zk_version: &semver::Version,
+    ) -> Self {
+        Self {
+            contracts,
+            version: version.map(|version| version.to_string()),
+            zk_version: zk_version.to_string(),
         }
     }
 

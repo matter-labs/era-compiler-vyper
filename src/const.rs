@@ -70,9 +70,9 @@ lazy_static! {
     ///
     /// The Vyper minimal proxy bytecode in bytes.
     ///
-    pub static ref FORWARDER_CONTRACT_BYTECODE_WORDS: Vec<[u8; era_compiler_common::BYTE_LENGTH_FIELD]> = {
+    pub static ref MINIMAL_PROXY_CONTRACT_BYTECODE_WORDS: Vec<[u8; era_compiler_common::BYTE_LENGTH_FIELD]> = {
         let mut assembly =
-            zkevm_assembly::Assembly::from_string(FORWARDER_CONTRACT_ASSEMBLY.to_owned(), None).expect("Always valid");
+            zkevm_assembly::Assembly::from_string(MINIMAL_PROXY_CONTRACT_ASSEMBLY.to_owned(), None).expect("Always valid");
         assembly
             .compile_to_bytecode().expect("Always valid")
     };
@@ -80,8 +80,8 @@ lazy_static! {
     ///
     /// The Vyper minimal proxy bytecode in words.
     ///
-    pub static ref FORWARDER_CONTRACT_BYTECODE: Vec<u8> = {
-        FORWARDER_CONTRACT_BYTECODE_WORDS.clone()
+    pub static ref MINIMAL_PROXY_CONTRACT_BYTECODE: Vec<u8> = {
+        MINIMAL_PROXY_CONTRACT_BYTECODE_WORDS.clone()
             .into_iter()
             .flatten()
             .collect::<Vec<u8>>()
@@ -90,14 +90,14 @@ lazy_static! {
     ///
     /// The Vyper minimal proxy bytecode hash.
     ///
-    pub static ref FORWARDER_CONTRACT_HASH: String = {
-        zkevm_opcode_defs::bytecode_to_code_hash(FORWARDER_CONTRACT_BYTECODE_WORDS.as_slice()).map(hex::encode)
+    pub static ref MINIMAL_PROXY_CONTRACT_HASH: String = {
+        zkevm_opcode_defs::bytecode_to_code_hash(MINIMAL_PROXY_CONTRACT_BYTECODE_WORDS.as_slice()).map(hex::encode)
             .expect("Always valid")
     };
 }
 
 /// The minimal proxy contract assembly.
-pub const FORWARDER_CONTRACT_ASSEMBLY: &str = r#"
+pub const MINIMAL_PROXY_CONTRACT_ASSEMBLY: &str = r#"
 	.text
 	.file	"MinimalProxy"
 	.globl	__entry

@@ -2,10 +2,8 @@
 //! Vyper compiler arguments.
 //!
 
-use std::path::Path;
 use std::path::PathBuf;
 
-use path_slash::PathExt;
 use structopt::StructOpt;
 
 ///
@@ -27,7 +25,7 @@ pub struct Arguments {
     /// Multiple Vyper files can be passed in the default Vyper mode.
     /// LLVM IR mode currently supports only a single file.
     #[structopt(parse(from_os_str))]
-    pub input_files: Vec<PathBuf>,
+    pub input_paths: Vec<PathBuf>,
 
     /// Create one file per component and contract/file at the specified directory, if given.
     #[structopt(short = "o", long = "output-dir")]
@@ -198,21 +196,9 @@ impl Arguments {
     /// Normalizes input paths by converting it to POSIX format.
     ///
     pub fn normalize_input_paths(&mut self) -> anyhow::Result<()> {
-        for input_path in self.input_files.iter_mut() {
-            *input_path = Self::path_to_posix(input_path.as_path())?;
+        for input_path in self.input_paths.iter_mut() {
+            *input_path = era_compiler_vyper::path_to_posix(input_path.as_path())?;
         }
         Ok(())
-    }
-
-    ///
-    /// Normalizes an input path by converting it to POSIX format.
-    ///
-    fn path_to_posix(path: &Path) -> anyhow::Result<PathBuf> {
-        let path = path
-            .to_slash()
-            .ok_or_else(|| anyhow::anyhow!("Error: Input path {:?} POSIX conversion error", path))?
-            .to_string();
-        let path = PathBuf::from(path.as_str());
-        Ok(path)
     }
 }

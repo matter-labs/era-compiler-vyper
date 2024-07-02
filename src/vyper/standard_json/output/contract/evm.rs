@@ -8,8 +8,8 @@ use std::collections::BTreeMap;
 /// The `vyper --standard-json` output contract EVM data.
 ///
 #[derive(Debug, serde::Deserialize)]
+#[serde(rename = "camelCase")]
 pub struct EVM {
     /// The contract ABI.
-    #[serde(rename = "methodIdentifiers")]
-    pub abi: BTreeMap<String, String>,
+    pub method_identifiers: BTreeMap<String, String>,
 }

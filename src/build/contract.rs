@@ -2,6 +2,7 @@
 //! The Vyper contract build.
 //!
 
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -16,6 +17,10 @@ use crate::vyper::combined_json::contract::Contract as CombinedJsonContract;
 pub struct Contract {
     /// The LLVM module build.
     pub build: era_compiler_llvm_context::EraVMBuild,
+    /// The `vyper` method identifiers output.
+    pub method_identifiers: Option<BTreeMap<String, String>>,
+    /// The `vyper` ABI output.
+    pub abi: Option<serde_json::Value>,
     /// The compilation warnings.
     pub warnings: Vec<CombinedJsonContractWarning>,
 }
@@ -26,9 +31,28 @@ impl Contract {
     ///
     pub fn new(
         build: era_compiler_llvm_context::EraVMBuild,
+        method_identifiers: Option<BTreeMap<String, String>>,
+        abi: Option<serde_json::Value>,
         warnings: Vec<CombinedJsonContractWarning>,
     ) -> Self {
-        Self { build, warnings }
+        Self {
+            build,
+            method_identifiers,
+            abi,
+            warnings,
+        }
+    }
+
+    ///
+    /// A shortcut constructor for minimal proxy.
+    ///
+    pub fn new_minimal_proxy(build: era_compiler_llvm_context::EraVMBuild) -> Self {
+        Self {
+            build,
+            method_identifiers: None,
+            abi: None,
+            warnings: vec![],
+        }
     }
 
     ///
@@ -40,12 +64,16 @@ impl Contract {
         contract_path: &Path,
         overwrite: bool,
     ) -> anyhow::Result<()> {
-        let contract_name = Self::contract_name(contract_path.to_str().expect("Always valid"));
+        let contract_path = crate::path_to_posix(contract_path)?;
+        let file_name = contract_path
+            .file_name()
+            .ok_or_else(|| anyhow::anyhow!("File name not found in path {contract_path:?}"))?
+            .to_string_lossy();
 
         if let Some(assembly) = self.build.assembly {
             let assembly_file_name = format!(
                 "{}.{}",
-                contract_name,
+                file_name,
                 era_compiler_common::EXTENSION_ERAVM_ASSEMBLY
             );
             let mut assembly_file_path = output_directory.to_owned();
@@ -69,7 +97,7 @@ impl Contract {
 
         let binary_file_name = format!(
             "{}.{}",
-            contract_name,
+            file_name,
             era_compiler_common::EXTENSION_ERAVM_BINARY
         );
         let mut binary_file_path = output_directory.to_owned();
@@ -92,31 +120,18 @@ impl Contract {
 
         Ok(())
     }
+}
 
-    ///
-    /// Writes the contract text assembly and bytecode to the combined JSON.
-    ///
-    pub fn write_to_combined_json(
-        self,
-        combined_json_contract: &mut CombinedJsonContract,
-    ) -> anyhow::Result<()> {
-        let hexadecimal_bytecode = hex::encode(self.build.bytecode);
-        combined_json_contract.bytecode = Some(hexadecimal_bytecode);
-        combined_json_contract
-            .bytecode_runtime
-            .clone_from(&combined_json_contract.bytecode);
-        combined_json_contract.assembly = self.build.assembly;
-        combined_json_contract.warnings = Some(self.warnings);
-        combined_json_contract.factory_deps = Some(self.build.factory_dependencies);
+impl From<Contract> for CombinedJsonContract {
+    fn from(contract: Contract) -> Self {
+        Self {
+            method_identifiers: contract.method_identifiers,
+            abi: contract.abi,
 
-        Ok(())
-    }
-
-    ///
-    /// Extracts the contract file name from the full path.
-    ///
-    pub fn contract_name(path: &str) -> String {
-        let path = path.trim().replace('\\', "/");
-        path.split('/').last().expect("Always exists").to_owned()
+            bytecode: Some(hex::encode(contract.build.bytecode)),
+            assembly: contract.build.assembly,
+            warnings: Some(contract.warnings),
+            factory_deps: Some(contract.build.factory_dependencies),
+        }
     }
 }
