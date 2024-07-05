@@ -41,6 +41,12 @@ impl Contract {
         _suppressed_messages: Vec<MessageType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
+        let target_machine = era_compiler_llvm_context::TargetMachine::new(
+            era_compiler_llvm_context::Target::EraVM,
+            &optimizer_settings,
+            llvm_options.as_slice(),
+        )?;
+
         let metadata_hash = source_code_hash.map(|source_code_hash| {
             ContractMetadata::new(
                 &source_code_hash,
@@ -53,13 +59,21 @@ impl Contract {
             .keccak256()
         });
 
-        let build = era_compiler_llvm_context::from_eravm_assembly(
+        let bytecode_buffer = era_compiler_llvm_context::eravm_assemble(
+            &target_machine,
             contract_path,
-            self.source_code,
-            metadata_hash,
-            output_assembly,
+            self.source_code.as_str(),
             debug_config.as_ref(),
         )?;
+
+        let assembly_text = if output_assembly {
+            Some(self.source_code)
+        } else {
+            None
+        };
+
+        let build =
+            era_compiler_llvm_context::eravm_build(bytecode_buffer, metadata_hash, assembly_text)?;
 
         Ok(ContractBuild::new(build, vec![]))
     }
