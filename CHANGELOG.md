@@ -1,5 +1,11 @@
 # The `zkvyper` changelog
 
+## [Unreleased]
+
+### Changed
+
+- Migrated to the LLVM-based assembler and linker
+
 ## [1.5.2] - 2024-07-01
 
 ### Fixed
