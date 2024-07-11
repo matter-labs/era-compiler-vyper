@@ -9,6 +9,7 @@ use std::path::Path;
 
 use crate::vyper::combined_json::contract::warning::Warning as CombinedJsonContractWarning;
 use crate::vyper::combined_json::contract::Contract as CombinedJsonContract;
+use crate::vyper::selection::Selection as VyperSelection;
 
 ///
 /// The Vyper contract build.
@@ -21,6 +22,12 @@ pub struct Contract {
     pub method_identifiers: Option<BTreeMap<String, String>>,
     /// The `vyper` ABI output.
     pub abi: Option<serde_json::Value>,
+    /// The `vyper` layout output.
+    pub layout: Option<serde_json::Value>,
+    /// The `vyper` userdoc output.
+    pub userdoc: Option<serde_json::Value>,
+    /// The `vyper` devdoc output.
+    pub devdoc: Option<serde_json::Value>,
     /// The compilation warnings.
     pub warnings: Vec<CombinedJsonContractWarning>,
 }
@@ -33,12 +40,18 @@ impl Contract {
         build: era_compiler_llvm_context::EraVMBuild,
         method_identifiers: Option<BTreeMap<String, String>>,
         abi: Option<serde_json::Value>,
+        layout: Option<serde_json::Value>,
+        userdoc: Option<serde_json::Value>,
+        devdoc: Option<serde_json::Value>,
         warnings: Vec<CombinedJsonContractWarning>,
     ) -> Self {
         Self {
             build,
             method_identifiers,
             abi,
+            layout,
+            userdoc,
+            devdoc,
             warnings,
         }
     }
@@ -51,18 +64,42 @@ impl Contract {
             build,
             method_identifiers: None,
             abi: None,
+            layout: None,
+            userdoc: None,
+            devdoc: None,
             warnings: vec![],
         }
     }
 
     ///
-    /// Writes the contract text assembly and bytecode to files.
+    /// Writes the contract to the terminal.
+    ///
+    pub fn write_to_terminal(
+        self,
+        path: String,
+        output_selection: &[VyperSelection],
+    ) -> anyhow::Result<()> {
+        for warning in self.warnings.iter() {
+            writeln!(std::io::stderr(), "\n{warning}")?;
+        }
+
+        writeln!(std::io::stdout(), "Contract `{path}`:")?;
+
+        let bytecode_string = hex::encode(self.build.bytecode);
+        writeln!(std::io::stdout(), "0x{bytecode_string}")?;
+
+        Ok(())
+    }
+
+    ///
+    /// Writes the contract output to the directory.
     ///
     pub fn write_to_directory(
         self,
         output_directory: &Path,
         contract_path: &Path,
         overwrite: bool,
+        output_selection: &[VyperSelection],
     ) -> anyhow::Result<()> {
         let contract_path = crate::path_to_posix(contract_path)?;
         let file_name = contract_path
@@ -120,18 +157,22 @@ impl Contract {
 
         Ok(())
     }
-}
 
-impl From<Contract> for CombinedJsonContract {
-    fn from(contract: Contract) -> Self {
-        Self {
-            method_identifiers: contract.method_identifiers,
-            abi: contract.abi,
+    ///
+    /// Converts the contract to the combined JSON.
+    ///
+    pub fn into_combined_json(self, output_selection: &[VyperSelection]) -> CombinedJsonContract {
+        CombinedJsonContract {
+            method_identifiers: self.method_identifiers,
+            abi: self.abi,
+            layout: self.layout,
+            userdoc: self.userdoc,
+            devdoc: self.devdoc,
 
-            bytecode: Some(hex::encode(contract.build.bytecode)),
-            assembly: contract.build.assembly,
-            warnings: Some(contract.warnings),
-            factory_deps: Some(contract.build.factory_dependencies),
+            bytecode: Some(hex::encode(self.build.bytecode)),
+            assembly: self.build.assembly,
+            warnings: Some(self.warnings),
+            factory_deps: Some(self.build.factory_dependencies),
         }
     }
 }

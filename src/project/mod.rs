@@ -23,6 +23,7 @@ use crate::process::output::Output as ProcessOutput;
 use crate::project::contract::vyper::ast::AST as VyperAST;
 use crate::project::contract::vyper::Contract as VyperContract;
 use crate::project::contract::Contract as ProjectContract;
+use crate::vyper::selection::Selection as VyperSelection;
 use crate::vyper::standard_json::output::Output as VyperStandardJsonOutput;
 
 use self::contract::eravm_assembly::Contract as EraVMAssemblyContract;
@@ -40,13 +41,19 @@ pub struct Project {
     pub source_code_hash: [u8; era_compiler_common::BYTE_LENGTH_FIELD],
     /// The contract data,
     pub contracts: BTreeMap<String, Contract>,
+    /// The selection output.
+    pub output_selection: Vec<VyperSelection>,
 }
 
 impl Project {
     ///
     /// A shortcut constructor.
     ///
-    pub fn new(version: semver::Version, contracts: BTreeMap<String, Contract>) -> Self {
+    pub fn new(
+        version: semver::Version,
+        contracts: BTreeMap<String, Contract>,
+        output_selection: Vec<VyperSelection>,
+    ) -> Self {
         let mut source_code_hasher = sha3::Keccak256::new();
         for (_path, contract) in contracts.iter() {
             source_code_hasher.update(contract.source_code().as_bytes());
@@ -58,6 +65,7 @@ impl Project {
             version,
             source_code_hash,
             contracts,
+            output_selection,
         }
     }
 
@@ -97,18 +105,23 @@ impl Project {
                 let project_contract = VyperContract::new(
                     version.to_owned(),
                     contract.source_code.expect("Must be set by the tester"),
-                    SourceMetadata::default(),
                     String::new(),
                     contract.ir,
+                    SourceMetadata::default(),
+                    ast,
                     serde_json::Value::Null,
                     contract.evm.method_identifiers,
-                    ast,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
                 );
                 project_contracts.insert(full_path, project_contract.into());
             }
         }
 
-        Ok(Self::new(version.to_owned(), project_contracts))
+        Ok(Self::new(version.to_owned(), project_contracts, vec![]))
     }
 
     ///
@@ -134,6 +147,7 @@ impl Project {
         Ok(Self::new(
             era_compiler_llvm_context::LLVM_VERSION,
             contracts,
+            vec![],
         ))
     }
 
@@ -162,6 +176,7 @@ impl Project {
         Ok(Self::new(
             era_compiler_llvm_context::eravm_const::ZKEVM_VERSION,
             contracts,
+            vec![],
         ))
     }
 
@@ -179,7 +194,7 @@ impl Project {
         suppressed_messages: Vec<MessageType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<Build> {
-        let mut build = Build::default();
+        let mut build = Build::new(self.output_selection);
         let source_code_hash = if include_metadata_hash {
             Some(self.source_code_hash)
         } else {

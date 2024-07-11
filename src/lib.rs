@@ -207,11 +207,7 @@ pub fn combined_json(
         debug_config,
     )?;
 
-    let combined_json = build.into_combined_json(
-        Some(&vyper.version.default),
-        &zkvyper_version,
-        output_assembly,
-    );
+    let combined_json = build.into_combined_json(Some(&vyper.version.default), &zkvyper_version);
 
     Ok(combined_json)
 }

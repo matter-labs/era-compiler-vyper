@@ -61,6 +61,14 @@ impl Contract {
             debug_config.as_ref(),
         )?;
 
-        Ok(ContractBuild::new(build, None, None, vec![]))
+        Ok(ContractBuild::new(
+            build,
+            None,
+            None,
+            None,
+            None,
+            None,
+            vec![],
+        ))
     }
 }

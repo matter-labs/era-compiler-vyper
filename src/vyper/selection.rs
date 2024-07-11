@@ -23,6 +23,16 @@ pub enum Selection {
     ABI,
     /// The method identifiers.
     MethodIdentifiers,
+    /// The storage layout.
+    Layout,
+    /// The interface.
+    Interface,
+    /// The external interface.
+    ExternalInterface,
+    /// The user documentation.
+    UserDocumentation,
+    /// The developer documentation.
+    DeveloperDocumentation,
 }
 
 impl FromStr for Selection {
@@ -37,7 +47,12 @@ impl FromStr for Selection {
             "ast" => Self::AST,
             "abi" => Self::ABI,
             "method_identifiers" => Self::MethodIdentifiers,
-            _ => todo!(),
+            "layout" => Self::Layout,
+            "interface" => Self::Interface,
+            "external_interface" => Self::ExternalInterface,
+            "userdoc" => Self::UserDocumentation,
+            "devdoc" => Self::DeveloperDocumentation,
+            string => anyhow::bail!("Unknown selection flag `{string}`"),
         })
     }
 }
@@ -52,6 +67,11 @@ impl std::fmt::Display for Selection {
             Self::AST => write!(f, "ast"),
             Self::ABI => write!(f, "abi"),
             Self::MethodIdentifiers => write!(f, "method_identifiers"),
+            Self::Layout => write!(f, "layout"),
+            Self::Interface => write!(f, "interface"),
+            Self::ExternalInterface => write!(f, "external_interface"),
+            Self::UserDocumentation => write!(f, "userdoc"),
+            Self::DeveloperDocumentation => write!(f, "devdoc"),
         }
     }
 }

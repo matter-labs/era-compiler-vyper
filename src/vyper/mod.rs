@@ -100,6 +100,7 @@ impl Compiler {
         let mut command = std::process::Command::new(self.executable.as_str());
         command.stdin(std::process::Stdio::piped());
         command.stdout(std::process::Stdio::piped());
+        command.stderr(std::process::Stdio::piped());
         command.arg("--standard-json");
 
         if self.version.default >= Self::FIRST_VERSION_OPTIMIZER_UNUSABLE {
@@ -125,20 +126,24 @@ impl Compiler {
                 self.executable
             )
         })?;
-        let stderr_message = String::from_utf8_lossy(result.stderr.as_slice());
         let mut output = match era_compiler_common::deserialize_from_slice::<StandardJsonOutput>(
             result.stdout.as_slice(),
         ) {
             Ok(output) => output,
             Err(error) => {
                 anyhow::bail!(
-                    "{} subprocess stdout parsing error: {error:?} (stderr: {stderr_message})",
-                    self.executable
+                    "{} subprocess stdout parsing error: {error:?} (stderr: {})",
+                    self.executable,
+                    String::from_utf8_lossy(result.stderr.as_slice())
                 );
             }
         };
         if !result.status.success() {
-            anyhow::bail!("{} error: {stderr_message}", self.executable);
+            anyhow::bail!(
+                "{} error: {}",
+                self.executable,
+                String::from_utf8_lossy(result.stderr.as_slice())
+            );
         }
 
         for (full_path, source) in input.sources.into_iter() {
@@ -180,12 +185,29 @@ impl Compiler {
         &self,
         version: &semver::Version,
         mut paths: Vec<PathBuf>,
-        selection: Vec<Selection>,
+        mut selection: Vec<Selection>,
         evm_version: Option<era_compiler_common::EVMVersion>,
         enable_decimals: bool,
         optimize: bool,
     ) -> anyhow::Result<Project> {
         paths.sort();
+
+        let output_selection: Vec<Selection> = selection.clone();
+
+        let extra_selection = [
+            Selection::IR,
+            Selection::IRJson,
+            Selection::Metadata,
+            Selection::AST,
+            Selection::ABI,
+            Selection::MethodIdentifiers,
+        ];
+        selection.extend(
+            extra_selection
+                .iter()
+                .filter(|flag| !selection.contains(flag))
+                .collect::<Vec<&Selection>>(),
+        );
 
         let mut command = std::process::Command::new(self.executable.as_str());
         if let Some(evm_version) = evm_version {
@@ -241,15 +263,15 @@ impl Compiler {
                     return (path_str, Err(error));
                 }
 
-                let contract_result =
-                    VyperContract::try_from_lines(version.to_owned(), source_code, group.to_vec())
-                        .map_err(|error| {
-                            anyhow::anyhow!(
-                                "Contract `{}` JSON output parsing: {}",
-                                path_str,
-                                error
-                            )
-                        });
+                let contract_result = VyperContract::try_from_lines(
+                    version.to_owned(),
+                    source_code,
+                    &selection,
+                    group.to_vec(),
+                )
+                .map_err(|error| {
+                    anyhow::anyhow!("Contract `{}` JSON output parsing: {}", path_str, error)
+                });
 
                 (path_str, contract_result)
             })
@@ -262,7 +284,7 @@ impl Compiler {
                     Ok::<BTreeMap<String, Contract>, anyhow::Error>(accumulator)
                 })?;
 
-        let project = Project::new(version.to_owned(), contracts);
+        let project = Project::new(version.to_owned(), contracts, output_selection);
 
         Ok(project)
     }

@@ -9,34 +9,39 @@ use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
-use crate::vyper::combined_json::contract::Contract as CombinedJsonContract;
 use crate::vyper::combined_json::CombinedJson;
+use crate::vyper::selection::Selection as VyperSelection;
 
 use self::contract::Contract;
 
 ///
 /// The Vyper project build.
 ///
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Build {
     /// The contract data,
     pub contracts: BTreeMap<String, Contract>,
+    /// The selection to output.
+    pub output_selection: Vec<VyperSelection>,
 }
 
 impl Build {
+    ///
+    /// A shortcut constructor.
+    ///
+    pub fn new(output_selection: Vec<VyperSelection>) -> Self {
+        Self {
+            contracts: BTreeMap::new(),
+            output_selection,
+        }
+    }
+
     ///
     /// Writes all contracts to the terminal.
     ///
     pub fn write_to_terminal(self) -> anyhow::Result<()> {
         for (path, contract) in self.contracts.into_iter() {
-            for warning in contract.warnings.iter() {
-                writeln!(std::io::stderr(), "\n{warning}")?;
-            }
-
-            writeln!(std::io::stdout(), "Contract `{path}`:")?;
-
-            let bytecode_string = hex::encode(contract.build.bytecode);
-            writeln!(std::io::stdout(), "0x{bytecode_string}")?;
+            contract.write_to_terminal(path, self.output_selection.as_slice())?;
         }
 
         Ok(())
@@ -61,6 +66,7 @@ impl Build {
                 output_directory,
                 PathBuf::from(contract_path).as_path(),
                 overwrite,
+                self.output_selection.as_slice(),
             )?;
         }
 
@@ -74,18 +80,15 @@ impl Build {
         self,
         version: Option<&semver::Version>,
         zkvyper_version: &semver::Version,
-        output_assembly: bool,
     ) -> CombinedJson {
         let contracts = self
             .contracts
             .into_iter()
             .map(|(path, contract)| {
-                let contract = if path.as_str() == crate::r#const::MINIMAL_PROXY_CONTRACT_NAME {
-                    CombinedJsonContract::new_minimal_proxy(output_assembly)
-                } else {
-                    contract.into()
-                };
-                (path, contract)
+                (
+                    path,
+                    contract.into_combined_json(self.output_selection.as_slice()),
+                )
             })
             .collect();
 

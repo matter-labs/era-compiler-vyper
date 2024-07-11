@@ -16,6 +16,7 @@ use crate::message_type::MessageType;
 use crate::metadata::Metadata as SourceMetadata;
 use crate::project::contract::metadata::Metadata as ContractMetadata;
 use crate::project::dependency_data::DependencyData;
+use crate::vyper::selection::Selection as VyperSelection;
 
 use self::ast::AST;
 use self::expression::Expression;
@@ -30,18 +31,28 @@ pub struct Contract {
     pub version: semver::Version,
     /// The Vyper contract source code.
     pub source_code: String,
-    /// The source metadata.
-    pub source_metadata: SourceMetadata,
     /// The stringified IR.
     pub ir_string: String,
     /// The LLL IR parsed from JSON.
     pub ir: Expression,
+    /// The source metadata.
+    pub source_metadata: SourceMetadata,
+    /// The contract AST.
+    pub ast: AST,
     /// The contract ABI.
     pub abi: serde_json::Value,
     /// The contract method identifiers.
     pub method_identifiers: BTreeMap<String, String>,
-    /// The contract AST.
-    pub ast: AST,
+    /// The contract storage layout.
+    pub layout: Option<serde_json::Value>,
+    /// The contract interface.
+    pub interface: Option<String>,
+    /// The contract external interface.
+    pub external_interface: Option<String>,
+    /// The contract user documentation.
+    pub userdoc: Option<serde_json::Value>,
+    /// The contract developer documentation.
+    pub devdoc: Option<serde_json::Value>,
     /// The dependency data.
     pub dependency_data: DependencyData,
 }
@@ -53,55 +64,112 @@ impl Contract {
     pub fn new(
         version: semver::Version,
         source_code: String,
-        source_metadata: SourceMetadata,
         ir_string: String,
         ir: Expression,
+        source_metadata: SourceMetadata,
+        ast: AST,
         abi: serde_json::Value,
         method_identifiers: BTreeMap<String, String>,
-        ast: AST,
+        layout: Option<serde_json::Value>,
+        interface: Option<String>,
+        external_interface: Option<String>,
+        userdoc: Option<serde_json::Value>,
+        devdoc: Option<serde_json::Value>,
     ) -> Self {
         Self {
             version,
             source_code,
-            source_metadata,
             ir_string,
             ir,
+            source_metadata,
+            ast,
             abi,
             method_identifiers,
-            ast,
+            layout,
+            interface,
+            external_interface,
+            userdoc,
+            devdoc,
             dependency_data: DependencyData::default(),
         }
     }
 
     ///
-    /// Parses three lines with JSONs, returned by the Vyper compiler.
-    /// The order must be:
-    /// 1. The LLL IR JSON
-    /// 2. The contract functions metadata
-    /// 3. The contract ABI data
-    /// 4. The contract AST
+    /// Parses output lines returned by the Vyper compiler.
+    /// The order of `lines` is expected to match that of `selection`.
     ///
     pub fn try_from_lines(
         version: semver::Version,
         source_code: String,
-        mut lines: Vec<&str>,
+        selection: &Vec<VyperSelection>,
+        lines: Vec<&str>,
     ) -> anyhow::Result<Self> {
-        let ir_string = lines.remove(0).to_owned();
-        let ir: Expression = era_compiler_common::deserialize_from_str(lines.remove(0))?;
-        let metadata: SourceMetadata = serde_json::from_str(lines.remove(0))?;
-        let ast: AST = serde_json::from_str(lines.remove(0))?;
-        let abi: serde_json::Value = serde_json::from_str(lines.remove(0))?;
-        let method_identifiers: BTreeMap<String, String> = serde_json::from_str(lines.remove(0))?;
+        let mut ir_string = None;
+        let mut ir = None;
+        let mut metadata = None;
+        let mut ast = None;
+        let mut abi = None;
+        let mut method_identifiers = None;
+        let mut layout = None;
+        let mut interface = None;
+        let mut external_interface = None;
+        let mut userdoc = None;
+        let mut devdoc = None;
+        for (line, selection) in lines.into_iter().zip(selection) {
+            match selection {
+                VyperSelection::CombinedJson => {
+                    panic!("Combined JSON cannot be requested with other types of output")
+                }
+                VyperSelection::IR => {
+                    ir_string = Some(line.to_owned());
+                }
+                VyperSelection::IRJson => {
+                    ir = Some(era_compiler_common::deserialize_from_str(line)?);
+                }
+                VyperSelection::Metadata => {
+                    metadata = Some(era_compiler_common::deserialize_from_str(line)?);
+                }
+                VyperSelection::AST => {
+                    ast = Some(era_compiler_common::deserialize_from_str(line)?);
+                }
+                VyperSelection::ABI => {
+                    abi = Some(era_compiler_common::deserialize_from_str(line)?);
+                }
+                VyperSelection::MethodIdentifiers => {
+                    method_identifiers = Some(era_compiler_common::deserialize_from_str(line)?);
+                }
+                VyperSelection::Layout => {
+                    layout = Some(era_compiler_common::deserialize_from_str(line)?);
+                }
+                VyperSelection::Interface => {
+                    interface = Some(line.to_owned());
+                }
+                VyperSelection::ExternalInterface => {
+                    external_interface = Some(line.to_owned());
+                }
+                VyperSelection::UserDocumentation => {
+                    userdoc = Some(era_compiler_common::deserialize_from_str(line)?);
+                }
+                VyperSelection::DeveloperDocumentation => {
+                    devdoc = Some(era_compiler_common::deserialize_from_str(line)?);
+                }
+            }
+        }
 
         Ok(Self::new(
             version,
             source_code,
-            metadata,
-            ir_string,
-            ir,
-            abi,
-            method_identifiers,
-            ast,
+            ir_string.expect("Always exists"),
+            ir.expect("Always exists"),
+            metadata.expect("Always exists"),
+            ast.expect("Always exists"),
+            abi.expect("Always exists"),
+            method_identifiers.expect("Always exists"),
+            layout,
+            interface,
+            external_interface,
+            userdoc,
+            devdoc,
         ))
     }
 
@@ -148,8 +216,11 @@ impl Contract {
             debug_config,
         );
 
-        let method_identifiers = std::mem::take(&mut self.method_identifiers);
         let abi = std::mem::take(&mut self.abi);
+        let method_identifiers = std::mem::take(&mut self.method_identifiers);
+        let layout = self.layout.take();
+        let userdoc = self.userdoc.take();
+        let devdoc = self.devdoc.take();
 
         self.declare(&mut context).map_err(|error| {
             anyhow::anyhow!(
@@ -180,6 +251,9 @@ impl Contract {
             build,
             Some(method_identifiers),
             Some(abi),
+            layout,
+            userdoc,
+            devdoc,
             warnings,
         ))
     }

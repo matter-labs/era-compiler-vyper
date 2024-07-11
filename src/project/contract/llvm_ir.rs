@@ -69,6 +69,14 @@ impl Contract {
 
         let build = context.build(contract_path, metadata_hash, output_assembly)?;
 
-        Ok(ContractBuild::new(build, None, None, vec![]))
+        Ok(ContractBuild::new(
+            build,
+            None,
+            None,
+            None,
+            None,
+            None,
+            vec![],
+        ))
     }
 }

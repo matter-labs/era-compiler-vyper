@@ -19,6 +19,15 @@ pub struct Contract {
     /// The `vyper` ABI output.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub abi: Option<serde_json::Value>,
+    /// The `vyper` layout output.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub layout: Option<serde_json::Value>,
+    /// The `vyper` userdoc output.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub userdoc: Option<serde_json::Value>,
+    /// The `vyper` devdoc output.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub devdoc: Option<serde_json::Value>,
     /// The `vyper` hexadecimal binary output.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bytecode: Option<String>,
@@ -41,36 +50,21 @@ impl Contract {
     pub fn new(
         method_identifiers: Option<BTreeMap<String, String>>,
         abi: Option<serde_json::Value>,
+        layout: Option<serde_json::Value>,
+        userdoc: Option<serde_json::Value>,
+        devdoc: Option<serde_json::Value>,
     ) -> Self {
         Self {
             method_identifiers,
             abi,
+            layout,
+            userdoc,
+            devdoc,
             bytecode: None,
 
             assembly: None,
             warnings: None,
             factory_deps: None,
-        }
-    }
-
-    ///
-    /// Creates a minimal proxy.
-    ///
-    pub fn new_minimal_proxy(output_assembly: bool) -> Self {
-        Self {
-            method_identifiers: None,
-            abi: None,
-            bytecode: Some(hex::encode(
-                crate::r#const::MINIMAL_PROXY_CONTRACT_BYTECODE.as_slice(),
-            )),
-
-            assembly: if output_assembly {
-                Some(crate::r#const::MINIMAL_PROXY_CONTRACT_ASSEMBLY.to_owned())
-            } else {
-                None
-            },
-            warnings: Some(Vec::new()),
-            factory_deps: Some(BTreeMap::new()),
         }
     }
 
