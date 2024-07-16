@@ -609,8 +609,8 @@ impl Instruction {
                 )?))
             }
 
-            Self::Assert(inner) => inner.into_llvm_value(context).map(|_| None),
-            Self::Assert_Unreachable(inner) => inner.into_llvm_value(context).map(|_| None),
+            Self::Assert(inner) => inner.into_llvm_value(context, false).map(|_| None),
+            Self::Assert_Unreachable(inner) => inner.into_llvm_value(context, true).map(|_| None),
 
             Self::Var_List(_inner) => Ok(None),
 

@@ -19,6 +19,7 @@ impl Assert {
     pub fn into_llvm_value<D>(
         self,
         context: &mut era_compiler_llvm_context::EraVMContext<D>,
+        is_unreachable: bool,
     ) -> anyhow::Result<()>
     where
         D: era_compiler_llvm_context::Dependency,
@@ -46,11 +47,15 @@ impl Assert {
         context.build_conditional_branch(condition, join_block, error_block)?;
 
         context.set_basic_block(error_block);
-        context.build_exit(
-            context.llvm_runtime().revert,
-            context.field_const(0),
-            context.field_const(0),
-        )?;
+        if is_unreachable {
+            era_compiler_llvm_context::eravm_evm_return::invalid(context)?;
+        } else {
+            era_compiler_llvm_context::eravm_evm_return::revert(
+                context,
+                context.field_const(0),
+                context.field_const(0),
+            )?;
+        }
 
         context.set_basic_block(join_block);
 
