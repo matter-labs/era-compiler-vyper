@@ -1,5 +1,11 @@
 # The `zkvyper` changelog
 
+## [Unreleased]
+
+### Fixed
+
+- `assert_unreachable` is now translated to `INVALID` burning all gas
+
 ## [1.5.2] - 2024-07-01
 
 ### Fixed
