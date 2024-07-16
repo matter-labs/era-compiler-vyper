@@ -2,19 +2,23 @@
 
 ## [Unreleased]
 
+### Removed
+
+- Redundant calls to `vyper` that were increasing the compilation time
+
 ### Fixed
 
-- The redundant `vyper -f combined_json` call increasing the compilation time
+- `assert_unreachable` is now translated to `INVALID` burning all gas
 
 ## [1.5.2] - 2024-07-01
-
-### Fixed
-
-- Path normalization error with the internal minimal proxy contract
 
 ### Removed
 
 - Obsolete warnings for `extcodesize` and `ecrecover`
+
+### Fixed
+
+- Path normalization error with the internal minimal proxy contract
 
 ## [1.5.1] - 2024-06-27
 
