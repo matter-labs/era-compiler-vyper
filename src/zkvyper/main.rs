@@ -88,7 +88,7 @@ fn main_inner() -> anyhow::Result<()> {
         None => None,
     };
 
-    let extra_selection = match arguments.format.as_ref() {
+    let output_selection = match arguments.format.as_ref() {
         Some(format) => format
             .split(',')
             .map(era_compiler_vyper::VyperSelection::from_str)
@@ -96,10 +96,11 @@ fn main_inner() -> anyhow::Result<()> {
         None => vec![],
     };
     let is_combined_json =
-        extra_selection.contains(&era_compiler_vyper::VyperSelection::CombinedJson);
-    if is_combined_json && extra_selection.len() > 1 {
+        output_selection.contains(&era_compiler_vyper::VyperSelection::CombinedJson);
+    if is_combined_json && output_selection.len() > 1 {
         anyhow::bail!(
-            "`combined_json` cannot be requested together with other output: consider removing them from `{:?}`", extra_selection,
+            "`combined_json` cannot be requested together with other output: `{:?}`",
+            output_selection,
         );
     }
 
@@ -133,19 +134,19 @@ fn main_inner() -> anyhow::Result<()> {
     let build = if arguments.llvm_ir {
         era_compiler_vyper::llvm_ir(
             arguments.input_paths,
+            output_selection,
             include_metadata_hash,
             optimizer_settings,
             llvm_options,
-            arguments.output_assembly,
             suppressed_messages,
             debug_config,
         )
     } else if arguments.eravm_assembly {
         era_compiler_vyper::eravm_assembly(
             arguments.input_paths,
+            output_selection,
             include_metadata_hash,
             llvm_options,
-            arguments.output_assembly,
             suppressed_messages,
             debug_config,
         )
@@ -161,14 +162,13 @@ fn main_inner() -> anyhow::Result<()> {
             let combined_json = era_compiler_vyper::combined_json(
                 arguments.input_paths,
                 &vyper,
-                extra_selection,
+                output_selection,
                 evm_version,
                 arguments.enable_decimals,
                 include_metadata_hash,
                 vyper_optimizer_enabled,
                 optimizer_settings,
                 llvm_options,
-                arguments.output_assembly,
                 suppressed_messages,
                 debug_config,
             )?;
@@ -187,14 +187,13 @@ fn main_inner() -> anyhow::Result<()> {
         era_compiler_vyper::standard_output(
             arguments.input_paths,
             &vyper,
-            extra_selection,
+            output_selection,
             evm_version,
             arguments.enable_decimals,
             include_metadata_hash,
             vyper_optimizer_enabled,
             optimizer_settings,
             llvm_options,
-            arguments.output_assembly,
             suppressed_messages,
             debug_config,
         )

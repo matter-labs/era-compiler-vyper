@@ -10,38 +10,25 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use crate::vyper::combined_json::CombinedJson;
-use crate::vyper::selection::Selection as VyperSelection;
 
 use self::contract::Contract;
 
 ///
 /// The Vyper project build.
 ///
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Build {
     /// The contract data,
     pub contracts: BTreeMap<String, Contract>,
-    /// The selection to output.
-    pub output_selection: Vec<VyperSelection>,
 }
 
 impl Build {
-    ///
-    /// A shortcut constructor.
-    ///
-    pub fn new(output_selection: Vec<VyperSelection>) -> Self {
-        Self {
-            contracts: BTreeMap::new(),
-            output_selection,
-        }
-    }
-
     ///
     /// Writes all contracts to the terminal.
     ///
     pub fn write_to_terminal(self) -> anyhow::Result<()> {
         for (path, contract) in self.contracts.into_iter() {
-            contract.write_to_terminal(path, self.output_selection.as_slice())?;
+            contract.write_to_terminal(path)?;
         }
 
         Ok(())
@@ -66,7 +53,6 @@ impl Build {
                 output_directory,
                 PathBuf::from(contract_path).as_path(),
                 overwrite,
-                self.output_selection.as_slice(),
             )?;
         }
 
@@ -84,12 +70,7 @@ impl Build {
         let contracts = self
             .contracts
             .into_iter()
-            .map(|(path, contract)| {
-                (
-                    path,
-                    contract.into_combined_json(self.output_selection.as_slice()),
-                )
-            })
+            .map(|(path, contract)| (path, contract.into_combined_json()))
             .collect();
 
         CombinedJson::new(contracts, version, zkvyper_version)

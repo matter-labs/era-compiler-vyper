@@ -33,7 +33,7 @@ pub fn run() -> anyhow::Result<()> {
         input.evm_version,
         input.optimizer_settings,
         input.llvm_options,
-        input.output_assembly,
+        input.output_selection,
         input.suppressed_messages,
         input.debug_config,
     )?;

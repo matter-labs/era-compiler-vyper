@@ -11,8 +11,11 @@ use self::warning::Warning;
 ///
 /// The contract.
 ///
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, serde::Serialize)]
 pub struct Contract {
+    /// The `vyper` hexadecimal binary output.
+    pub bytecode: String,
+
     /// The `vyper` method identifiers output.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub method_identifiers: Option<BTreeMap<String, String>>,
@@ -28,9 +31,6 @@ pub struct Contract {
     /// The `vyper` devdoc output.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub devdoc: Option<serde_json::Value>,
-    /// The `vyper` hexadecimal binary output.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub bytecode: Option<String>,
 
     /// The EraVM text assembly.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -44,30 +44,6 @@ pub struct Contract {
 }
 
 impl Contract {
-    ///
-    /// A shortcut constructor.
-    ///
-    pub fn new(
-        method_identifiers: Option<BTreeMap<String, String>>,
-        abi: Option<serde_json::Value>,
-        layout: Option<serde_json::Value>,
-        userdoc: Option<serde_json::Value>,
-        devdoc: Option<serde_json::Value>,
-    ) -> Self {
-        Self {
-            method_identifiers,
-            abi,
-            layout,
-            userdoc,
-            devdoc,
-            bytecode: None,
-
-            assembly: None,
-            warnings: None,
-            factory_deps: None,
-        }
-    }
-
     ///
     /// Returns the signature hash of the specified contract entry.
     ///

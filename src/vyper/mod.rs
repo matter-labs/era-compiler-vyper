@@ -221,7 +221,13 @@ impl Compiler {
         command.arg(
             selection
                 .iter()
-                .map(|selection| selection.to_string())
+                .filter_map(|selection| {
+                    if selection.is_supported_by_vyper() {
+                        Some(selection.to_string())
+                    } else {
+                        None
+                    }
+                })
                 .collect::<Vec<String>>()
                 .join(","),
         );

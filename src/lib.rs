@@ -54,10 +54,10 @@ use path_slash::PathExt;
 ///
 pub fn llvm_ir(
     input_paths: Vec<PathBuf>,
+    output_selection: Vec<VyperSelection>,
     include_metadata_hash: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
-    output_assembly: bool,
     suppressed_messages: Vec<MessageType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
@@ -66,14 +66,13 @@ pub fn llvm_ir(
     }
 
     let paths: Vec<&Path> = input_paths.iter().map(|path| path.as_path()).collect();
-    let project = Project::try_from_llvm_ir_paths(paths.as_slice())?;
+    let project = Project::try_from_llvm_ir_paths(paths.as_slice(), output_selection)?;
 
     let build = project.compile(
         None,
         include_metadata_hash,
         optimizer_settings,
         llvm_options,
-        output_assembly,
         zkevm_assembly::RunningVmEncodingMode::Production,
         suppressed_messages,
         debug_config,
@@ -86,9 +85,9 @@ pub fn llvm_ir(
 ///
 pub fn eravm_assembly(
     input_paths: Vec<PathBuf>,
+    output_selection: Vec<VyperSelection>,
     include_metadata_hash: bool,
     llvm_options: Vec<String>,
-    output_assembly: bool,
     suppressed_messages: Vec<MessageType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
@@ -97,7 +96,7 @@ pub fn eravm_assembly(
     }
 
     let paths: Vec<&Path> = input_paths.iter().map(|path| path.as_path()).collect();
-    let project = Project::try_from_eravm_assembly_paths(paths.as_slice())?;
+    let project = Project::try_from_eravm_assembly_paths(paths.as_slice(), output_selection)?;
 
     let optimizer_settings = era_compiler_llvm_context::OptimizerSettings::cycles();
     let build = project.compile(
@@ -105,7 +104,6 @@ pub fn eravm_assembly(
         include_metadata_hash,
         optimizer_settings,
         llvm_options,
-        output_assembly,
         zkevm_assembly::RunningVmEncodingMode::Production,
         suppressed_messages,
         debug_config,
@@ -119,21 +117,20 @@ pub fn eravm_assembly(
 pub fn standard_output(
     input_paths: Vec<PathBuf>,
     vyper: &VyperCompiler,
-    selection: Vec<VyperSelection>,
+    output_selection: Vec<VyperSelection>,
     evm_version: Option<era_compiler_common::EVMVersion>,
     enable_decimals: bool,
     include_metadata_hash: bool,
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
-    output_assembly: bool,
     suppressed_messages: Vec<MessageType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
     let project = vyper.batch(
         &vyper.version.default,
         input_paths,
-        selection,
+        output_selection,
         evm_version,
         enable_decimals,
         vyper_optimizer_enabled,
@@ -152,7 +149,6 @@ pub fn standard_output(
         include_metadata_hash,
         optimizer_settings,
         llvm_options,
-        output_assembly,
         zkevm_assembly::RunningVmEncodingMode::Production,
         suppressed_messages,
         debug_config,
@@ -166,14 +162,13 @@ pub fn standard_output(
 pub fn combined_json(
     input_paths: Vec<PathBuf>,
     vyper: &VyperCompiler,
-    selection: Vec<VyperSelection>,
+    output_selection: Vec<VyperSelection>,
     evm_version: Option<era_compiler_common::EVMVersion>,
     enable_decimals: bool,
     include_metadata_hash: bool,
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
-    output_assembly: bool,
     suppressed_messages: Vec<MessageType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<VyperCompilerCombinedJson> {
@@ -182,7 +177,7 @@ pub fn combined_json(
     let project: Project = vyper.batch(
         &vyper.version.default,
         input_paths.clone(),
-        selection,
+        output_selection,
         evm_version,
         enable_decimals,
         vyper_optimizer_enabled,
@@ -201,7 +196,6 @@ pub fn combined_json(
         include_metadata_hash,
         optimizer_settings,
         llvm_options,
-        output_assembly,
         zkevm_assembly::RunningVmEncodingMode::Production,
         suppressed_messages,
         debug_config,

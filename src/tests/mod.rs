@@ -63,7 +63,6 @@ pub fn build_vyper(
         false,
         optimizer_settings,
         vec![],
-        false,
         zkevm_assembly::RunningVmEncodingMode::Production,
         vec![],
         None,

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- EraVM assembly must now be requested with `zkvyper -f eravm_assembly ...`
+
 ### Removed
 
 - Redundant calls to `vyper` that were increasing the compilation time

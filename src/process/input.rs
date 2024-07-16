@@ -8,6 +8,7 @@ use std::borrow::Cow;
 
 use crate::message_type::MessageType;
 use crate::project::contract::Contract;
+use crate::vyper::selection::Selection as VyperSelection;
 
 ///
 /// The input data.
@@ -24,12 +25,12 @@ pub struct Input<'a> {
     pub enable_test_encoding: bool,
     /// The EVM target version.
     pub evm_version: Option<era_compiler_common::EVMVersion>,
+    /// The output selection flags.
+    pub output_selection: Vec<VyperSelection>,
     /// The optimizer settings.
     pub optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     /// The extra LLVM arguments.
     pub llvm_options: Vec<String>,
-    /// Whether to output EraVM assembly.
-    pub output_assembly: bool,
     /// The suppressed messages.
     pub suppressed_messages: Vec<MessageType>,
     /// The debug output config.
@@ -46,9 +47,9 @@ impl<'a> Input<'a> {
         source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
         enable_test_encoding: bool,
         evm_version: Option<era_compiler_common::EVMVersion>,
+        output_selection: Vec<VyperSelection>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
-        output_assembly: bool,
         suppressed_messages: Vec<MessageType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> Self {
@@ -58,9 +59,9 @@ impl<'a> Input<'a> {
             source_code_hash,
             enable_test_encoding,
             evm_version,
+            output_selection,
             optimizer_settings,
             llvm_options,
-            output_assembly,
             suppressed_messages,
             debug_config,
         }

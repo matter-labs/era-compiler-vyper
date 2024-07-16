@@ -100,10 +100,6 @@ pub struct Arguments {
     #[structopt(long = "debug-output-dir")]
     pub debug_output_directory: Option<PathBuf>,
 
-    /// Include assembly in the output.
-    #[structopt(long = "output-assembly")]
-    pub output_assembly: bool,
-
     /// Suppress specified warnings.
     /// Available arguments: `ecrecover`, `extcodesize`, `txorigin`.
     #[structopt(long = "suppress-warnings")]

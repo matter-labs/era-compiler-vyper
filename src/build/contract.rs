@@ -7,9 +7,11 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
+use crate::metadata::Metadata as SourceMetadata;
+use crate::project::contract::vyper::ast::AST;
+use crate::project::contract::vyper::expression::Expression as IR;
 use crate::vyper::combined_json::contract::warning::Warning as CombinedJsonContractWarning;
 use crate::vyper::combined_json::contract::Contract as CombinedJsonContract;
-use crate::vyper::selection::Selection as VyperSelection;
 
 ///
 /// The Vyper contract build.
@@ -18,12 +20,24 @@ use crate::vyper::selection::Selection as VyperSelection;
 pub struct Contract {
     /// The LLVM module build.
     pub build: era_compiler_llvm_context::EraVMBuild,
+    /// The stringified IR.
+    pub ir_string: Option<String>,
+    /// The LLL IR parsed from JSON.
+    pub ir: Option<IR>,
+    /// The source metadata.
+    pub source_metadata: Option<SourceMetadata>,
+    /// The contract AST.
+    pub ast: Option<AST>,
     /// The `vyper` method identifiers output.
     pub method_identifiers: Option<BTreeMap<String, String>>,
     /// The `vyper` ABI output.
     pub abi: Option<serde_json::Value>,
     /// The `vyper` layout output.
     pub layout: Option<serde_json::Value>,
+    /// The contract interface.
+    pub interface: Option<String>,
+    /// The contract external interface.
+    pub external_interface: Option<String>,
     /// The `vyper` userdoc output.
     pub userdoc: Option<serde_json::Value>,
     /// The `vyper` devdoc output.
@@ -38,18 +52,30 @@ impl Contract {
     ///
     pub fn new(
         build: era_compiler_llvm_context::EraVMBuild,
+        ir_string: Option<String>,
+        ir: Option<IR>,
+        source_metadata: Option<SourceMetadata>,
+        ast: Option<AST>,
         method_identifiers: Option<BTreeMap<String, String>>,
         abi: Option<serde_json::Value>,
         layout: Option<serde_json::Value>,
+        interface: Option<String>,
+        external_interface: Option<String>,
         userdoc: Option<serde_json::Value>,
         devdoc: Option<serde_json::Value>,
         warnings: Vec<CombinedJsonContractWarning>,
     ) -> Self {
         Self {
             build,
+            ir_string,
+            ir,
+            source_metadata,
+            ast,
             method_identifiers,
             abi,
             layout,
+            interface,
+            external_interface,
             userdoc,
             devdoc,
             warnings,
@@ -57,14 +83,51 @@ impl Contract {
     }
 
     ///
-    /// A shortcut constructor for minimal proxy.
+    /// A shortcut constructor.
     ///
-    pub fn new_minimal_proxy(build: era_compiler_llvm_context::EraVMBuild) -> Self {
+    pub fn new_inner(build: era_compiler_llvm_context::EraVMBuild) -> Self {
         Self {
             build,
+            ir_string: None,
+            ir: None,
+            source_metadata: None,
+            ast: None,
             method_identifiers: None,
             abi: None,
             layout: None,
+            interface: None,
+            external_interface: None,
+            userdoc: None,
+            devdoc: None,
+            warnings: vec![],
+        }
+    }
+
+    ///
+    /// A shortcut constructor for minimal proxy.
+    ///
+    pub fn new_minimal_proxy(output_assembly: bool) -> Self {
+        let build = era_compiler_llvm_context::EraVMBuild::new(
+            crate::r#const::MINIMAL_PROXY_CONTRACT_BYTECODE.clone(),
+            crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.clone(),
+            None,
+            if output_assembly {
+                Some(crate::r#const::MINIMAL_PROXY_CONTRACT_ASSEMBLY.to_owned())
+            } else {
+                None
+            },
+        );
+        Self {
+            build,
+            ir_string: None,
+            ir: None,
+            source_metadata: None,
+            ast: None,
+            method_identifiers: None,
+            abi: None,
+            layout: None,
+            interface: None,
+            external_interface: None,
             userdoc: None,
             devdoc: None,
             warnings: vec![],
@@ -74,11 +137,7 @@ impl Contract {
     ///
     /// Writes the contract to the terminal.
     ///
-    pub fn write_to_terminal(
-        self,
-        path: String,
-        output_selection: &[VyperSelection],
-    ) -> anyhow::Result<()> {
+    pub fn write_to_terminal(self, path: String) -> anyhow::Result<()> {
         for warning in self.warnings.iter() {
             writeln!(std::io::stderr(), "\n{warning}")?;
         }
@@ -99,7 +158,6 @@ impl Contract {
         output_directory: &Path,
         contract_path: &Path,
         overwrite: bool,
-        output_selection: &[VyperSelection],
     ) -> anyhow::Result<()> {
         let contract_path = crate::path_to_posix(contract_path)?;
         let file_name = contract_path
@@ -161,15 +219,16 @@ impl Contract {
     ///
     /// Converts the contract to the combined JSON.
     ///
-    pub fn into_combined_json(self, output_selection: &[VyperSelection]) -> CombinedJsonContract {
+    pub fn into_combined_json(self) -> CombinedJsonContract {
         CombinedJsonContract {
+            bytecode: hex::encode(self.build.bytecode),
+
             method_identifiers: self.method_identifiers,
             abi: self.abi,
             layout: self.layout,
             userdoc: self.userdoc,
             devdoc: self.devdoc,
 
-            bytecode: Some(hex::encode(self.build.bytecode)),
             assembly: self.build.assembly,
             warnings: Some(self.warnings),
             factory_deps: Some(self.build.factory_dependencies),

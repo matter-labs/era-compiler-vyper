@@ -127,7 +127,10 @@ impl Project {
     ///
     /// Reads LLVM IR source code files and returns the project.
     ///
-    pub fn try_from_llvm_ir_paths(paths: &[&Path]) -> anyhow::Result<Self> {
+    pub fn try_from_llvm_ir_paths(
+        paths: &[&Path],
+        output_selection: Vec<VyperSelection>,
+    ) -> anyhow::Result<Self> {
         let contracts = paths
             .iter()
             .map(|path| {
@@ -147,14 +150,17 @@ impl Project {
         Ok(Self::new(
             era_compiler_llvm_context::LLVM_VERSION,
             contracts,
-            vec![],
+            output_selection,
         ))
     }
 
     ///
     /// Reads EraVM assembly source code files and returns the project.
     ///
-    pub fn try_from_eravm_assembly_paths(paths: &[&Path]) -> anyhow::Result<Self> {
+    pub fn try_from_eravm_assembly_paths(
+        paths: &[&Path],
+        output_selection: Vec<VyperSelection>,
+    ) -> anyhow::Result<Self> {
         let contracts = paths
             .iter()
             .map(|path| {
@@ -176,7 +182,7 @@ impl Project {
         Ok(Self::new(
             era_compiler_llvm_context::eravm_const::ZKEVM_VERSION,
             contracts,
-            vec![],
+            output_selection,
         ))
     }
 
@@ -189,12 +195,11 @@ impl Project {
         include_metadata_hash: bool,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
-        output_assembly: bool,
         bytecode_encoding: zkevm_assembly::RunningVmEncodingMode,
         suppressed_messages: Vec<MessageType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<Build> {
-        let mut build = Build::new(self.output_selection);
+        let mut build = Build::default();
         let source_code_hash = if include_metadata_hash {
             Some(self.source_code_hash)
         } else {
@@ -211,9 +216,9 @@ impl Project {
                         source_code_hash,
                         bytecode_encoding == zkevm_assembly::RunningVmEncodingMode::Testing,
                         evm_version,
+                        self.output_selection.clone(),
                         optimizer_settings.clone(),
                         llvm_options.clone(),
-                        output_assembly,
                         suppressed_messages.clone(),
                         debug_config.clone(),
                     ));
@@ -237,19 +242,12 @@ impl Project {
                 .unwrap_or_default()
         });
         if is_minimal_proxy_used {
-            let minimal_proxy_build = era_compiler_llvm_context::EraVMBuild::new(
-                crate::r#const::MINIMAL_PROXY_CONTRACT_BYTECODE.clone(),
-                crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.clone(),
-                None,
-                if output_assembly {
-                    Some(crate::r#const::MINIMAL_PROXY_CONTRACT_ASSEMBLY.to_owned())
-                } else {
-                    None
-                },
-            );
             build.contracts.insert(
                 crate::r#const::MINIMAL_PROXY_CONTRACT_NAME.to_owned(),
-                ContractBuild::new_minimal_proxy(minimal_proxy_build),
+                ContractBuild::new_minimal_proxy(
+                    self.output_selection
+                        .contains(&VyperSelection::EraVMAssembly),
+                ),
             );
         }
 

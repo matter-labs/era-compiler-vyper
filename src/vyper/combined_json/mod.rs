@@ -14,7 +14,7 @@ use self::contract::Contract;
 ///
 /// The `vyper --combined-json` output.
 ///
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, serde::Serialize)]
 pub struct CombinedJson {
     /// The contract entries.
     #[serde(flatten)]

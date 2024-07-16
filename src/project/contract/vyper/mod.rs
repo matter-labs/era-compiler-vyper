@@ -118,8 +118,9 @@ impl Contract {
         for (line, selection) in lines.into_iter().zip(selection) {
             match selection {
                 VyperSelection::CombinedJson => {
-                    panic!("Combined JSON cannot be requested with other types of output")
+                    panic!("Combined JSON cannot be requested with other types of output");
                 }
+
                 VyperSelection::IR => {
                     ir_string = Some(line.to_owned());
                 }
@@ -153,6 +154,10 @@ impl Contract {
                 VyperSelection::DeveloperDocumentation => {
                     devdoc = Some(era_compiler_common::deserialize_from_str(line)?);
                 }
+
+                VyperSelection::EraVMAssembly => {
+                    panic!("EraVM assembly cannot be requested from `vyper` executable");
+                }
             }
         }
 
@@ -183,7 +188,7 @@ impl Contract {
         evm_version: Option<era_compiler_common::EVMVersion>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
-        output_assembly: bool,
+        output_selection: Vec<VyperSelection>,
         suppressed_messages: Vec<MessageType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
@@ -216,11 +221,61 @@ impl Contract {
             debug_config,
         );
 
-        let abi = std::mem::take(&mut self.abi);
-        let method_identifiers = std::mem::take(&mut self.method_identifiers);
-        let layout = self.layout.take();
-        let userdoc = self.userdoc.take();
-        let devdoc = self.devdoc.take();
+        let ir_string = if output_selection.contains(&VyperSelection::IR) {
+            Some(self.ir_string.clone())
+        } else {
+            None
+        };
+        let ir = if output_selection.contains(&VyperSelection::IRJson) {
+            Some(self.ir.clone())
+        } else {
+            None
+        };
+        let source_metadata = if output_selection.contains(&VyperSelection::Metadata) {
+            Some(self.source_metadata.clone())
+        } else {
+            None
+        };
+        let ast = if output_selection.contains(&VyperSelection::AST) {
+            Some(self.ast.clone())
+        } else {
+            None
+        };
+        let abi = if output_selection.contains(&VyperSelection::ABI) {
+            Some(self.abi.clone())
+        } else {
+            None
+        };
+        let method_identifiers = if output_selection.contains(&VyperSelection::MethodIdentifiers) {
+            Some(self.method_identifiers.clone())
+        } else {
+            None
+        };
+        let layout = if output_selection.contains(&VyperSelection::Layout) {
+            self.layout.take()
+        } else {
+            None
+        };
+        let interface = if output_selection.contains(&VyperSelection::Interface) {
+            self.interface.take()
+        } else {
+            None
+        };
+        let external_interface = if output_selection.contains(&VyperSelection::ExternalInterface) {
+            self.external_interface.take()
+        } else {
+            None
+        };
+        let userdoc = if output_selection.contains(&VyperSelection::UserDocumentation) {
+            self.userdoc.take()
+        } else {
+            None
+        };
+        let devdoc = if output_selection.contains(&VyperSelection::DeveloperDocumentation) {
+            self.devdoc.take()
+        } else {
+            None
+        };
 
         self.declare(&mut context).map_err(|error| {
             anyhow::anyhow!(
@@ -238,7 +293,11 @@ impl Contract {
         })?;
 
         let is_minimal_proxy_used = context.vyper().is_minimal_proxy_used();
-        let mut build = context.build(contract_path, metadata_hash, output_assembly)?;
+        let mut build = context.build(
+            contract_path,
+            metadata_hash,
+            output_selection.contains(&VyperSelection::EraVMAssembly),
+        )?;
 
         if is_minimal_proxy_used {
             build.factory_dependencies.insert(
@@ -249,9 +308,15 @@ impl Contract {
 
         Ok(ContractBuild::new(
             build,
-            Some(method_identifiers),
-            Some(abi),
+            ir_string,
+            ir,
+            source_metadata,
+            ast,
+            method_identifiers,
+            abi,
             layout,
+            interface,
+            external_interface,
             userdoc,
             devdoc,
             warnings,
