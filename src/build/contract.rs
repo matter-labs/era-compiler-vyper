@@ -229,31 +229,6 @@ impl Contract {
             .ok_or_else(|| anyhow::anyhow!("File name not found in path {contract_path:?}"))?
             .to_string_lossy();
 
-        if let Some(assembly) = self.build.assembly {
-            let assembly_file_name = format!(
-                "{}.{}",
-                file_name,
-                era_compiler_common::EXTENSION_ERAVM_ASSEMBLY
-            );
-            let mut assembly_file_path = output_directory.to_owned();
-            assembly_file_path.push(assembly_file_name);
-
-            if assembly_file_path.exists() && !overwrite {
-                anyhow::bail!(
-                    "Refusing to overwrite an existing file {assembly_file_path:?} (use --overwrite to force).",
-                );
-            } else {
-                File::create(&assembly_file_path)
-                    .map_err(|error| {
-                        anyhow::anyhow!("File {:?} creating error: {}", assembly_file_path, error)
-                    })?
-                    .write_all(assembly.as_bytes())
-                    .map_err(|error| {
-                        anyhow::anyhow!("File {:?} writing error: {}", assembly_file_path, error)
-                    })?;
-            }
-        }
-
         let binary_file_name = format!(
             "{}.{}",
             file_name,
@@ -261,20 +236,131 @@ impl Contract {
         );
         let mut binary_file_path = output_directory.to_owned();
         binary_file_path.push(binary_file_name);
-
         if binary_file_path.exists() && !overwrite {
             anyhow::bail!(
                 "Refusing to overwrite an existing file {binary_file_path:?} (use --overwrite to force).",
             );
-        } else {
-            File::create(&binary_file_path)
-                .map_err(|error| {
-                    anyhow::anyhow!("File {:?} creating error: {}", binary_file_path, error)
-                })?
-                .write_all(format!("0x{}", hex::encode(self.build.bytecode.as_slice())).as_bytes())
-                .map_err(|error| {
-                    anyhow::anyhow!("File {:?} writing error: {}", binary_file_path, error)
-                })?;
+        }
+        File::create(&binary_file_path)
+            .map_err(|error| {
+                anyhow::anyhow!("File {:?} creating error: {}", binary_file_path, error)
+            })?
+            .write_all(format!("0x{}", hex::encode(self.build.bytecode.as_slice())).as_bytes())
+            .map_err(|error| {
+                anyhow::anyhow!("File {:?} writing error: {}", binary_file_path, error)
+            })?;
+
+        let mut extra_output_file_path = output_directory.to_owned();
+        extra_output_file_path.push(file_name.as_ref());
+        if extra_output_file_path.exists() && !overwrite {
+            anyhow::bail!(
+                "Refusing to overwrite an existing file {extra_output_file_path:?} (use --overwrite to force).",
+            );
+        }
+        let extra_output_file =
+            File::create(extra_output_file_path.as_path()).map_err(|error| {
+                anyhow::anyhow!("File {extra_output_file_path:?} creating: {error}")
+            })?;
+        for flag in selection.iter() {
+            match flag {
+                VyperSelection::IRJson => {
+                    serde_json::to_writer(
+                        &extra_output_file,
+                        self.ir.as_ref().expect("Always exists"),
+                    )?;
+                    writeln!(&extra_output_file)?;
+                }
+                VyperSelection::Metadata => {
+                    serde_json::to_writer(
+                        &extra_output_file,
+                        self.source_metadata.as_ref().expect("Always exists"),
+                    )?;
+                    writeln!(&extra_output_file)?;
+                }
+                VyperSelection::AST => {
+                    serde_json::to_writer(
+                        &extra_output_file,
+                        self.ast.as_ref().expect("Always exists"),
+                    )?;
+                    writeln!(&extra_output_file)?;
+                }
+                VyperSelection::ABI => {
+                    serde_json::to_writer(
+                        &extra_output_file,
+                        self.abi.as_ref().expect("Always exists"),
+                    )?;
+                    writeln!(&extra_output_file)?;
+                }
+                VyperSelection::MethodIdentifiers => {
+                    serde_json::to_writer(
+                        &extra_output_file,
+                        self.method_identifiers.as_ref().expect("Always exists"),
+                    )?;
+                    writeln!(&extra_output_file)?;
+                }
+                VyperSelection::StorageLayout => {
+                    serde_json::to_writer(
+                        &extra_output_file,
+                        self.layout.as_ref().expect("Always exists"),
+                    )?;
+                    writeln!(&extra_output_file)?;
+                }
+                VyperSelection::UserDocumentation => {
+                    serde_json::to_writer(
+                        &extra_output_file,
+                        self.userdoc.as_ref().expect("Always exists"),
+                    )?;
+                    writeln!(&extra_output_file)?;
+                }
+                VyperSelection::DeveloperDocumentation => {
+                    serde_json::to_writer(
+                        &extra_output_file,
+                        self.devdoc.as_ref().expect("Always exists"),
+                    )?;
+                    writeln!(&extra_output_file)?;
+                }
+
+                VyperSelection::EraVMAssembly => {
+                    let assembly_file_name = format!(
+                        "{}.{}",
+                        file_name,
+                        era_compiler_common::EXTENSION_ERAVM_ASSEMBLY
+                    );
+                    let mut assembly_file_path = output_directory.to_owned();
+                    assembly_file_path.push(assembly_file_name);
+                    if assembly_file_path.exists() && !overwrite {
+                        anyhow::bail!(
+                            "Refusing to overwrite an existing file {assembly_file_path:?} (use --overwrite to force).",
+                        );
+                    }
+                    File::create(&assembly_file_path)
+                        .map_err(|error| {
+                            anyhow::anyhow!(
+                                "File {:?} creating error: {}",
+                                assembly_file_path,
+                                error
+                            )
+                        })?
+                        .write_all(
+                            self.build
+                                .assembly
+                                .as_ref()
+                                .expect("Always exists")
+                                .as_bytes(),
+                        )
+                        .map_err(|error| {
+                            anyhow::anyhow!(
+                                "File {:?} writing error: {}",
+                                assembly_file_path,
+                                error
+                            )
+                        })?;
+                }
+
+                VyperSelection::CombinedJson => {
+                    panic!("Combined JSON is printed with another pipeline");
+                }
+            }
         }
 
         Ok(())

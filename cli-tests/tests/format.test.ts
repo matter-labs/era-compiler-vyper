@@ -3,20 +3,17 @@ import { paths } from '../src/entities';
 
 describe("Set of --format json tests", () => {
     const zkvyperCommand = 'zkvyper';
-    const vyperCommand = 'vyper';
     const format_args: string[] = [
         `combined_json`,
-        `ir`,
         `ir_json`,
         `metadata`,
         `ast`,
         `abi`,
         `method_identifiers`,
         `layout`,
-        `interface`,
-        `external_interface`,
         `userdoc`,
         `devdoc`,
+        `eravm_assembly`,
     ];
 
     //id1988
@@ -32,11 +29,6 @@ describe("Set of --format json tests", () => {
             it("No 'Error'/'Warning'/'Fail' in the output", () => {
                 expect(result.output).not.toMatch(/\b([Ee]rror|[Ww]arning|[Ff]ail)\b/i);
             });
-
-            it("vyper exit code == zkvyper exit code", () => {
-                const vyperResult = executeCommand(vyperCommand, args);
-                expect(vyperResult.exitCode).toBe(result.exitCode);
-            });
         });
     }
 
@@ -50,7 +42,7 @@ describe("Set of --format json tests", () => {
         });
 
         it("Error is presented", () => {
-            expect(result.output).toMatch(/(Unsupported format type)/i);
+            expect(result.output).toMatch(/(Unknown selection flag)/i);
         });
     });
 
