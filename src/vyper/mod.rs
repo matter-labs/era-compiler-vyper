@@ -185,28 +185,26 @@ impl Compiler {
         &self,
         version: &semver::Version,
         mut paths: Vec<PathBuf>,
-        mut selection: Vec<Selection>,
+        selection: &[Selection],
         evm_version: Option<era_compiler_common::EVMVersion>,
         enable_decimals: bool,
         optimize: bool,
     ) -> anyhow::Result<Project> {
         paths.sort();
 
-        let output_selection: Vec<Selection> = selection.clone();
-
-        let extra_selection = [
-            Selection::IR,
-            Selection::IRJson,
-            Selection::Metadata,
-            Selection::AST,
-            Selection::ABI,
-            Selection::MethodIdentifiers,
-        ];
-        selection.extend(
-            extra_selection
-                .iter()
-                .filter(|flag| !selection.contains(flag))
-                .collect::<Vec<&Selection>>(),
+        let mut vyper_selection = selection.to_owned();
+        vyper_selection.retain(|flag| flag.is_requested_from_vyper());
+        vyper_selection.extend(
+            [
+                Selection::IRJson,
+                Selection::Metadata,
+                Selection::AST,
+                Selection::ABI,
+                Selection::MethodIdentifiers,
+            ]
+            .iter()
+            .filter(|flag| !vyper_selection.contains(flag))
+            .collect::<Vec<&Selection>>(),
         );
 
         let mut command = std::process::Command::new(self.executable.as_str());
@@ -219,15 +217,9 @@ impl Compiler {
         }
         command.arg("-f");
         command.arg(
-            selection
+            vyper_selection
                 .iter()
-                .filter_map(|selection| {
-                    if selection.is_supported_by_vyper() {
-                        Some(selection.to_string())
-                    } else {
-                        None
-                    }
-                })
+                .map(|selection| selection.to_string())
                 .collect::<Vec<String>>()
                 .join(","),
         );
@@ -254,7 +246,7 @@ impl Compiler {
         let lines: Vec<&str> = stdout.lines().collect();
         let results: BTreeMap<String, anyhow::Result<VyperContract>> = paths
             .into_par_iter()
-            .zip(lines.into_par_iter().chunks(selection.len()))
+            .zip(lines.into_par_iter().chunks(vyper_selection.len()))
             .map(|(path, group)| {
                 let path_str = path.to_string_lossy().to_string();
                 let source_code = match std::fs::read_to_string(path).map_err(|error| {
@@ -272,7 +264,7 @@ impl Compiler {
                 let contract_result = VyperContract::try_from_lines(
                     version.to_owned(),
                     source_code,
-                    &selection,
+                    vyper_selection.as_slice(),
                     group.to_vec(),
                 )
                 .map_err(|error| {
@@ -290,7 +282,7 @@ impl Compiler {
                     Ok::<BTreeMap<String, Contract>, anyhow::Error>(accumulator)
                 })?;
 
-        let project = Project::new(version.to_owned(), contracts, output_selection);
+        let project = Project::new(version.to_owned(), contracts, selection.to_owned());
 
         Ok(project)
     }

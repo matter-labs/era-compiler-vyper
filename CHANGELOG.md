@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- The `layout`, `userdoc`, `devdoc` fields to all output modes
+
 ### Changed
 
 - EraVM assembly must now be requested with `zkvyper -f eravm_assembly ...`
@@ -12,7 +16,7 @@
 
 ### Fixed
 
-- `assert_unreachable` is now translated to `INVALID` burning all gas
+- `assert_unreachable` is now translated to `INVALID`, burning all gas
 
 ## [1.5.2] - 2024-07-01
 

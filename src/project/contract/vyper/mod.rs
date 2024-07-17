@@ -31,8 +31,6 @@ pub struct Contract {
     pub version: semver::Version,
     /// The Vyper contract source code.
     pub source_code: String,
-    /// The stringified IR.
-    pub ir_string: String,
     /// The LLL IR parsed from JSON.
     pub ir: Expression,
     /// The source metadata.
@@ -45,10 +43,6 @@ pub struct Contract {
     pub method_identifiers: BTreeMap<String, String>,
     /// The contract storage layout.
     pub layout: Option<serde_json::Value>,
-    /// The contract interface.
-    pub interface: Option<String>,
-    /// The contract external interface.
-    pub external_interface: Option<String>,
     /// The contract user documentation.
     pub userdoc: Option<serde_json::Value>,
     /// The contract developer documentation.
@@ -64,30 +58,24 @@ impl Contract {
     pub fn new(
         version: semver::Version,
         source_code: String,
-        ir_string: String,
         ir: Expression,
         source_metadata: SourceMetadata,
         ast: AST,
         abi: serde_json::Value,
         method_identifiers: BTreeMap<String, String>,
         layout: Option<serde_json::Value>,
-        interface: Option<String>,
-        external_interface: Option<String>,
         userdoc: Option<serde_json::Value>,
         devdoc: Option<serde_json::Value>,
     ) -> Self {
         Self {
             version,
             source_code,
-            ir_string,
             ir,
             source_metadata,
             ast,
             abi,
             method_identifiers,
             layout,
-            interface,
-            external_interface,
             userdoc,
             devdoc,
             dependency_data: DependencyData::default(),
@@ -101,29 +89,20 @@ impl Contract {
     pub fn try_from_lines(
         version: semver::Version,
         source_code: String,
-        selection: &Vec<VyperSelection>,
+        selection: &[VyperSelection],
         lines: Vec<&str>,
     ) -> anyhow::Result<Self> {
-        let mut ir_string = None;
         let mut ir = None;
         let mut metadata = None;
         let mut ast = None;
         let mut abi = None;
         let mut method_identifiers = None;
         let mut layout = None;
-        let mut interface = None;
-        let mut external_interface = None;
         let mut userdoc = None;
         let mut devdoc = None;
+
         for (line, selection) in lines.into_iter().zip(selection) {
             match selection {
-                VyperSelection::CombinedJson => {
-                    panic!("Combined JSON cannot be requested with other types of output");
-                }
-
-                VyperSelection::IR => {
-                    ir_string = Some(line.to_owned());
-                }
                 VyperSelection::IRJson => {
                     ir = Some(era_compiler_common::deserialize_from_str(line)?);
                 }
@@ -139,14 +118,8 @@ impl Contract {
                 VyperSelection::MethodIdentifiers => {
                     method_identifiers = Some(era_compiler_common::deserialize_from_str(line)?);
                 }
-                VyperSelection::Layout => {
+                VyperSelection::StorageLayout => {
                     layout = Some(era_compiler_common::deserialize_from_str(line)?);
-                }
-                VyperSelection::Interface => {
-                    interface = Some(line.to_owned());
-                }
-                VyperSelection::ExternalInterface => {
-                    external_interface = Some(line.to_owned());
                 }
                 VyperSelection::UserDocumentation => {
                     userdoc = Some(era_compiler_common::deserialize_from_str(line)?);
@@ -155,6 +128,9 @@ impl Contract {
                     devdoc = Some(era_compiler_common::deserialize_from_str(line)?);
                 }
 
+                VyperSelection::CombinedJson => {
+                    panic!("Combined JSON cannot be requested with other types of output");
+                }
                 VyperSelection::EraVMAssembly => {
                     panic!("EraVM assembly cannot be requested from `vyper` executable");
                 }
@@ -164,15 +140,12 @@ impl Contract {
         Ok(Self::new(
             version,
             source_code,
-            ir_string.expect("Always exists"),
             ir.expect("Always exists"),
             metadata.expect("Always exists"),
             ast.expect("Always exists"),
             abi.expect("Always exists"),
             method_identifiers.expect("Always exists"),
             layout,
-            interface,
-            external_interface,
             userdoc,
             devdoc,
         ))
@@ -221,11 +194,6 @@ impl Contract {
             debug_config,
         );
 
-        let ir_string = if output_selection.contains(&VyperSelection::IR) {
-            Some(self.ir_string.clone())
-        } else {
-            None
-        };
         let ir = if output_selection.contains(&VyperSelection::IRJson) {
             Some(self.ir.clone())
         } else {
@@ -251,18 +219,8 @@ impl Contract {
         } else {
             None
         };
-        let layout = if output_selection.contains(&VyperSelection::Layout) {
+        let layout = if output_selection.contains(&VyperSelection::StorageLayout) {
             self.layout.take()
-        } else {
-            None
-        };
-        let interface = if output_selection.contains(&VyperSelection::Interface) {
-            self.interface.take()
-        } else {
-            None
-        };
-        let external_interface = if output_selection.contains(&VyperSelection::ExternalInterface) {
-            self.external_interface.take()
         } else {
             None
         };
@@ -308,15 +266,12 @@ impl Contract {
 
         Ok(ContractBuild::new(
             build,
-            ir_string,
             ir,
             source_metadata,
             ast,
             method_identifiers,
             abi,
             layout,
-            interface,
-            external_interface,
             userdoc,
             devdoc,
             warnings,

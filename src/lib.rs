@@ -54,7 +54,7 @@ use path_slash::PathExt;
 ///
 pub fn llvm_ir(
     input_paths: Vec<PathBuf>,
-    output_selection: Vec<VyperSelection>,
+    output_selection: &[VyperSelection],
     include_metadata_hash: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
@@ -85,7 +85,7 @@ pub fn llvm_ir(
 ///
 pub fn eravm_assembly(
     input_paths: Vec<PathBuf>,
-    output_selection: Vec<VyperSelection>,
+    output_selection: &[VyperSelection],
     include_metadata_hash: bool,
     llvm_options: Vec<String>,
     suppressed_messages: Vec<MessageType>,
@@ -117,7 +117,7 @@ pub fn eravm_assembly(
 pub fn standard_output(
     input_paths: Vec<PathBuf>,
     vyper: &VyperCompiler,
-    output_selection: Vec<VyperSelection>,
+    output_selection: &[VyperSelection],
     evm_version: Option<era_compiler_common::EVMVersion>,
     enable_decimals: bool,
     include_metadata_hash: bool,
@@ -139,7 +139,7 @@ pub fn standard_output(
     if let Some(ref debug_config) = debug_config {
         for (path, contract) in project.contracts.iter() {
             if let Some(ir_string) = contract.ir_string() {
-                debug_config.dump_lll(path.as_str(), None, ir_string)?;
+                debug_config.dump_lll(path.as_str(), None, ir_string.as_str())?;
             }
         }
     }
@@ -162,7 +162,6 @@ pub fn standard_output(
 pub fn combined_json(
     input_paths: Vec<PathBuf>,
     vyper: &VyperCompiler,
-    output_selection: Vec<VyperSelection>,
     evm_version: Option<era_compiler_common::EVMVersion>,
     enable_decimals: bool,
     include_metadata_hash: bool,
@@ -174,10 +173,18 @@ pub fn combined_json(
 ) -> anyhow::Result<VyperCompilerCombinedJson> {
     let zkvyper_version = semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid");
 
+    let output_selection = vec![
+        VyperSelection::ABI,
+        VyperSelection::MethodIdentifiers,
+        VyperSelection::StorageLayout,
+        VyperSelection::UserDocumentation,
+        VyperSelection::DeveloperDocumentation,
+    ];
+
     let project: Project = vyper.batch(
         &vyper.version.default,
         input_paths.clone(),
-        output_selection,
+        output_selection.as_slice(),
         evm_version,
         enable_decimals,
         vyper_optimizer_enabled,
@@ -186,7 +193,7 @@ pub fn combined_json(
     if let Some(ref debug_config) = debug_config {
         for (path, contract) in project.contracts.iter() {
             if let Some(ir_string) = contract.ir_string() {
-                debug_config.dump_lll(path.as_str(), None, ir_string)?;
+                debug_config.dump_lll(path.as_str(), None, ir_string.as_str())?;
             }
         }
     }

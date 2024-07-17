@@ -105,14 +105,11 @@ impl Project {
                 let project_contract = VyperContract::new(
                     version.to_owned(),
                     contract.source_code.expect("Must be set by the tester"),
-                    String::new(),
                     contract.ir,
                     SourceMetadata::default(),
                     ast,
                     serde_json::Value::Null,
                     contract.evm.method_identifiers,
-                    None,
-                    None,
                     None,
                     None,
                     None,
@@ -129,7 +126,7 @@ impl Project {
     ///
     pub fn try_from_llvm_ir_paths(
         paths: &[&Path],
-        output_selection: Vec<VyperSelection>,
+        output_selection: &[VyperSelection],
     ) -> anyhow::Result<Self> {
         let contracts = paths
             .iter()
@@ -150,7 +147,7 @@ impl Project {
         Ok(Self::new(
             era_compiler_llvm_context::LLVM_VERSION,
             contracts,
-            output_selection,
+            output_selection.to_owned(),
         ))
     }
 
@@ -159,7 +156,7 @@ impl Project {
     ///
     pub fn try_from_eravm_assembly_paths(
         paths: &[&Path],
-        output_selection: Vec<VyperSelection>,
+        output_selection: &[VyperSelection],
     ) -> anyhow::Result<Self> {
         let contracts = paths
             .iter()
@@ -182,7 +179,7 @@ impl Project {
         Ok(Self::new(
             era_compiler_llvm_context::eravm_const::ZKEVM_VERSION,
             contracts,
-            output_selection,
+            output_selection.to_owned(),
         ))
     }
 

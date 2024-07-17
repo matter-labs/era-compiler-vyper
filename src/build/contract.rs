@@ -12,6 +12,7 @@ use crate::project::contract::vyper::ast::AST;
 use crate::project::contract::vyper::expression::Expression as IR;
 use crate::vyper::combined_json::contract::warning::Warning as CombinedJsonContractWarning;
 use crate::vyper::combined_json::contract::Contract as CombinedJsonContract;
+use crate::vyper::selection::Selection as VyperSelection;
 
 ///
 /// The Vyper contract build.
@@ -20,8 +21,6 @@ use crate::vyper::combined_json::contract::Contract as CombinedJsonContract;
 pub struct Contract {
     /// The LLVM module build.
     pub build: era_compiler_llvm_context::EraVMBuild,
-    /// The stringified IR.
-    pub ir_string: Option<String>,
     /// The LLL IR parsed from JSON.
     pub ir: Option<IR>,
     /// The source metadata.
@@ -34,10 +33,6 @@ pub struct Contract {
     pub abi: Option<serde_json::Value>,
     /// The `vyper` layout output.
     pub layout: Option<serde_json::Value>,
-    /// The contract interface.
-    pub interface: Option<String>,
-    /// The contract external interface.
-    pub external_interface: Option<String>,
     /// The `vyper` userdoc output.
     pub userdoc: Option<serde_json::Value>,
     /// The `vyper` devdoc output.
@@ -52,30 +47,24 @@ impl Contract {
     ///
     pub fn new(
         build: era_compiler_llvm_context::EraVMBuild,
-        ir_string: Option<String>,
         ir: Option<IR>,
         source_metadata: Option<SourceMetadata>,
         ast: Option<AST>,
         method_identifiers: Option<BTreeMap<String, String>>,
         abi: Option<serde_json::Value>,
         layout: Option<serde_json::Value>,
-        interface: Option<String>,
-        external_interface: Option<String>,
         userdoc: Option<serde_json::Value>,
         devdoc: Option<serde_json::Value>,
         warnings: Vec<CombinedJsonContractWarning>,
     ) -> Self {
         Self {
             build,
-            ir_string,
             ir,
             source_metadata,
             ast,
             method_identifiers,
             abi,
             layout,
-            interface,
-            external_interface,
             userdoc,
             devdoc,
             warnings,
@@ -88,15 +77,12 @@ impl Contract {
     pub fn new_inner(build: era_compiler_llvm_context::EraVMBuild) -> Self {
         Self {
             build,
-            ir_string: None,
             ir: None,
             source_metadata: None,
             ast: None,
             method_identifiers: None,
             abi: None,
             layout: None,
-            interface: None,
-            external_interface: None,
             userdoc: None,
             devdoc: None,
             warnings: vec![],
@@ -119,15 +105,12 @@ impl Contract {
         );
         Self {
             build,
-            ir_string: None,
             ir: None,
             source_metadata: None,
             ast: None,
             method_identifiers: None,
             abi: None,
             layout: None,
-            interface: None,
-            external_interface: None,
             userdoc: None,
             devdoc: None,
             warnings: vec![],
@@ -137,15 +120,91 @@ impl Contract {
     ///
     /// Writes the contract to the terminal.
     ///
-    pub fn write_to_terminal(self, path: String) -> anyhow::Result<()> {
+    pub fn write_to_terminal(
+        self,
+        path: String,
+        selection: &[VyperSelection],
+    ) -> anyhow::Result<()> {
         for warning in self.warnings.iter() {
             writeln!(std::io::stderr(), "\n{warning}")?;
         }
 
-        writeln!(std::io::stdout(), "Contract `{path}`:")?;
+        writeln!(std::io::stderr(), "Contract `{path}`:")?;
+        writeln!(std::io::stdout(), "0x{}", hex::encode(self.build.bytecode))?;
 
-        let bytecode_string = hex::encode(self.build.bytecode);
-        writeln!(std::io::stdout(), "0x{bytecode_string}")?;
+        for flag in selection.iter() {
+            match flag {
+                VyperSelection::IRJson => {
+                    serde_json::to_writer(
+                        std::io::stdout(),
+                        self.ir.as_ref().expect("Always exists"),
+                    )?;
+                    writeln!(std::io::stdout())?;
+                }
+                VyperSelection::Metadata => {
+                    serde_json::to_writer(
+                        std::io::stdout(),
+                        self.source_metadata.as_ref().expect("Always exists"),
+                    )?;
+                    writeln!(std::io::stdout())?;
+                }
+                VyperSelection::AST => {
+                    serde_json::to_writer(
+                        std::io::stdout(),
+                        self.ast.as_ref().expect("Always exists"),
+                    )?;
+                    writeln!(std::io::stdout())?;
+                }
+                VyperSelection::ABI => {
+                    serde_json::to_writer(
+                        std::io::stdout(),
+                        self.abi.as_ref().expect("Always exists"),
+                    )?;
+                    writeln!(std::io::stdout())?;
+                }
+                VyperSelection::MethodIdentifiers => {
+                    serde_json::to_writer(
+                        std::io::stdout(),
+                        self.method_identifiers.as_ref().expect("Always exists"),
+                    )?;
+                    writeln!(std::io::stdout())?;
+                }
+                VyperSelection::StorageLayout => {
+                    serde_json::to_writer(
+                        std::io::stdout(),
+                        self.layout.as_ref().expect("Always exists"),
+                    )?;
+                    writeln!(std::io::stdout())?;
+                }
+                VyperSelection::UserDocumentation => {
+                    serde_json::to_writer(
+                        std::io::stdout(),
+                        self.userdoc.as_ref().expect("Always exists"),
+                    )?;
+                    writeln!(std::io::stdout())?;
+                }
+                VyperSelection::DeveloperDocumentation => {
+                    serde_json::to_writer(
+                        std::io::stdout(),
+                        self.devdoc.as_ref().expect("Always exists"),
+                    )?;
+                    writeln!(std::io::stdout())?;
+                }
+
+                VyperSelection::EraVMAssembly => {
+                    writeln!(std::io::stderr(), "Contract `{path}` assembly:")?;
+                    writeln!(
+                        std::io::stdout(),
+                        "{}",
+                        self.build.assembly.as_ref().expect("Always exists")
+                    )?;
+                }
+
+                VyperSelection::CombinedJson => {
+                    panic!("Combined JSON is printed with another pipeline");
+                }
+            }
+        }
 
         Ok(())
     }
@@ -155,10 +214,15 @@ impl Contract {
     ///
     pub fn write_to_directory(
         self,
+        selection: &[VyperSelection],
         output_directory: &Path,
         contract_path: &Path,
         overwrite: bool,
     ) -> anyhow::Result<()> {
+        for warning in self.warnings.iter() {
+            writeln!(std::io::stderr(), "\n{warning}")?;
+        }
+
         let contract_path = crate::path_to_posix(contract_path)?;
         let file_name = contract_path
             .file_name()
@@ -221,7 +285,7 @@ impl Contract {
     ///
     pub fn into_combined_json(self) -> CombinedJsonContract {
         CombinedJsonContract {
-            bytecode: hex::encode(self.build.bytecode),
+            bytecode: format!("0x{}", hex::encode(self.build.bytecode)),
 
             method_identifiers: self.method_identifiers,
             abi: self.abi,

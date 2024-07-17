@@ -107,9 +107,11 @@ impl Contract {
     ///
     /// Returns the stringified IR reference.
     ///
-    pub fn ir_string(&self) -> Option<&str> {
+    pub fn ir_string(&self) -> Option<String> {
         match self {
-            Self::Vyper(inner) => Some(inner.ir_string.as_str()),
+            Self::Vyper(inner) => {
+                Some(serde_json::to_string_pretty(&inner.ir).expect("Always valid"))
+            }
             _ => None,
         }
     }

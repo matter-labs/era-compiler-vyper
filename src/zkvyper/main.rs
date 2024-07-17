@@ -134,7 +134,7 @@ fn main_inner() -> anyhow::Result<()> {
     let build = if arguments.llvm_ir {
         era_compiler_vyper::llvm_ir(
             arguments.input_paths,
-            output_selection,
+            output_selection.as_slice(),
             include_metadata_hash,
             optimizer_settings,
             llvm_options,
@@ -144,7 +144,7 @@ fn main_inner() -> anyhow::Result<()> {
     } else if arguments.eravm_assembly {
         era_compiler_vyper::eravm_assembly(
             arguments.input_paths,
-            output_selection,
+            output_selection.as_slice(),
             include_metadata_hash,
             llvm_options,
             suppressed_messages,
@@ -162,7 +162,6 @@ fn main_inner() -> anyhow::Result<()> {
             let combined_json = era_compiler_vyper::combined_json(
                 arguments.input_paths,
                 &vyper,
-                output_selection,
                 evm_version,
                 arguments.enable_decimals,
                 include_metadata_hash,
@@ -187,7 +186,7 @@ fn main_inner() -> anyhow::Result<()> {
         era_compiler_vyper::standard_output(
             arguments.input_paths,
             &vyper,
-            output_selection,
+            output_selection.as_slice(),
             evm_version,
             arguments.enable_decimals,
             include_metadata_hash,
@@ -201,10 +200,14 @@ fn main_inner() -> anyhow::Result<()> {
 
     match arguments.output_directory {
         Some(output_directory) => {
-            build.write_to_directory(output_directory.as_path(), arguments.overwrite)?;
+            build.write_to_directory(
+                output_selection.as_slice(),
+                output_directory.as_path(),
+                arguments.overwrite,
+            )?;
         }
         None => {
-            build.write_to_terminal()?;
+            build.write_to_terminal(output_selection.as_slice())?;
         }
     }
 

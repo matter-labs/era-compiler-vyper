@@ -5,11 +5,11 @@
 pub mod contract;
 
 use std::collections::BTreeMap;
-use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
 use crate::vyper::combined_json::CombinedJson;
+use crate::vyper::selection::Selection as VyperSelection;
 
 use self::contract::Contract;
 
@@ -26,9 +26,9 @@ impl Build {
     ///
     /// Writes all contracts to the terminal.
     ///
-    pub fn write_to_terminal(self) -> anyhow::Result<()> {
+    pub fn write_to_terminal(self, selection: &[VyperSelection]) -> anyhow::Result<()> {
         for (path, contract) in self.contracts.into_iter() {
-            contract.write_to_terminal(path)?;
+            contract.write_to_terminal(path, selection)?;
         }
 
         Ok(())
@@ -39,17 +39,15 @@ impl Build {
     ///
     pub fn write_to_directory(
         self,
+        selection: &[VyperSelection],
         output_directory: &Path,
         overwrite: bool,
     ) -> anyhow::Result<()> {
         std::fs::create_dir_all(output_directory)?;
 
         for (contract_path, contract) in self.contracts.into_iter() {
-            for warning in contract.warnings.iter() {
-                writeln!(std::io::stderr(), "\n{warning}")?;
-            }
-
             contract.write_to_directory(
+                selection,
                 output_directory,
                 PathBuf::from(contract_path).as_path(),
                 overwrite,
