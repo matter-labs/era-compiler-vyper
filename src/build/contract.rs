@@ -75,18 +75,18 @@ impl Contract {
     /// A shortcut constructor.
     ///
     pub fn new_inner(build: era_compiler_llvm_context::EraVMBuild) -> Self {
-        Self {
+        Self::new(
             build,
-            ir: None,
-            source_metadata: None,
-            ast: None,
-            method_identifiers: None,
-            abi: None,
-            layout: None,
-            userdoc: None,
-            devdoc: None,
-            warnings: vec![],
-        }
+            None,
+            None,
+            None,
+            Some(BTreeMap::new()),
+            Some(serde_json::json!([])),
+            Some(serde_json::json!({})),
+            Some(serde_json::json!({})),
+            Some(serde_json::json!({})),
+            vec![],
+        )
     }
 
     ///
@@ -103,18 +103,8 @@ impl Contract {
                 None
             },
         );
-        Self {
-            build,
-            ir: None,
-            source_metadata: None,
-            ast: None,
-            method_identifiers: None,
-            abi: None,
-            layout: None,
-            userdoc: None,
-            devdoc: None,
-            warnings: vec![],
-        }
+
+        Self::new_inner(build)
     }
 
     ///
@@ -370,8 +360,10 @@ impl Contract {
     /// Converts the contract to the combined JSON.
     ///
     pub fn into_combined_json(self) -> CombinedJsonContract {
+        let bytecode = format!("0x{}", hex::encode(self.build.bytecode));
         CombinedJsonContract {
-            bytecode: format!("0x{}", hex::encode(self.build.bytecode)),
+            bytecode: bytecode.clone(),
+            bytecode_runtime: bytecode,
 
             method_identifiers: self.method_identifiers,
             abi: self.abi,

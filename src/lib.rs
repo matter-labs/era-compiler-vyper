@@ -183,7 +183,7 @@ pub fn combined_json(
 
     let project: Project = vyper.batch(
         &vyper.version.default,
-        input_paths.clone(),
+        input_paths,
         output_selection.as_slice(),
         evm_version,
         enable_decimals,

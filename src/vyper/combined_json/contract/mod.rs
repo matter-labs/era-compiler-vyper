@@ -13,8 +13,10 @@ use self::warning::Warning;
 ///
 #[derive(Debug, serde::Serialize)]
 pub struct Contract {
-    /// The `vyper` hexadecimal binary output.
+    /// The bytecode hexadecimal string.
     pub bytecode: String,
+    /// The same as above. Kept for legacy reasons.
+    pub bytecode_runtime: String,
 
     /// The `vyper` method identifiers output.
     #[serde(skip_serializing_if = "Option::is_none")]
