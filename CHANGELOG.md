@@ -16,6 +16,7 @@
 
 ### Fixed
 
+- missing `0x` prefix in the combined JSON bytecode output
 - `assert_unreachable` is now translated to `INVALID`, burning all gas
 
 ## [1.5.2] - 2024-07-01

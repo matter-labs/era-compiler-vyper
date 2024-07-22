@@ -8,6 +8,8 @@ use std::collections::BTreeMap;
 use std::path::Path;
 use std::path::PathBuf;
 
+use normpath::PathExt;
+
 use crate::vyper::combined_json::CombinedJson;
 use crate::vyper::selection::Selection as VyperSelection;
 use crate::vyper::Compiler as VyperCompiler;
@@ -69,27 +71,32 @@ impl Build {
         let contracts = self
             .contracts
             .into_iter()
-            .map(|(mut path, contract)| {
-                if version < Some(&VyperCompiler::FIRST_VERSION_ABSOLUTE_PATHS) {
-                    let contract_path = PathBuf::from(path.as_str());
-                    let current_directory = std::env::current_dir()
-                        .map_err(|error| anyhow::anyhow!(error))
+            .map(|(path, contract)| {
+                let contract_path = PathBuf::from(path.as_str());
+                let contract_path = contract_path
+                    .normalize()
+                    .map(|path| path.into_path_buf())
+                    .unwrap_or(contract_path);
+
+                let contract_path = if version < Some(&VyperCompiler::FIRST_VERSION_ABSOLUTE_PATHS)
+                {
+                    std::env::current_dir()
+                        .map_err(anyhow::Error::from)
                         .and_then(|path| crate::path_to_posix(path.as_path()))
                         .and_then(|path| {
                             contract_path
                                 .strip_prefix(path)
-                                .map_err(|error| anyhow::anyhow!(error))
-                        });
+                                .map_err(anyhow::Error::from)
+                        })
+                        .unwrap_or(contract_path.as_path())
+                } else {
+                    contract_path.as_path()
+                };
 
-                    path = match current_directory {
-                        Ok(path) => path,
-                        Err(_error) => contract_path.as_path(),
-                    }
-                    .to_string_lossy()
-                    .to_string();
-                }
-
-                (path, contract.into_combined_json())
+                (
+                    contract_path.to_string_lossy().to_string(),
+                    contract.into_combined_json(),
+                )
             })
             .collect();
 
