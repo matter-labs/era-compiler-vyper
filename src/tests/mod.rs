@@ -21,9 +21,9 @@ use crate::vyper::standard_json::input::Input as VyperStandardJsonInput;
 use crate::vyper::Compiler as VyperCompiler;
 
 ///
-/// Builds a test Vyper project.
+/// Builds a test Vyper project via standard JSON.
 ///
-pub fn build_vyper(
+pub fn build_vyper_standard_json(
     source_code: &str,
     version: &semver::Version,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
@@ -72,15 +72,52 @@ pub fn build_vyper(
 }
 
 ///
+/// Builds a test Vyper project via combined JSON.
+///
+pub fn build_vyper_combined_json(
+    input_paths: Vec<&str>,
+    version: &semver::Version,
+    optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
+) -> anyhow::Result<Build> {
+    check_dependencies();
+
+    let vyper = VyperCompiler::new(
+        format!(
+            "{}-{version}{}",
+            VyperCompiler::DEFAULT_EXECUTABLE_NAME,
+            std::env::consts::EXE_SUFFIX
+        )
+        .as_str(),
+    )?;
+
+    inkwell::support::enable_llvm_pretty_stack_trace();
+    era_compiler_llvm_context::initialize_target(era_compiler_llvm_context::Target::EraVM);
+    let _ = crate::process::EXECUTABLE.set(PathBuf::from(crate::r#const::DEFAULT_EXECUTABLE_NAME));
+
+    let input_paths = input_paths.into_iter().map(PathBuf::from).collect();
+
+    let project: Project =
+        vyper.batch(&vyper.version.default, input_paths, &[], None, true, true)?;
+
+    let build = project.compile(
+        None,
+        false,
+        optimizer_settings,
+        vec![],
+        zkevm_assembly::RunningVmEncodingMode::Production,
+        vec![],
+        None,
+    )?;
+
+    Ok(build)
+}
+
+///
 /// Checks if the specified `warning` was emitted during the `source_code` compilation.
 ///
-pub fn check_warning(
-    source_code: &str,
-    version: &semver::Version,
-    warning: &str,
-) -> anyhow::Result<bool> {
-    let build = build_vyper(
-        source_code,
+pub fn check_warning(path: &str, version: &semver::Version, warning: &str) -> anyhow::Result<bool> {
+    let build = build_vyper_combined_json(
+        vec![path],
         version,
         era_compiler_llvm_context::OptimizerSettings::none(),
     )?;
