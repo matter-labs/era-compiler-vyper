@@ -5,6 +5,7 @@
 #![allow(non_camel_case_types)]
 #![allow(clippy::upper_case_acronyms)]
 #![allow(clippy::too_many_arguments)]
+#![allow(clippy::assigning_clones)]
 
 pub(crate) mod build;
 pub(crate) mod r#const;

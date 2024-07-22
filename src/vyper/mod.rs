@@ -57,6 +57,9 @@ impl Compiler {
     pub const FIRST_VERSION_ENABLE_DECIMALS_SUPPORT: semver::Version =
         semver::Version::new(0, 4, 0);
 
+    /// The first version returning absolute paths.
+    pub const FIRST_VERSION_ABSOLUTE_PATHS: semver::Version = semver::Version::new(0, 4, 0);
+
     ///
     /// A shortcut constructor.
     ///
