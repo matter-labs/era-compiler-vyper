@@ -6,20 +6,38 @@
 
 #[cfg(not(target_arch = "aarch64"))]
 #[test]
-fn default_0_3_3() {
-    default(semver::Version::new(0, 3, 3));
+fn default_standard_json_0_3_3() {
+    default_standard_json(semver::Version::new(0, 3, 3));
 }
 #[test]
-fn default_0_3_9() {
-    default(semver::Version::new(0, 3, 9));
+fn default_standard_json_0_3_9() {
+    default_standard_json(semver::Version::new(0, 3, 9));
 }
 #[test]
-fn default_0_3_10() {
-    default(semver::Version::new(0, 3, 10));
+fn default_standard_json_0_3_10() {
+    default_standard_json(semver::Version::new(0, 3, 10));
 }
 #[test]
-fn default_0_4_0() {
-    default(semver::Version::new(0, 4, 0));
+fn default_standard_json_0_4_0() {
+    default_standard_json(semver::Version::new(0, 4, 0));
+}
+
+#[cfg(not(target_arch = "aarch64"))]
+#[test]
+fn default_combined_json_0_3_3() {
+    default_combined_json(semver::Version::new(0, 3, 3));
+}
+#[test]
+fn default_combined_json_0_3_9() {
+    default_combined_json(semver::Version::new(0, 3, 9));
+}
+#[test]
+fn default_combined_json_0_3_10() {
+    default_combined_json(semver::Version::new(0, 3, 10));
+}
+#[test]
+fn default_combined_json_0_4_0() {
+    default_combined_json(semver::Version::new(0, 4, 0));
 }
 
 pub const SOURCE_CODE: &str = r#"
@@ -60,20 +78,20 @@ def toggleCompleted(_index: uint256):
     self.todos[_index].completed = not self.todos[_index].completed
 "#;
 
-fn default(version: semver::Version) {
-    let build_unoptimized = super::build_vyper(
+fn default_standard_json(version: semver::Version) {
+    let build_unoptimized = super::build_vyper_standard_json(
         SOURCE_CODE,
         &version,
         era_compiler_llvm_context::OptimizerSettings::none(),
     )
     .expect("Build failure");
-    let build_optimized_for_cycles = super::build_vyper(
+    let build_optimized_for_cycles = super::build_vyper_standard_json(
         SOURCE_CODE,
         &version,
         era_compiler_llvm_context::OptimizerSettings::cycles(),
     )
     .expect("Build failure");
-    let build_optimized_for_size = super::build_vyper(
+    let build_optimized_for_size = super::build_vyper_standard_json(
         SOURCE_CODE,
         &version,
         era_compiler_llvm_context::OptimizerSettings::size(),
@@ -83,31 +101,93 @@ fn default(version: semver::Version) {
     let size_when_unoptimized = build_unoptimized
         .contracts
         .get("test.vy:test")
-        .expect("Missing file `test.vy:test`")
+        .expect("Missing contract `test.vy:test`")
         .build
         .bytecode
         .len();
     let size_when_optimized_for_cycles = build_optimized_for_cycles
         .contracts
         .get("test.vy:test")
-        .expect("Missing file `test.vy:test`")
+        .expect("Missing contract `test.vy:test`")
         .build
         .bytecode
         .len();
     let size_when_optimized_for_size = build_optimized_for_size
         .contracts
         .get("test.vy:test")
-        .expect("Missing file `test.vy:test`")
+        .expect("Missing contract `test.vy:test`")
         .build
         .bytecode
         .len();
 
     assert!(
         size_when_optimized_for_cycles < size_when_unoptimized,
-        "Expected the cycles-optimized bytecode to be smaller than the unoptimized. Optimized: {}B, Unoptimized: {}B", size_when_optimized_for_cycles, size_when_unoptimized,
+        "Expected the cycles-optimized bytecode to be smaller than the unoptimized. Optimized: {}B, Unoptimized: {}B",
+        size_when_optimized_for_cycles,
+        size_when_unoptimized,
     );
     assert!(
         size_when_optimized_for_size < size_when_unoptimized,
-        "Expected the size-optimized bytecode to be smaller than the unoptimized. Optimized: {}B, Unoptimized: {}B", size_when_optimized_for_size, size_when_unoptimized,
+        "Expected the size-optimized bytecode to be smaller than the unoptimized. Optimized: {}B, Unoptimized: {}B",
+        size_when_optimized_for_size,
+        size_when_unoptimized,
+    );
+}
+
+fn default_combined_json(version: semver::Version) {
+    let path = "src/tests/contracts/optimizer.vy";
+
+    let build_unoptimized = super::build_vyper_combined_json(
+        vec![path],
+        &version,
+        era_compiler_llvm_context::OptimizerSettings::none(),
+    )
+    .expect("Build failure");
+    let build_optimized_for_cycles = super::build_vyper_combined_json(
+        vec![path],
+        &version,
+        era_compiler_llvm_context::OptimizerSettings::cycles(),
+    )
+    .expect("Build failure");
+    let build_optimized_for_size = super::build_vyper_combined_json(
+        vec![path],
+        &version,
+        era_compiler_llvm_context::OptimizerSettings::size(),
+    )
+    .expect("Build failure");
+
+    let size_when_unoptimized = build_unoptimized
+        .contracts
+        .get(path)
+        .unwrap_or_else(|| panic!("Missing contract `{path}`"))
+        .build
+        .bytecode
+        .len();
+    let size_when_optimized_for_cycles = build_optimized_for_cycles
+        .contracts
+        .get(path)
+        .unwrap_or_else(|| panic!("Missing contract `{path}`"))
+        .build
+        .bytecode
+        .len();
+    let size_when_optimized_for_size = build_optimized_for_size
+        .contracts
+        .get(path)
+        .unwrap_or_else(|| panic!("Missing contract `{path}`"))
+        .build
+        .bytecode
+        .len();
+
+    assert!(
+        size_when_optimized_for_cycles < size_when_unoptimized,
+        "Expected the cycles-optimized bytecode to be smaller than the unoptimized. Optimized: {}B, Unoptimized: {}B",
+        size_when_optimized_for_cycles,
+        size_when_unoptimized,
+    );
+    assert!(
+        size_when_optimized_for_size < size_when_unoptimized,
+        "Expected the size-optimized bytecode to be smaller than the unoptimized. Optimized: {}B, Unoptimized: {}B",
+        size_when_optimized_for_size,
+        size_when_unoptimized,
     );
 }

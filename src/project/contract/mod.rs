@@ -9,6 +9,7 @@ pub mod vyper;
 
 use crate::build::contract::Contract as ContractBuild;
 use crate::message_type::MessageType;
+use crate::vyper::selection::Selection as VyperSelection;
 
 use self::eravm_assembly::Contract as EraVMAssemblyContract;
 use self::llvm_ir::Contract as LLVMIRContract;
@@ -56,7 +57,7 @@ impl Contract {
         evm_version: Option<era_compiler_common::EVMVersion>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
-        output_assembly: bool,
+        output_selection: Vec<VyperSelection>,
         suppressed_messages: Vec<MessageType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
@@ -67,7 +68,7 @@ impl Contract {
                 evm_version,
                 optimizer_settings,
                 llvm_options,
-                output_assembly,
+                output_selection,
                 suppressed_messages,
                 debug_config,
             ),
@@ -76,7 +77,7 @@ impl Contract {
                 source_code_hash,
                 optimizer_settings,
                 llvm_options,
-                output_assembly,
+                output_selection,
                 suppressed_messages,
                 debug_config,
             ),
@@ -85,7 +86,7 @@ impl Contract {
                 source_code_hash,
                 optimizer_settings,
                 llvm_options,
-                output_assembly,
+                output_selection,
                 suppressed_messages,
                 debug_config,
             ),
@@ -100,6 +101,18 @@ impl Contract {
             Self::Vyper(inner) => inner.source_code.as_str(),
             Self::LLVMIR(inner) => inner.source_code.as_str(),
             Self::EraVMAssembly(inner) => inner.source_code.as_str(),
+        }
+    }
+
+    ///
+    /// Returns the stringified IR reference.
+    ///
+    pub fn ir_string(&self) -> Option<String> {
+        match self {
+            Self::Vyper(inner) => {
+                Some(serde_json::to_string_pretty(&inner.ir).expect("Always valid"))
+            }
+            _ => None,
         }
     }
 }

@@ -33,7 +33,7 @@ pub fn run() -> anyhow::Result<()> {
         input.evm_version,
         input.optimizer_settings,
         input.llvm_options,
-        input.output_assembly,
+        input.output_selection,
         input.suppressed_messages,
         input.debug_config,
     )?;
@@ -54,10 +54,10 @@ where
     I: serde::Serialize,
     O: serde::de::DeserializeOwned,
 {
-    let executable = match EXECUTABLE.get() {
-        Some(executable) => executable.to_owned(),
-        None => std::env::current_exe()?,
-    };
+    let executable = EXECUTABLE
+        .get()
+        .cloned()
+        .unwrap_or_else(|| std::env::current_exe().expect("Current executable path getting error"));
 
     let mut command = Command::new(executable.as_path());
     command.stdin(std::process::Stdio::piped());
@@ -67,30 +67,39 @@ where
 
     let mut process = command
         .spawn()
-        .map_err(|error| anyhow::anyhow!("{executable:?} subprocess spawning error: {error:?}"))?;
+        .unwrap_or_else(|error| panic!("{executable:?} subprocess spawning: {error:?}"));
 
     let stdin = process
         .stdin
         .as_mut()
-        .ok_or_else(|| anyhow::anyhow!("{executable:?} subprocess stdin getting error"))?;
+        .unwrap_or_else(|| panic!("{executable:?} subprocess stdin getting error"));
     let stdin_input = serde_json::to_vec(&input).expect("Always valid");
-    stdin.write_all(stdin_input.as_slice()).map_err(|error| {
-        anyhow::anyhow!("{executable:?} subprocess stdin writing error: {error:?}",)
-    })?;
+    stdin
+        .write_all(stdin_input.as_slice())
+        .unwrap_or_else(|error| panic!("{executable:?} subprocess stdin writing: {error:?}",));
 
-    let result = process.wait_with_output().map_err(|error| {
-        anyhow::anyhow!("{executable:?} subprocess output reading error: {error:?}")
-    })?;
-    let stderr_message = String::from_utf8_lossy(result.stderr.as_slice());
-    if !result.status.success() {
-        anyhow::bail!("{}", stderr_message.trim());
+    let result = process
+        .wait_with_output()
+        .unwrap_or_else(|error| panic!("{executable:?} subprocess output reading: {error:?}"));
+
+    if result.status.code() != Some(era_compiler_common::EXIT_CODE_SUCCESS) {
+        anyhow::bail!(
+            "{executable:?} subprocess failed with exit code {:?}:\n{}\n{}",
+            result.status.code(),
+            String::from_utf8_lossy(result.stdout.as_slice()),
+            String::from_utf8_lossy(result.stderr.as_slice()),
+        );
     }
+
     let output = match era_compiler_common::deserialize_from_slice::<O>(result.stdout.as_slice()) {
         Ok(output) => output,
         Err(error) => {
-            anyhow::bail!("{executable:?} subprocess stdout parsing error: {error:?} (stderr: {stderr_message})");
+            panic!(
+                "{executable:?} subprocess stdout parsing error: {error:?}\n{}\n{}",
+                String::from_utf8_lossy(result.stdout.as_slice()),
+                String::from_utf8_lossy(result.stderr.as_slice()),
+            );
         }
     };
-
     Ok(output)
 }

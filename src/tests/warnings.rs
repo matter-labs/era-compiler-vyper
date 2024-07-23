@@ -23,14 +23,8 @@ fn tx_origin_0_4_0() {
 }
 
 fn tx_origin(version: semver::Version) {
-    let source_code = r#"
-@external
-def test() -> address:
-    return tx.origin
-"#;
-
     assert!(super::check_warning(
-        source_code,
+        "src/tests/contracts/tx_origin.vy",
         &version,
         "You are checking for 'tx.origin', which may lead to unexpected behavior."
     )

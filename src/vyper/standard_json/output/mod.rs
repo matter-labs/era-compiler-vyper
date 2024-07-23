@@ -19,16 +19,16 @@ use self::error::Error;
 #[derive(Debug, serde::Deserialize)]
 pub struct Output {
     /// The contracts hashmap.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub contracts: Option<BTreeMap<String, BTreeMap<String, Contract>>>,
     /// The source code hashmap.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub sources: Option<BTreeMap<String, serde_json::Value>>,
     /// The compilation errors and warnings.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub errors: Option<Vec<Error>>,
     /// The `vyper` compiler long version.
     #[serde(rename = "compiler")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub long_version: Option<String>,
 }

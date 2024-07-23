@@ -23,6 +23,7 @@ use crate::process::output::Output as ProcessOutput;
 use crate::project::contract::vyper::ast::AST as VyperAST;
 use crate::project::contract::vyper::Contract as VyperContract;
 use crate::project::contract::Contract as ProjectContract;
+use crate::vyper::selection::Selection as VyperSelection;
 use crate::vyper::standard_json::output::Output as VyperStandardJsonOutput;
 
 use self::contract::eravm_assembly::Contract as EraVMAssemblyContract;
@@ -40,13 +41,19 @@ pub struct Project {
     pub source_code_hash: [u8; era_compiler_common::BYTE_LENGTH_FIELD],
     /// The contract data,
     pub contracts: BTreeMap<String, Contract>,
+    /// The selection output.
+    pub output_selection: Vec<VyperSelection>,
 }
 
 impl Project {
     ///
     /// A shortcut constructor.
     ///
-    pub fn new(version: semver::Version, contracts: BTreeMap<String, Contract>) -> Self {
+    pub fn new(
+        version: semver::Version,
+        contracts: BTreeMap<String, Contract>,
+        output_selection: Vec<VyperSelection>,
+    ) -> Self {
         let mut source_code_hasher = sha3::Keccak256::new();
         for (_path, contract) in contracts.iter() {
             source_code_hasher.update(contract.source_code().as_bytes());
@@ -58,6 +65,7 @@ impl Project {
             version,
             source_code_hash,
             contracts,
+            output_selection,
         }
     }
 
@@ -97,22 +105,29 @@ impl Project {
                 let project_contract = VyperContract::new(
                     version.to_owned(),
                     contract.source_code.expect("Must be set by the tester"),
-                    SourceMetadata::default(),
                     contract.ir,
-                    contract.evm.abi,
+                    SourceMetadata::default(),
                     ast,
+                    serde_json::Value::Null,
+                    contract.evm.method_identifiers,
+                    None,
+                    None,
+                    None,
                 );
                 project_contracts.insert(full_path, project_contract.into());
             }
         }
 
-        Ok(Self::new(version.to_owned(), project_contracts))
+        Ok(Self::new(version.to_owned(), project_contracts, vec![]))
     }
 
     ///
     /// Reads LLVM IR source code files and returns the project.
     ///
-    pub fn try_from_llvm_ir_paths(paths: &[&Path]) -> anyhow::Result<Self> {
+    pub fn try_from_llvm_ir_paths(
+        paths: &[&Path],
+        output_selection: &[VyperSelection],
+    ) -> anyhow::Result<Self> {
         let contracts = paths
             .iter()
             .map(|path| {
@@ -132,13 +147,17 @@ impl Project {
         Ok(Self::new(
             era_compiler_llvm_context::LLVM_VERSION,
             contracts,
+            output_selection.to_owned(),
         ))
     }
 
     ///
     /// Reads EraVM assembly source code files and returns the project.
     ///
-    pub fn try_from_eravm_assembly_paths(paths: &[&Path]) -> anyhow::Result<Self> {
+    pub fn try_from_eravm_assembly_paths(
+        paths: &[&Path],
+        output_selection: &[VyperSelection],
+    ) -> anyhow::Result<Self> {
         let contracts = paths
             .iter()
             .map(|path| {
@@ -160,6 +179,7 @@ impl Project {
         Ok(Self::new(
             era_compiler_llvm_context::eravm_const::ZKEVM_VERSION,
             contracts,
+            output_selection.to_owned(),
         ))
     }
 
@@ -172,7 +192,6 @@ impl Project {
         include_metadata_hash: bool,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
-        output_assembly: bool,
         bytecode_encoding: zkevm_assembly::RunningVmEncodingMode,
         suppressed_messages: Vec<MessageType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
@@ -194,9 +213,9 @@ impl Project {
                         source_code_hash,
                         bytecode_encoding == zkevm_assembly::RunningVmEncodingMode::Testing,
                         evm_version,
+                        self.output_selection.clone(),
                         optimizer_settings.clone(),
                         llvm_options.clone(),
-                        output_assembly,
                         suppressed_messages.clone(),
                         debug_config.clone(),
                     ));
@@ -215,24 +234,17 @@ impl Project {
                     contract
                         .build
                         .factory_dependencies
-                        .contains_key(crate::r#const::FORWARDER_CONTRACT_HASH.as_str())
+                        .contains_key(crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.as_str())
                 })
                 .unwrap_or_default()
         });
         if is_minimal_proxy_used {
-            let minimal_proxy_build = era_compiler_llvm_context::EraVMBuild::new(
-                crate::r#const::FORWARDER_CONTRACT_BYTECODE.clone(),
-                crate::r#const::FORWARDER_CONTRACT_HASH.clone(),
-                None,
-                if output_assembly {
-                    Some(crate::r#const::FORWARDER_CONTRACT_ASSEMBLY.to_owned())
-                } else {
-                    None
-                },
-            );
             build.contracts.insert(
                 crate::r#const::MINIMAL_PROXY_CONTRACT_NAME.to_owned(),
-                ContractBuild::new(minimal_proxy_build, vec![]),
+                ContractBuild::new_minimal_proxy(
+                    self.output_selection
+                        .contains(&VyperSelection::EraVMAssembly),
+                ),
             );
         }
 
