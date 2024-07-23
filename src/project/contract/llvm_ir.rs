@@ -5,6 +5,7 @@
 use crate::build::contract::Contract as ContractBuild;
 use crate::message_type::MessageType;
 use crate::project::contract::metadata::Metadata as ContractMetadata;
+use crate::vyper::selection::Selection as VyperSelection;
 
 ///
 /// The LLVM IR contract.
@@ -37,7 +38,7 @@ impl Contract {
         source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
-        output_assembly: bool,
+        output_selection: Vec<VyperSelection>,
         _suppressed_messages: Vec<MessageType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
@@ -67,8 +68,12 @@ impl Contract {
             era_compiler_llvm_context::DummyDependency,
         >::new(&llvm, module, llvm_options, optimizer, None, debug_config);
 
-        let build = context.build(contract_path, metadata_hash, output_assembly)?;
+        let build = context.build(
+            contract_path,
+            metadata_hash,
+            output_selection.contains(&VyperSelection::EraVMAssembly),
+        )?;
 
-        Ok(ContractBuild::new(build, vec![]))
+        Ok(ContractBuild::new_inner(build))
     }
 }

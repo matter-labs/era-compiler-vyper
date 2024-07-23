@@ -3,12 +3,12 @@
 //!
 
 pub mod combined_json;
+pub mod selection;
 pub mod standard_json;
 pub mod version;
 
 use std::collections::BTreeMap;
 use std::collections::HashMap;
-use std::path::Path;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 use std::sync::RwLock;
@@ -21,7 +21,7 @@ use crate::project::contract::vyper::Contract as VyperContract;
 use crate::project::contract::Contract;
 use crate::project::Project;
 
-use self::combined_json::CombinedJson;
+use self::selection::Selection;
 use self::standard_json::input::settings::optimize::Optimize as StandardJsonInputSettingsOptimize;
 use self::standard_json::input::Input as StandardJsonInput;
 use self::standard_json::output::Output as StandardJsonOutput;
@@ -50,9 +50,15 @@ impl Compiler {
         semver::Version::new(0, 4, 0),
     ];
 
+    /// The first version where we cannot use the optimizer.
+    pub const FIRST_VERSION_OPTIMIZER_UNUSABLE: semver::Version = semver::Version::new(0, 3, 10);
+
     /// The first version supporting `--enable-decimals`.
     pub const FIRST_VERSION_ENABLE_DECIMALS_SUPPORT: semver::Version =
         semver::Version::new(0, 4, 0);
+
+    /// The first version returning absolute paths.
+    pub const FIRST_VERSION_ABSOLUTE_PATHS: semver::Version = semver::Version::new(0, 4, 0);
 
     ///
     /// A shortcut constructor.
@@ -88,63 +94,6 @@ impl Compiler {
     }
 
     ///
-    /// The `vyper -f combined_json input_files...` mirror.
-    ///
-    pub fn combined_json(
-        &self,
-        paths: &[PathBuf],
-        evm_version: Option<era_compiler_common::EVMVersion>,
-        enable_decimals: bool,
-        optimize: bool,
-    ) -> anyhow::Result<CombinedJson> {
-        let mut command = std::process::Command::new(self.executable.as_str());
-        if let Some(evm_version) = evm_version {
-            command.arg("--evm-version");
-            command.arg(evm_version.to_string());
-        }
-        if enable_decimals && self.version.default >= Self::FIRST_VERSION_ENABLE_DECIMALS_SUPPORT {
-            command.arg("--enable-decimals");
-        }
-        command.arg("-f");
-        command.arg("combined_json");
-        command.args(paths);
-        if self.version.default >= semver::Version::new(0, 3, 10) {
-            command.arg("--optimize");
-            command.arg("none");
-        } else if !optimize {
-            command.arg("--no-optimize");
-        }
-        let output = command.output().map_err(|error| {
-            anyhow::anyhow!("{} subprocess error: {:?}", self.executable, error)
-        })?;
-        if !output.status.success() {
-            anyhow::bail!(
-                "{} error: {}",
-                self.executable,
-                String::from_utf8_lossy(output.stderr.as_slice()).to_string()
-            );
-        }
-
-        let mut combined_json: CombinedJson = era_compiler_common::deserialize_from_slice(
-            output.stdout.as_slice(),
-        )
-        .map_err(|error| {
-            anyhow::anyhow!(
-                "{} subprocess output parsing error: {}\n{}",
-                self.executable,
-                error,
-                era_compiler_common::deserialize_from_slice::<serde_json::Value>(
-                    output.stdout.as_slice()
-                )
-                .map(|json| serde_json::to_string_pretty(&json).expect("Always valid"))
-                .unwrap_or_else(|_| String::from_utf8_lossy(output.stdout.as_slice()).to_string()),
-            )
-        })?;
-        combined_json.remove_evm();
-        Ok(combined_json)
-    }
-
-    ///
     /// The `vyper --standard-json` mirror.
     ///
     pub fn standard_json(
@@ -154,9 +103,10 @@ impl Compiler {
         let mut command = std::process::Command::new(self.executable.as_str());
         command.stdin(std::process::Stdio::piped());
         command.stdout(std::process::Stdio::piped());
+        command.stderr(std::process::Stdio::piped());
         command.arg("--standard-json");
 
-        if self.version.default >= semver::Version::new(0, 3, 10) {
+        if self.version.default >= Self::FIRST_VERSION_OPTIMIZER_UNUSABLE {
             input.settings.optimize = StandardJsonInputSettingsOptimize::None;
         }
 
@@ -179,20 +129,24 @@ impl Compiler {
                 self.executable
             )
         })?;
-        let stderr_message = String::from_utf8_lossy(result.stderr.as_slice());
         let mut output = match era_compiler_common::deserialize_from_slice::<StandardJsonOutput>(
             result.stdout.as_slice(),
         ) {
             Ok(output) => output,
             Err(error) => {
                 anyhow::bail!(
-                    "{} subprocess stdout parsing error: {error:?} (stderr: {stderr_message})",
-                    self.executable
+                    "{} subprocess stdout parsing error: {error:?} (stderr: {})",
+                    self.executable,
+                    String::from_utf8_lossy(result.stderr.as_slice())
                 );
             }
         };
         if !result.status.success() {
-            anyhow::bail!("{} error: {stderr_message}", self.executable);
+            anyhow::bail!(
+                "{} error: {}",
+                self.executable,
+                String::from_utf8_lossy(result.stderr.as_slice())
+            );
         }
 
         for (full_path, source) in input.sources.into_iter() {
@@ -228,64 +182,33 @@ impl Compiler {
     }
 
     ///
-    /// Returns the Vyper LLL in the native format for the contract at `path`.
-    ///
-    /// Is used to print the IR for debugging.
-    ///
-    pub fn lll_debug(
-        &self,
-        path: &Path,
-        evm_version: Option<era_compiler_common::EVMVersion>,
-        enable_decimals: bool,
-        optimize: bool,
-    ) -> anyhow::Result<String> {
-        let mut command = std::process::Command::new(self.executable.as_str());
-        if let Some(evm_version) = evm_version {
-            command.arg("--evm-version");
-            command.arg(evm_version.to_string());
-        }
-        if enable_decimals && self.version.default >= Self::FIRST_VERSION_ENABLE_DECIMALS_SUPPORT {
-            command.arg("--enable-decimals");
-        }
-        command.arg("-f");
-        command.arg("ir");
-        if self.version.default >= semver::Version::new(0, 3, 10) {
-            command.arg("--optimize");
-            command.arg("none");
-        } else if !optimize {
-            command.arg("--no-optimize");
-        }
-        command.arg(path);
-
-        let output = command.output().map_err(|error| {
-            anyhow::anyhow!("{} subprocess error: {:?}", self.executable, error)
-        })?;
-
-        if !output.status.success() {
-            anyhow::bail!(
-                "{} error: {}",
-                self.executable,
-                String::from_utf8_lossy(output.stderr.as_slice()).to_string()
-            );
-        }
-
-        let stdout = String::from_utf8_lossy(output.stdout.as_slice()).to_string();
-
-        Ok(stdout)
-    }
-
-    ///
     /// Returns all the Vyper data required to compile the contracts at `paths`.
     ///
     pub fn batch(
         &self,
         version: &semver::Version,
         mut paths: Vec<PathBuf>,
+        selection: &[Selection],
         evm_version: Option<era_compiler_common::EVMVersion>,
         enable_decimals: bool,
         optimize: bool,
     ) -> anyhow::Result<Project> {
         paths.sort();
+
+        let mut vyper_selection = selection.to_owned();
+        vyper_selection.retain(|flag| flag.is_requested_from_vyper());
+        vyper_selection.extend(
+            [
+                Selection::IRJson,
+                Selection::Metadata,
+                Selection::AST,
+                Selection::ABI,
+                Selection::MethodIdentifiers,
+            ]
+            .iter()
+            .filter(|flag| !vyper_selection.contains(flag))
+            .collect::<Vec<&Selection>>(),
+        );
 
         let mut command = std::process::Command::new(self.executable.as_str());
         if let Some(evm_version) = evm_version {
@@ -296,8 +219,14 @@ impl Compiler {
             command.arg("--enable-decimals");
         }
         command.arg("-f");
-        command.arg("ir_json,metadata,method_identifiers,ast");
-        if self.version.default >= semver::Version::new(0, 3, 10) {
+        command.arg(
+            vyper_selection
+                .iter()
+                .map(|selection| selection.to_string())
+                .collect::<Vec<String>>()
+                .join(","),
+        );
+        if self.version.default >= Self::FIRST_VERSION_OPTIMIZER_UNUSABLE {
             command.arg("--optimize");
             command.arg("none");
         } else if !optimize {
@@ -320,7 +249,7 @@ impl Compiler {
         let lines: Vec<&str> = stdout.lines().collect();
         let results: BTreeMap<String, anyhow::Result<VyperContract>> = paths
             .into_par_iter()
-            .zip(lines.into_par_iter().chunks(VyperContract::EXPECTED_LINES))
+            .zip(lines.into_par_iter().chunks(vyper_selection.len()))
             .map(|(path, group)| {
                 let path_str = path.to_string_lossy().to_string();
                 let source_code = match std::fs::read_to_string(path).map_err(|error| {
@@ -335,15 +264,15 @@ impl Compiler {
                     return (path_str, Err(error));
                 }
 
-                let contract_result =
-                    VyperContract::try_from_lines(version.to_owned(), source_code, group.to_vec())
-                        .map_err(|error| {
-                            anyhow::anyhow!(
-                                "Contract `{}` JSON output parsing: {}",
-                                path_str,
-                                error
-                            )
-                        });
+                let contract_result = VyperContract::try_from_lines(
+                    version.to_owned(),
+                    source_code,
+                    vyper_selection.as_slice(),
+                    group.to_vec(),
+                )
+                .map_err(|error| {
+                    anyhow::anyhow!("Contract `{}` JSON output parsing: {}", path_str, error)
+                });
 
                 (path_str, contract_result)
             })
@@ -356,45 +285,9 @@ impl Compiler {
                     Ok::<BTreeMap<String, Contract>, anyhow::Error>(accumulator)
                 })?;
 
-        let project = Project::new(version.to_owned(), contracts);
+        let project = Project::new(version.to_owned(), contracts, selection.to_owned());
 
         Ok(project)
-    }
-
-    ///
-    /// The `vyper -f <identifiers> ...` mirror.
-    ///
-    pub fn extra_output(
-        &self,
-        path: &Path,
-        evm_version: Option<era_compiler_common::EVMVersion>,
-        enable_decimals: bool,
-        extra_output: &str,
-    ) -> anyhow::Result<String> {
-        let mut command = std::process::Command::new(self.executable.as_str());
-        if let Some(evm_version) = evm_version {
-            command.arg("--evm-version");
-            command.arg(evm_version.to_string());
-        }
-        if enable_decimals && self.version.default >= Self::FIRST_VERSION_ENABLE_DECIMALS_SUPPORT {
-            command.arg("--enable-decimals");
-        }
-        command.arg("-f");
-        command.arg(extra_output);
-        command.arg(path);
-
-        let output = command.output().map_err(|error| {
-            anyhow::anyhow!("{} subprocess error: {:?}", self.executable, error)
-        })?;
-        if !output.status.success() {
-            anyhow::bail!(
-                "{} error: {}",
-                self.executable,
-                String::from_utf8_lossy(output.stderr.as_slice()).to_string()
-            );
-        }
-
-        Ok(String::from_utf8_lossy(output.stdout.as_slice()).to_string())
     }
 
     ///

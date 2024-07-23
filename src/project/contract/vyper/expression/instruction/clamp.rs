@@ -46,8 +46,8 @@ where
     context.build_conditional_branch(condition, join_block, error_block)?;
 
     context.set_basic_block(error_block);
-    context.build_exit(
-        context.llvm_runtime().revert,
+    era_compiler_llvm_context::eravm_evm_return::revert(
+        context,
         context.field_const(0),
         context.field_const(0),
     )?;
@@ -81,8 +81,8 @@ where
     context.build_conditional_branch(condition, join_block, error_block)?;
 
     context.set_basic_block(error_block);
-    context.build_exit(
-        context.llvm_runtime().revert,
+    era_compiler_llvm_context::eravm_evm_return::revert(
+        context,
         context.field_const(0),
         context.field_const(0),
     )?;

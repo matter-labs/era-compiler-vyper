@@ -32,14 +32,8 @@ fn selfdestruct_0_4_0() {
 }
 
 fn selfdestruct(version: semver::Version) {
-    let source_code = r#"
-@external
-def f():
-    selfdestruct(convert(0x42, address))
-"#;
-
-    super::build_vyper(
-        source_code,
+    super::build_vyper_combined_json(
+        vec!["src/tests/contracts/selfdestruct.vy"],
         &version,
         era_compiler_llvm_context::OptimizerSettings::none(),
     )

@@ -5,6 +5,7 @@
 use crate::build::contract::Contract as ContractBuild;
 use crate::message_type::MessageType;
 use crate::project::contract::metadata::Metadata as ContractMetadata;
+use crate::vyper::selection::Selection as VyperSelection;
 
 ///
 /// The EraVM assembly contract.
@@ -37,7 +38,7 @@ impl Contract {
         source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
-        output_assembly: bool,
+        _output_selection: Vec<VyperSelection>,
         _suppressed_messages: Vec<MessageType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
@@ -66,15 +67,12 @@ impl Contract {
             debug_config.as_ref(),
         )?;
 
-        let assembly_text = if output_assembly {
-            Some(self.source_code)
-        } else {
-            None
-        };
+        let build = era_compiler_llvm_context::eravm_build(
+            bytecode_buffer,
+            metadata_hash,
+            Some(self.source_code),
+        )?;
 
-        let build =
-            era_compiler_llvm_context::eravm_build(bytecode_buffer, metadata_hash, assembly_text)?;
-
-        Ok(ContractBuild::new(build, vec![]))
+        Ok(ContractBuild::new_inner(build))
     }
 }

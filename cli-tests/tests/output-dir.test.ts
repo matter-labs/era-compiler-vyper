@@ -8,7 +8,7 @@ describe("Output dir", () => {
     //id1983
     describe("Default run with output dir", () => {
         const tmpDirZkVyper = createTmpDirectory();
-        const args = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${tmpDirZkVyper.name}"`, `--output-assembly`];
+        const args = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${tmpDirZkVyper.name}"`, `-f`, `eravm_assembly`];
         const result = executeCommand(zkvyperCommand, args);
 
         it("Output is empty", () => {
@@ -48,7 +48,7 @@ describe("Output dir", () => {
     //id1983
     describe("Default run with output dir and assembly", () => {
         const tmpDirZkVyper = createTmpDirectory();
-        const args = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${tmpDirZkVyper.name}"`, `--output-assembly`];
+        const args = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${tmpDirZkVyper.name}"`, `-f`, `eravm_assembly`];
         const result = executeCommand(zkvyperCommand, args);
 
         it("Output is empty", () => {

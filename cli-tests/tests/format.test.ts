@@ -3,28 +3,17 @@ import { paths } from '../src/entities';
 
 describe("Set of --format json tests", () => {
     const zkvyperCommand = 'zkvyper';
-    const vyperCommand = 'vyper';
     const format_args: string[] = [
-        `bytecode`,
-        `bytecode_runtime`,
-        `blueprint_bytecode`,
+        `combined_json`,
+        `ir_json`,
+        `metadata`,
+        `ast`,
         `abi`,
-        `abi_python`,
-        `source_map`,
         `method_identifiers`,
+        `layout`,
         `userdoc`,
         `devdoc`,
-        `combined_json`,
-        `layout`,
-        `ast`,
-        `interface`,
-        `external_interface`,
-        `opcodes`,
-        `opcodes_runtime`,
-        `ir`,
-        `ir_json`,
-        `ir_runtime`,
-        `asm`,
+        `eravm_assembly`,
     ];
 
     //id1988
@@ -40,11 +29,6 @@ describe("Set of --format json tests", () => {
             it("No 'Error'/'Warning'/'Fail' in the output", () => {
                 expect(result.output).not.toMatch(/\b([Ee]rror|[Ww]arning|[Ff]ail)\b/i);
             });
-
-            it("vyper exit code == zkvyper exit code", () => {
-                const vyperResult = executeCommand(vyperCommand, args);
-                expect(vyperResult.exitCode).toBe(result.exitCode);
-            });
         });
     }
 
@@ -58,7 +42,7 @@ describe("Set of --format json tests", () => {
         });
 
         it("Error is presented", () => {
-            expect(result.output).toMatch(/(Unsupported format type)/i);
+            expect(result.output).toMatch(/(Unknown selection flag)/i);
         });
     });
 

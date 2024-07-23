@@ -2,19 +2,33 @@
 
 ## [Unreleased]
 
+### Added
+
+- The `layout`, `userdoc`, `devdoc` fields to all output modes
+
 ### Changed
 
 - Migrated to the LLVM-based assembler and linker
+- EraVM assembly must now be requested with `zkvyper -f eravm_assembly ...`
 
-## [1.5.2] - 2024-07-01
+### Removed
+
+- Redundant calls to `vyper` that were increasing the compilation time
 
 ### Fixed
 
-- Path normalization error with the internal minimal proxy contract
+- missing `0x` prefix in the combined JSON bytecode output
+- `assert_unreachable` is now translated to `INVALID`, burning all gas
+
+## [1.5.2] - 2024-07-01
 
 ### Removed
 
 - Obsolete warnings for `extcodesize` and `ecrecover`
+
+### Fixed
+
+- Path normalization error with the internal minimal proxy contract
 
 ## [1.5.1] - 2024-06-27
 

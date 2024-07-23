@@ -167,8 +167,8 @@ impl Expression {
             }
             Self::Identifier(identifier) => {
                 if identifier.as_str() == crate::r#const::DEFAULT_SEQUENCE_IDENTIFIER {
-                    context.build_exit(
-                        context.llvm_runtime().revert,
+                    era_compiler_llvm_context::eravm_evm_return::revert(
+                        context,
                         context.field_const(0),
                         context.field_const(0),
                     )?;

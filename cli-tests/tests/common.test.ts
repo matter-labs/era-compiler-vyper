@@ -49,7 +49,7 @@ describe("Common tests", () => {
 
     //id1983
     describe("Default run a command from the help", () => {
-        const zkvyperArgs = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${paths.pathToOutputDir}"`, `--output-assembly`];
+        const zkvyperArgs = [`"${paths.pathToBasicVyContract}"`, `-o`, `"${paths.pathToOutputDir}"`, `-f`, `eravm_assembly`];
         const result = executeCommand(zkvyperCommand, zkvyperArgs);
 
         it("Output is empty", () => {

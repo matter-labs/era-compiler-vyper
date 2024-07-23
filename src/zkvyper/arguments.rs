@@ -2,10 +2,8 @@
 //! Vyper compiler arguments.
 //!
 
-use std::path::Path;
 use std::path::PathBuf;
 
-use path_slash::PathExt;
 use structopt::StructOpt;
 
 ///
@@ -27,7 +25,7 @@ pub struct Arguments {
     /// Multiple Vyper files can be passed in the default Vyper mode.
     /// LLVM IR mode currently supports only a single file.
     #[structopt(parse(from_os_str))]
-    pub input_files: Vec<PathBuf>,
+    pub input_paths: Vec<PathBuf>,
 
     /// Create one file per component and contract/file at the specified directory, if given.
     #[structopt(short = "o", long = "output-dir")]
@@ -55,7 +53,7 @@ pub struct Arguments {
     pub disable_vyper_optimizer: bool,
 
     /// Specify the path to the `vyper` executable. By default, the one in `${PATH}` is used.
-    /// In LLVM IR mode `vyper` is unused.
+    /// In LLVM IR and EraVM assembly modes, `vyper` executable is unused.
     #[structopt(long = "vyper")]
     pub vyper: Option<String>,
 
@@ -69,12 +67,12 @@ pub struct Arguments {
     #[structopt(long = "enable-decimals")]
     pub enable_decimals: bool,
 
-    /// An extra output format string.
-    /// See `vyper --help` for available options including combined JSON mode.
+    /// Set the output format selection.
+    /// Available options: combined_json | ir_json | metadata | ast | abi | method_identifiers | layout | userdoc | devdoc | eravm_assembly
     #[structopt(short = "f")]
     pub format: Option<String>,
 
-    /// Sets the number of threads, which execute the tests concurrently.
+    /// Set the number of threads, which execute the tests concurrently.
     #[structopt(short = "t", long = "threads")]
     pub threads: Option<usize>,
 
@@ -101,10 +99,6 @@ pub struct Arguments {
     /// Only for testing and debugging.
     #[structopt(long = "debug-output-dir")]
     pub debug_output_directory: Option<PathBuf>,
-
-    /// Include assembly in the output.
-    #[structopt(long = "output-assembly")]
-    pub output_assembly: bool,
 
     /// Suppress specified warnings.
     /// Available arguments: `ecrecover`, `extcodesize`, `txorigin`.
@@ -198,21 +192,9 @@ impl Arguments {
     /// Normalizes input paths by converting it to POSIX format.
     ///
     pub fn normalize_input_paths(&mut self) -> anyhow::Result<()> {
-        for input_path in self.input_files.iter_mut() {
-            *input_path = Self::path_to_posix(input_path.as_path())?;
+        for input_path in self.input_paths.iter_mut() {
+            *input_path = era_compiler_vyper::path_to_posix(input_path.as_path())?;
         }
         Ok(())
-    }
-
-    ///
-    /// Normalizes an input path by converting it to POSIX format.
-    ///
-    fn path_to_posix(path: &Path) -> anyhow::Result<PathBuf> {
-        let path = path
-            .to_slash()
-            .ok_or_else(|| anyhow::anyhow!("Error: Input path {:?} POSIX conversion error", path))?
-            .to_string();
-        let path = PathBuf::from(path.as_str());
-        Ok(path)
     }
 }

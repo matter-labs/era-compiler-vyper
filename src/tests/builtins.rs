@@ -15,16 +15,9 @@ fn create_copy_of_0_4_0() {
     create_copy_of(semver::Version::new(0, 4, 0));
 }
 
-pub const SOURCE_CODE: &'static str = r#"
-@external
-def f():
-    result: address = create_copy_of(convert(0x42, address))
-    return
-"#;
-
 fn create_copy_of(version: semver::Version) {
-    let _ = super::build_vyper(
-        SOURCE_CODE,
+    let _ = super::build_vyper_combined_json(
+        vec!["src/tests/contracts/create_copy_of.vy"],
         &version,
         era_compiler_llvm_context::OptimizerSettings::none(),
     )

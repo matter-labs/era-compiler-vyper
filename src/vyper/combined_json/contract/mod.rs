@@ -11,20 +11,28 @@ use self::warning::Warning;
 ///
 /// The contract.
 ///
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, serde::Serialize)]
 pub struct Contract {
+    /// The bytecode hexadecimal string.
+    pub bytecode: String,
+    /// The same as above. Kept for legacy reasons.
+    pub bytecode_runtime: String,
+
     /// The `vyper` method identifiers output.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub method_identifiers: Option<BTreeMap<String, String>>,
     /// The `vyper` ABI output.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub abi: Option<serde_json::Value>,
-    /// The `vyper` hexadecimal binary output.
+    /// The `vyper` layout output.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub bytecode: Option<String>,
-    /// The `vyper` hexadecimal binary runtime part output.
+    pub layout: Option<serde_json::Value>,
+    /// The `vyper` userdoc output.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub bytecode_runtime: Option<String>,
+    pub userdoc: Option<serde_json::Value>,
+    /// The `vyper` devdoc output.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub devdoc: Option<serde_json::Value>,
 
     /// The EraVM text assembly.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -39,30 +47,6 @@ pub struct Contract {
 
 impl Contract {
     ///
-    /// Creates a minimal proxy.
-    ///
-    pub fn new_minimal_proxy(output_assembly: bool) -> Self {
-        Self {
-            method_identifiers: Some(BTreeMap::new()),
-            abi: Some(serde_json::Value::Object(serde_json::Map::default())),
-            bytecode: Some(hex::encode(
-                crate::r#const::FORWARDER_CONTRACT_BYTECODE.as_slice(),
-            )),
-            bytecode_runtime: Some(hex::encode(
-                crate::r#const::FORWARDER_CONTRACT_BYTECODE.as_slice(),
-            )),
-
-            assembly: if output_assembly {
-                Some(crate::r#const::FORWARDER_CONTRACT_ASSEMBLY.to_owned())
-            } else {
-                None
-            },
-            warnings: Some(Vec::new()),
-            factory_deps: Some(BTreeMap::new()),
-        }
-    }
-
-    ///
     /// Returns the signature hash of the specified contract entry.
     ///
     /// # Panics
@@ -71,7 +55,7 @@ impl Contract {
     pub fn entry(&self, entry: &str) -> u32 {
         self.method_identifiers
             .as_ref()
-            .expect("Always exists")
+            .expect("Method identifiers not available")
             .iter()
             .find_map(|(contract_entry, hash)| {
                 if contract_entry.starts_with(&(entry.to_owned() + "(")) {

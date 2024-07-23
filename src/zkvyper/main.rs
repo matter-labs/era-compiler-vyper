@@ -88,6 +88,22 @@ fn main_inner() -> anyhow::Result<()> {
         None => None,
     };
 
+    let output_selection = match arguments.format.as_ref() {
+        Some(format) => format
+            .split(',')
+            .map(era_compiler_vyper::VyperSelection::from_str)
+            .collect::<anyhow::Result<Vec<era_compiler_vyper::VyperSelection>>>()?,
+        None => vec![],
+    };
+    let is_combined_json =
+        output_selection.contains(&era_compiler_vyper::VyperSelection::CombinedJson);
+    if is_combined_json && output_selection.len() > 1 {
+        anyhow::bail!(
+            "`combined_json` cannot be requested together with other output: `{:?}`",
+            output_selection,
+        );
+    }
+
     let mut optimizer_settings = match arguments.optimization {
         Some(mode) => era_compiler_llvm_context::OptimizerSettings::try_from_cli(mode)?,
         None => era_compiler_llvm_context::OptimizerSettings::cycles(),
@@ -113,22 +129,24 @@ fn main_inner() -> anyhow::Result<()> {
         None => true,
     };
 
+    let vyper_optimizer_enabled = !arguments.disable_vyper_optimizer;
+
     let build = if arguments.llvm_ir {
         era_compiler_vyper::llvm_ir(
-            arguments.input_files,
+            arguments.input_paths,
+            output_selection.as_slice(),
             include_metadata_hash,
             optimizer_settings,
             llvm_options,
-            arguments.output_assembly,
             suppressed_messages,
             debug_config,
         )
     } else if arguments.eravm_assembly {
         era_compiler_vyper::eravm_assembly(
-            arguments.input_files,
+            arguments.input_paths,
+            output_selection.as_slice(),
             include_metadata_hash,
             llvm_options,
-            arguments.output_assembly,
             suppressed_messages,
             debug_config,
         )
@@ -139,57 +157,57 @@ fn main_inner() -> anyhow::Result<()> {
                 .as_deref()
                 .unwrap_or(era_compiler_vyper::VyperCompiler::DEFAULT_EXECUTABLE_NAME),
         )?;
-        match arguments.format.as_deref() {
-            Some("combined_json") => {
-                era_compiler_vyper::combined_json(
-                    arguments.input_files,
-                    &vyper,
-                    evm_version,
-                    arguments.enable_decimals,
-                    include_metadata_hash,
-                    !arguments.disable_vyper_optimizer,
-                    optimizer_settings,
-                    llvm_options,
-                    arguments.output_assembly,
-                    suppressed_messages,
-                    debug_config,
-                    arguments.output_directory,
-                    arguments.overwrite,
-                )?;
-                return Ok(());
-            }
-            Some(format) if format.split(',').any(|element| element == "combined_json") => {
-                anyhow::bail!(
-                    "`combined_json` cannot be requested together with other output: consider removing it from `{format}`"
-                );
-            }
-            Some(_) | None => era_compiler_vyper::standard_output(
-                arguments.input_files,
+
+        if is_combined_json {
+            let combined_json = era_compiler_vyper::combined_json(
+                arguments.input_paths,
                 &vyper,
                 evm_version,
                 arguments.enable_decimals,
                 include_metadata_hash,
-                !arguments.disable_vyper_optimizer,
+                vyper_optimizer_enabled,
                 optimizer_settings,
                 llvm_options,
-                arguments.output_assembly,
                 suppressed_messages,
                 debug_config,
-            ),
+            )?;
+
+            match arguments.output_directory {
+                Some(output_directory) => {
+                    combined_json
+                        .write_to_directory(output_directory.as_path(), arguments.overwrite)?;
+                }
+                None => serde_json::to_writer(std::io::stdout(), &combined_json)
+                    .expect("Stdout writing error"),
+            }
+            std::process::exit(era_compiler_common::EXIT_CODE_SUCCESS);
         }
+
+        era_compiler_vyper::standard_output(
+            arguments.input_paths,
+            &vyper,
+            output_selection.as_slice(),
+            evm_version,
+            arguments.enable_decimals,
+            include_metadata_hash,
+            vyper_optimizer_enabled,
+            optimizer_settings,
+            llvm_options,
+            suppressed_messages,
+            debug_config,
+        )
     }?;
 
     match arguments.output_directory {
         Some(output_directory) => {
-            build.write_to_directory(output_directory.as_path(), arguments.overwrite)?;
+            build.write_to_directory(
+                output_selection.as_slice(),
+                output_directory.as_path(),
+                arguments.overwrite,
+            )?;
         }
         None => {
-            build.write_to_terminal(
-                arguments.format.as_deref(),
-                arguments.vyper.as_deref(),
-                evm_version,
-                arguments.enable_decimals,
-            )?;
+            build.write_to_terminal(output_selection.as_slice())?;
         }
     }
 

@@ -8,7 +8,7 @@ use crate::vyper::combined_json::contract::warning::Warning as CombinedJsonContr
 ///
 /// The Vyper contract AST.
 ///
-#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
+#[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize)]
 pub struct AST {
     /// The contract name.
     pub contract_name: String,
