@@ -192,7 +192,6 @@ impl Project {
         include_metadata_hash: bool,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
-        bytecode_encoding: zkevm_assembly::RunningVmEncodingMode,
         suppressed_messages: Vec<MessageType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<Build> {
@@ -211,7 +210,6 @@ impl Project {
                         Cow::Borrowed(full_path),
                         Cow::Borrowed(contract),
                         source_code_hash,
-                        bytecode_encoding == zkevm_assembly::RunningVmEncodingMode::Testing,
                         evm_version,
                         self.output_selection.clone(),
                         optimizer_settings.clone(),

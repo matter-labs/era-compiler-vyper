@@ -70,28 +70,22 @@ lazy_static! {
     ///
     /// The Vyper minimal proxy bytecode in bytes.
     ///
-    pub static ref MINIMAL_PROXY_CONTRACT_BYTECODE_WORDS: Vec<[u8; era_compiler_common::BYTE_LENGTH_FIELD]> = {
-        let mut assembly =
-            zkevm_assembly::Assembly::from_string(MINIMAL_PROXY_CONTRACT_ASSEMBLY.to_owned(), None).expect("Always valid");
-        assembly
-            .compile_to_bytecode().expect("Always valid")
-    };
-
-    ///
-    /// The Vyper minimal proxy bytecode in words.
-    ///
     pub static ref MINIMAL_PROXY_CONTRACT_BYTECODE: Vec<u8> = {
-        MINIMAL_PROXY_CONTRACT_BYTECODE_WORDS.clone()
-            .into_iter()
-            .flatten()
-            .collect::<Vec<u8>>()
+        let target_machine = era_compiler_llvm_context::TargetMachine::new(era_compiler_llvm_context::Target::EraVM, &era_compiler_llvm_context::OptimizerSettings::cycles(), &[]).expect("Minimal proxy target machine initialization error");
+        let assembly_buffer = era_compiler_llvm_context::eravm_assemble(&target_machine, MINIMAL_PROXY_CONTRACT_NAME, MINIMAL_PROXY_CONTRACT_ASSEMBLY, None).expect("Minimal proxy assembling error");
+        let build = era_compiler_llvm_context::eravm_build(assembly_buffer, None, Some(MINIMAL_PROXY_CONTRACT_ASSEMBLY.to_owned())).expect("Minimal proxy building error");
+        build.bytecode
     };
 
     ///
     /// The Vyper minimal proxy bytecode hash.
     ///
     pub static ref MINIMAL_PROXY_CONTRACT_HASH: String = {
-        zkevm_opcode_defs::bytecode_to_code_hash(MINIMAL_PROXY_CONTRACT_BYTECODE_WORDS.as_slice()).map(hex::encode)
+        let bytecode_words: Vec<[u8; era_compiler_common::BYTE_LENGTH_FIELD]> = MINIMAL_PROXY_CONTRACT_BYTECODE
+            .chunks(era_compiler_common::BYTE_LENGTH_FIELD)
+            .map(|word| word.try_into().expect("Always valid"))
+            .collect();
+        zkevm_opcode_defs::bytecode_to_code_hash(bytecode_words.as_slice()).map(hex::encode)
             .expect("Always valid")
     };
 }

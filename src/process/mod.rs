@@ -23,9 +23,6 @@ pub fn run() -> anyhow::Result<()> {
     let input_json = std::io::read_to_string(std::io::stdin()).expect("Stdin reading error");
     let input: Input = era_compiler_common::deserialize_from_str(input_json.as_str())
         .expect("Stdin reading error");
-    if input.enable_test_encoding {
-        zkevm_assembly::set_encoding_mode(zkevm_assembly::RunningVmEncodingMode::Testing);
-    }
 
     let build = input.contract.into_owned().compile(
         input.full_path.as_str(),

@@ -74,7 +74,6 @@ pub fn llvm_ir(
         include_metadata_hash,
         optimizer_settings,
         llvm_options,
-        zkevm_assembly::RunningVmEncodingMode::Production,
         suppressed_messages,
         debug_config,
     )?;
@@ -105,7 +104,6 @@ pub fn eravm_assembly(
         include_metadata_hash,
         optimizer_settings,
         llvm_options,
-        zkevm_assembly::RunningVmEncodingMode::Production,
         suppressed_messages,
         debug_config,
     )?;
@@ -150,7 +148,6 @@ pub fn standard_output(
         include_metadata_hash,
         optimizer_settings,
         llvm_options,
-        zkevm_assembly::RunningVmEncodingMode::Production,
         suppressed_messages,
         debug_config,
     )?;
@@ -204,7 +201,6 @@ pub fn combined_json(
         include_metadata_hash,
         optimizer_settings,
         llvm_options,
-        zkevm_assembly::RunningVmEncodingMode::Production,
         suppressed_messages,
         debug_config,
     )?;
