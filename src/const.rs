@@ -71,13 +71,12 @@ lazy_static! {
     /// The Vyper minimal proxy bytecode in bytes.
     ///
     pub static ref MINIMAL_PROXY_CONTRACT_BYTECODE: Vec<u8> = {
-        let target_machine = era_compiler_llvm_context::TargetMachine::new(era_compiler_llvm_context::Target::EraVM, &era_compiler_llvm_context::OptimizerSettings::cycles(), &[]).expect("Minimal proxy target machine initialization error");
-
-        let mut assembly_string = MINIMAL_PROXY_CONTRACT_ASSEMBLY.to_owned();
-        assembly_string.push(char::from(0));
-
-        let assembly_buffer = era_compiler_llvm_context::eravm_assemble(&target_machine, MINIMAL_PROXY_CONTRACT_NAME, assembly_string.as_str(), None).expect("Minimal proxy assembling error");
-        let build = era_compiler_llvm_context::eravm_build(assembly_buffer, None, Some(assembly_string)).expect("Minimal proxy building error");
+        let target_machine = era_compiler_llvm_context::TargetMachine::new(era_compiler_llvm_context::Target::EraVM, &era_compiler_llvm_context::OptimizerSettings::cycles(), &[])
+                .expect("Minimal proxy target machine initialization error");
+        let assembly_buffer = era_compiler_llvm_context::eravm_assemble(&target_machine, MINIMAL_PROXY_CONTRACT_NAME, MINIMAL_PROXY_CONTRACT_ASSEMBLY, None)
+                .expect("Minimal proxy assembling error");
+        let build = era_compiler_llvm_context::eravm_build(assembly_buffer, None, Some(MINIMAL_PROXY_CONTRACT_ASSEMBLY.to_owned()))
+                .expect("Minimal proxy building error");
         build.bytecode
     };
 
@@ -87,10 +86,11 @@ lazy_static! {
     pub static ref MINIMAL_PROXY_CONTRACT_HASH: String = {
         let bytecode_words: Vec<[u8; era_compiler_common::BYTE_LENGTH_FIELD]> = MINIMAL_PROXY_CONTRACT_BYTECODE
             .chunks(era_compiler_common::BYTE_LENGTH_FIELD)
-            .map(|word| word.try_into().expect("Always valid"))
+            .map(|word| word.try_into().expect("Minimal proxy bytecode chunking error"))
             .collect();
-        zkevm_opcode_defs::bytecode_to_code_hash(bytecode_words.as_slice()).map(hex::encode)
-            .expect("Always valid")
+        zkevm_opcode_defs::bytecode_to_code_hash(bytecode_words.as_slice())
+            .map(hex::encode)
+            .expect("Minimal proxy bytecode hashing error")
     };
 }
 
@@ -342,10 +342,11 @@ CPI0_6:
 CPI0_7:
         .cell   -32
         .text
+
 DEFAULT_UNWIND:
         ret.panic.to_label      r0, @DEFAULT_UNWIND
 DEFAULT_FAR_RETURN:
-        ret.ok.to_label r1, @DEFAULT_FAR_RETURN
+        ret.ok.to_label         r1, @DEFAULT_FAR_RETURN
 DEFAULT_FAR_REVERT:
         ret.revert.to_label     r1, @DEFAULT_FAR_REVERT
 "#;
