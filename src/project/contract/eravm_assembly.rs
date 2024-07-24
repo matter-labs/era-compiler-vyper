@@ -22,7 +22,11 @@ impl Contract {
     ///
     /// A shortcut constructor.
     ///
-    pub fn new(version: semver::Version, source_code: String) -> Self {
+    pub fn new(version: semver::Version, mut source_code: String) -> Self {
+        if !source_code.ends_with(char::from(0)) {
+            source_code.push(char::from(0));
+        }
+
         Self {
             version,
             source_code,

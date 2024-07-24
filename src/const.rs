@@ -72,8 +72,12 @@ lazy_static! {
     ///
     pub static ref MINIMAL_PROXY_CONTRACT_BYTECODE: Vec<u8> = {
         let target_machine = era_compiler_llvm_context::TargetMachine::new(era_compiler_llvm_context::Target::EraVM, &era_compiler_llvm_context::OptimizerSettings::cycles(), &[]).expect("Minimal proxy target machine initialization error");
-        let assembly_buffer = era_compiler_llvm_context::eravm_assemble(&target_machine, MINIMAL_PROXY_CONTRACT_NAME, MINIMAL_PROXY_CONTRACT_ASSEMBLY, None).expect("Minimal proxy assembling error");
-        let build = era_compiler_llvm_context::eravm_build(assembly_buffer, None, Some(MINIMAL_PROXY_CONTRACT_ASSEMBLY.to_owned())).expect("Minimal proxy building error");
+
+        let mut assembly_string = MINIMAL_PROXY_CONTRACT_ASSEMBLY.to_owned();
+        assembly_string.push(char::from(0));
+
+        let assembly_buffer = era_compiler_llvm_context::eravm_assemble(&target_machine, MINIMAL_PROXY_CONTRACT_NAME, assembly_string.as_str(), None).expect("Minimal proxy assembling error");
+        let build = era_compiler_llvm_context::eravm_build(assembly_buffer, None, Some(assembly_string)).expect("Minimal proxy building error");
         build.bytecode
     };
 
