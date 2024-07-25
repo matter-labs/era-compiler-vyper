@@ -229,10 +229,10 @@ impl Project {
             result
                 .as_ref()
                 .map(|contract| {
-                    contract
-                        .build
-                        .factory_dependencies
-                        .contains_key(crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.as_str())
+                    contract.build.factory_dependencies.contains_key(
+                        hex::encode(crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.as_slice())
+                            .as_str(),
+                    )
                 })
                 .unwrap_or_default()
         });

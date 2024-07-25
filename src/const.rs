@@ -83,13 +83,12 @@ lazy_static! {
     ///
     /// The Vyper minimal proxy bytecode hash.
     ///
-    pub static ref MINIMAL_PROXY_CONTRACT_HASH: String = {
+    pub static ref MINIMAL_PROXY_CONTRACT_HASH: [u8; era_compiler_common::BYTE_LENGTH_FIELD] = {
         let bytecode_words: Vec<[u8; era_compiler_common::BYTE_LENGTH_FIELD]> = MINIMAL_PROXY_CONTRACT_BYTECODE
             .chunks(era_compiler_common::BYTE_LENGTH_FIELD)
             .map(|word| word.try_into().expect("Minimal proxy bytecode chunking error"))
             .collect();
         zkevm_opcode_defs::bytecode_to_code_hash(bytecode_words.as_slice())
-            .map(hex::encode)
             .expect("Minimal proxy bytecode hashing error")
     };
 }
