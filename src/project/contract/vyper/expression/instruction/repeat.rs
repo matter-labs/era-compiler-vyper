@@ -40,7 +40,7 @@ impl Repeat {
         let index_identifier = self.0.remove(0).try_into_identifier()?;
         let start = self.0.remove(0);
         let rounds = self.0.remove(0);
-        let _rounds_bound = self.0.remove(0);
+        let rounds_bound = self.0.remove(0);
         let body = self.0.remove(0);
 
         let condition_block = context.append_basic_block("repeat_condition");
@@ -50,6 +50,9 @@ impl Repeat {
 
         let start = start.into_llvm_value(context)?.expect("Always exists");
         let rounds = rounds.into_llvm_value(context)?.expect("Always exists");
+        let rounds_bound = rounds_bound
+            .into_llvm_value(context)?
+            .expect("Always exists");
         let rounds_pointer = context.build_alloca(context.field_type(), "repeat_rounds")?;
         context.build_store(rounds_pointer, context.field_const(0))?;
 
@@ -63,10 +66,21 @@ impl Repeat {
 
         context.set_basic_block(condition_block);
         let rounds_value = context.build_load(rounds_pointer, "repeat_condition_rounds_value")?;
-        let condition = context.builder().build_int_compare(
+        let rounds_condition = context.builder().build_int_compare(
             inkwell::IntPredicate::ULT,
             rounds_value.into_int_value(),
             rounds.into_int_value(),
+            "repeat_rounds_condition_compared",
+        )?;
+        let bounds_condition = context.builder().build_int_compare(
+            inkwell::IntPredicate::ULT,
+            rounds_value.into_int_value(),
+            rounds_bound.into_int_value(),
+            "repeat_bounds_condition_compared",
+        )?;
+        let condition = context.builder().build_and(
+            rounds_condition,
+            bounds_condition,
             "repeat_condition_compared",
         )?;
         context.build_conditional_branch(condition, body_block, join_block)?;
