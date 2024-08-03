@@ -255,6 +255,7 @@ impl Contract {
             contract_path,
             metadata_hash,
             output_selection.contains(&VyperSelection::EraVMAssembly),
+            false,
         )?;
 
         if is_minimal_proxy_used {

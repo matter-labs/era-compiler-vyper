@@ -72,6 +72,7 @@ impl Contract {
             contract_path,
             metadata_hash,
             output_selection.contains(&VyperSelection::EraVMAssembly),
+            false,
         )?;
 
         Ok(ContractBuild::new_inner(build))
