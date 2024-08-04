@@ -205,8 +205,9 @@ impl Project {
             .contracts
             .par_iter()
             .map(|(full_path, contract)| {
-                let process_output: anyhow::Result<ProcessOutput> =
-                    crate::process::call(ProcessInput::new(
+                let process_output: anyhow::Result<ProcessOutput> = crate::process::call(
+                    full_path.as_str(),
+                    ProcessInput::new(
                         Cow::Borrowed(full_path),
                         Cow::Borrowed(contract),
                         source_code_hash,
@@ -216,7 +217,8 @@ impl Project {
                         llvm_options.clone(),
                         suppressed_messages.clone(),
                         debug_config.clone(),
-                    ));
+                    ),
+                );
 
                 (
                     full_path.to_owned(),

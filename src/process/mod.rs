@@ -46,7 +46,7 @@ pub fn run() -> anyhow::Result<()> {
 ///
 /// Runs this process recursively to compile a single contract.
 ///
-pub fn call<I, O>(input: I) -> anyhow::Result<O>
+pub fn call<I, O>(path: &str, input: I) -> anyhow::Result<O>
 where
     I: serde::Serialize,
     O: serde::de::DeserializeOwned,
@@ -81,7 +81,7 @@ where
 
     if result.status.code() != Some(era_compiler_common::EXIT_CODE_SUCCESS) {
         anyhow::bail!(
-            "{executable:?} subprocess failed with exit code {:?}:\n{}\n{}",
+            "{executable:?} subprocess compiling `{path}` failed with exit code {:?}:\n{}\n{}",
             result.status.code(),
             String::from_utf8_lossy(result.stdout.as_slice()),
             String::from_utf8_lossy(result.stderr.as_slice()),
