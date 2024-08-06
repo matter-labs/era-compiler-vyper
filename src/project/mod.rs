@@ -192,7 +192,6 @@ impl Project {
         include_metadata_hash: bool,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
-        bytecode_encoding: zkevm_assembly::RunningVmEncodingMode,
         suppressed_messages: Vec<MessageType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<Build> {
@@ -206,19 +205,20 @@ impl Project {
             .contracts
             .par_iter()
             .map(|(full_path, contract)| {
-                let process_output: anyhow::Result<ProcessOutput> =
-                    crate::process::call(ProcessInput::new(
+                let process_output: anyhow::Result<ProcessOutput> = crate::process::call(
+                    full_path.as_str(),
+                    ProcessInput::new(
                         Cow::Borrowed(full_path),
                         Cow::Borrowed(contract),
                         source_code_hash,
-                        bytecode_encoding == zkevm_assembly::RunningVmEncodingMode::Testing,
                         evm_version,
                         self.output_selection.clone(),
                         optimizer_settings.clone(),
                         llvm_options.clone(),
                         suppressed_messages.clone(),
                         debug_config.clone(),
-                    ));
+                    ),
+                );
 
                 (
                     full_path.to_owned(),
@@ -231,10 +231,10 @@ impl Project {
             result
                 .as_ref()
                 .map(|contract| {
-                    contract
-                        .build
-                        .factory_dependencies
-                        .contains_key(crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.as_str())
+                    contract.build.factory_dependencies.contains_key(
+                        hex::encode(crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.as_slice())
+                            .as_str(),
+                    )
                 })
                 .unwrap_or_default()
         });

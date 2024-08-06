@@ -8,6 +8,7 @@
 
 ### Changed
 
+- Migrated to the LLVM-based assembler and linker
 - EraVM assembly must now be requested with `zkvyper -f eravm_assembly ...`
 
 ### Removed

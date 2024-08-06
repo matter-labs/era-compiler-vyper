@@ -21,8 +21,6 @@ pub struct Input<'a> {
     pub contract: Cow<'a, Contract>,
     /// The source code hash.
     pub source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
-    /// Enables the test bytecode encoding.
-    pub enable_test_encoding: bool,
     /// The EVM target version.
     pub evm_version: Option<era_compiler_common::EVMVersion>,
     /// The output selection flags.
@@ -45,7 +43,6 @@ impl<'a> Input<'a> {
         full_path: Cow<'a, String>,
         contract: Cow<'a, Contract>,
         source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
-        enable_test_encoding: bool,
         evm_version: Option<era_compiler_common::EVMVersion>,
         output_selection: Vec<VyperSelection>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
@@ -57,7 +54,6 @@ impl<'a> Input<'a> {
             full_path,
             contract,
             source_code_hash,
-            enable_test_encoding,
             evm_version,
             output_selection,
             optimizer_settings,
