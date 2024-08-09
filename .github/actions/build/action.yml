@@ -5,18 +5,23 @@ inputs:
     description: 'Specific build target triplet.'
     required: false
     default: ''
-  release-suffix:
-    description: 'Suffix to use for release name.'
-    required: false
-    default: ''
   sanitizer:
     description: 'Sanitizer to use for build.'
+    required: false
+    default: ''
+  release-suffix:
+    description: 'Suffix to use for release name.'
     required: false
     default: ''
   build-type:
     description: 'Type of build: release or debug.'
     required: false
     default: 'release'
+  enable-coverage:
+    description: 'Enable code coverage.'
+    required: false
+    default: 'false'
+
 runs:
   using: "composite"
   steps:
@@ -28,22 +33,22 @@ runs:
         rustup target add ${{ inputs.target }}
         echo "target=--target ${{ inputs.target }}" >> $GITHUB_OUTPUT
 
-    - name: Install nightly
-      if: inputs.sanitizer != '' && inputs.target != ''
-      shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
-      run: |
-        rustup install nightly-${{ inputs.target }}
-        rustup component add rust-src --toolchain nightly-${{ inputs.target }}
-
     - name: Build zkvyper
-      shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
+      env:
+        RUSTC_BOOTSTRAP: 1
+        RUSTFLAGS: '-C target-feature=+crt-static'
+      shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash -ex {0}' }}
       run: |
         if [ '${{ inputs.sanitizer }}' != '' ]; then
+          rustup component add rust-src --toolchain "$(rustc --version | cut -d ' ' -f2)-${TARGET}"
           export RUSTFLAGS="-Z sanitizer=${{ inputs.sanitizer }}"
-          NIGHTLY='+nightly -Zbuild-std'
+          BUILD_STD_LIB='-Zbuild-std'
         fi
         [ ${{ inputs.build-type }} = 'release' ] && RELEASE="--release"
-        cargo ${NIGHTLY} build ${RELEASE} ${{ steps.build-target.outputs.target }}
+        if [ '${{ inputs.enable-coverage }}' = 'true' ]; then
+          export RUSTFLAGS="${RUSTFLAGS} -C instrument-coverage"
+        fi
+        cargo ${BUILD_STD_LIB} build ${RELEASE} ${{ steps.build-target.outputs.target }}
         echo "${PWD}/target/${{ inputs.target }}/${{ inputs.build-type }}" >> "${GITHUB_PATH}"
 
     - name: Prepare binary
