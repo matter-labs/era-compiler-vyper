@@ -34,6 +34,7 @@ pub fn run() -> anyhow::Result<()> {
         input.suppressed_messages,
         input.debug_config,
     )?;
+    unsafe { inkwell::support::shutdown_llvm() };
 
     let output = Output::new(build);
     let output_json = serde_json::to_vec(&output).expect("Always valid");
