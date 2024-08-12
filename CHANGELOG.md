@@ -1,5 +1,12 @@
 # The `zkvyper` changelog
 
+## [Unreleased]
+
+### Changed
+
+- Migrated to the LLVM-based assembler and linker
+- Updated to Rust v1.80.1
+
 ## [1.5.3] - 2024-07-31
 
 ### Added
@@ -8,7 +15,6 @@
 
 ### Changed
 
-- Migrated to the LLVM-based assembler and linker
 - EraVM assembly must now be requested with `zkvyper -f eravm_assembly ...`
 
 ### Removed
