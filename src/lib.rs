@@ -1,5 +1,5 @@
 //!
-//! Vyper compiler library.
+//! The Vyper compiler library.
 //!
 
 #![allow(non_camel_case_types)]
