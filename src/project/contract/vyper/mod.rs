@@ -255,11 +255,12 @@ impl Contract {
             contract_path,
             metadata_hash,
             output_selection.contains(&VyperSelection::EraVMAssembly),
+            false,
         )?;
 
         if is_minimal_proxy_used {
             build.factory_dependencies.insert(
-                crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.clone(),
+                hex::encode(crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.as_slice()),
                 crate::r#const::MINIMAL_PROXY_CONTRACT_NAME.to_owned(),
             );
         }
@@ -424,7 +425,9 @@ where
 
 impl era_compiler_llvm_context::Dependency for DependencyData {
     fn get(&self, _name: &str) -> anyhow::Result<String> {
-        Ok(crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.clone())
+        Ok(hex::encode(
+            crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.as_slice(),
+        ))
     }
 
     fn resolve_path(&self, _identifier: &str) -> anyhow::Result<String> {

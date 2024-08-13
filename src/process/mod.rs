@@ -23,9 +23,6 @@ pub fn run() -> anyhow::Result<()> {
     let input_json = std::io::read_to_string(std::io::stdin()).expect("Stdin reading error");
     let input: Input = era_compiler_common::deserialize_from_str(input_json.as_str())
         .expect("Stdin reading error");
-    if input.enable_test_encoding {
-        zkevm_assembly::set_encoding_mode(zkevm_assembly::RunningVmEncodingMode::Testing);
-    }
 
     let build = input.contract.into_owned().compile(
         input.full_path.as_str(),
@@ -37,6 +34,7 @@ pub fn run() -> anyhow::Result<()> {
         input.suppressed_messages,
         input.debug_config,
     )?;
+    unsafe { inkwell::support::shutdown_llvm() };
 
     let output = Output::new(build);
     let output_json = serde_json::to_vec(&output).expect("Always valid");
@@ -49,7 +47,7 @@ pub fn run() -> anyhow::Result<()> {
 ///
 /// Runs this process recursively to compile a single contract.
 ///
-pub fn call<I, O>(input: I) -> anyhow::Result<O>
+pub fn call<I, O>(path: &str, input: I) -> anyhow::Result<O>
 where
     I: serde::Serialize,
     O: serde::de::DeserializeOwned,
@@ -84,7 +82,7 @@ where
 
     if result.status.code() != Some(era_compiler_common::EXIT_CODE_SUCCESS) {
         anyhow::bail!(
-            "{executable:?} subprocess failed with exit code {:?}:\n{}\n{}",
+            "{executable:?} subprocess compiling `{path}` failed with exit code {:?}:\n{}\n{}",
             result.status.code(),
             String::from_utf8_lossy(result.stdout.as_slice()),
             String::from_utf8_lossy(result.stderr.as_slice()),
