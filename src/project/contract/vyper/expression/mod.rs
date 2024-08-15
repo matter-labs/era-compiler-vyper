@@ -94,8 +94,11 @@ impl Expression {
     ///
     pub fn safe_label(label: &str) -> String {
         let identifier = label.replace(['(', ')', '[', ']', ',', ' '], "_");
-        let hash = era_compiler_llvm_context::eravm_utils::keccak256(identifier.as_bytes());
-        format!("{identifier}_{hash}")
+        let hash = era_compiler_common::Hash::keccak256(identifier.as_bytes()).to_string();
+        format!(
+            "{identifier}_{}",
+            hash.strip_prefix("0x").unwrap_or(hash.as_str())
+        )
     }
 
     ///

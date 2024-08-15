@@ -40,7 +40,7 @@ pub fn build_vyper_standard_json(
     )?;
 
     inkwell::support::enable_llvm_pretty_stack_trace();
-    era_compiler_llvm_context::initialize_target(era_compiler_llvm_context::Target::EraVM);
+    era_compiler_llvm_context::initialize_target(era_compiler_common::Target::EraVM);
     let _ = crate::process::EXECUTABLE.set(PathBuf::from(crate::r#const::DEFAULT_EXECUTABLE_NAME));
 
     let mut sources = BTreeMap::new();
@@ -83,7 +83,7 @@ pub fn build_vyper_combined_json(
     )?;
 
     inkwell::support::enable_llvm_pretty_stack_trace();
-    era_compiler_llvm_context::initialize_target(era_compiler_llvm_context::Target::EraVM);
+    era_compiler_llvm_context::initialize_target(era_compiler_common::Target::EraVM);
     let _ = crate::process::EXECUTABLE.set(PathBuf::from(crate::r#const::DEFAULT_EXECUTABLE_NAME));
 
     let input_paths = input_paths.into_iter().map(PathBuf::from).collect();

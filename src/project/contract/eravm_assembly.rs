@@ -43,7 +43,7 @@ impl Contract {
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
         let target_machine = era_compiler_llvm_context::TargetMachine::new(
-            era_compiler_llvm_context::Target::EraVM,
+            era_compiler_common::Target::EraVM,
             &optimizer_settings,
             llvm_options.as_slice(),
         )?;
