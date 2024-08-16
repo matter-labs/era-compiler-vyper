@@ -71,7 +71,7 @@ lazy_static! {
     /// The Vyper minimal proxy bytecode in bytes.
     ///
     pub static ref MINIMAL_PROXY_CONTRACT_BYTECODE: Vec<u8> = {
-        let target_machine = era_compiler_llvm_context::TargetMachine::new(era_compiler_llvm_context::Target::EraVM, &era_compiler_llvm_context::OptimizerSettings::cycles(), &[])
+        let target_machine = era_compiler_llvm_context::TargetMachine::new(era_compiler_common::Target::EraVM, &era_compiler_llvm_context::OptimizerSettings::cycles(), &[])
                 .expect("Minimal proxy target machine initialization error");
         let assembly_buffer = era_compiler_llvm_context::eravm_assemble(&target_machine, MINIMAL_PROXY_CONTRACT_NAME, MINIMAL_PROXY_CONTRACT_ASSEMBLY, None)
                 .expect("Minimal proxy assembling error");
