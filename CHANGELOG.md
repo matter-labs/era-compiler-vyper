@@ -2,8 +2,13 @@
 
 ## [Unreleased]
 
+### Added
+
+- The support for IPFS metadata hash type
+
 ### Changed
 
+- Source code files do not affect one another's metadata hash anymore
 - Migrated to the LLVM-based assembler and linker
 - Updated to Rust v1.80.1
 

@@ -11,8 +11,6 @@ use std::path::Path;
 
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
-use sha3::digest::FixedOutput;
-use sha3::Digest;
 
 use crate::build::contract::Contract as ContractBuild;
 use crate::build::Build;
@@ -37,8 +35,6 @@ use self::contract::Contract;
 pub struct Project {
     /// The Vyper compiler version.
     pub version: semver::Version,
-    /// The project source code hash.
-    pub source_code_hash: [u8; era_compiler_common::BYTE_LENGTH_FIELD],
     /// The contract data,
     pub contracts: BTreeMap<String, Contract>,
     /// The selection output.
@@ -54,16 +50,8 @@ impl Project {
         contracts: BTreeMap<String, Contract>,
         output_selection: Vec<VyperSelection>,
     ) -> Self {
-        let mut source_code_hasher = sha3::Keccak256::new();
-        for (_path, contract) in contracts.iter() {
-            source_code_hasher.update(contract.source_code().as_bytes());
-        }
-        let source_code_hash: [u8; era_compiler_common::BYTE_LENGTH_FIELD] =
-            source_code_hasher.finalize_fixed().into();
-
         Self {
             version,
-            source_code_hash,
             contracts,
             output_selection,
         }

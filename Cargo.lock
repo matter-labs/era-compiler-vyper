@@ -372,7 +372,7 @@ checksum = "5443807d6dff69373d433ab9ef5378ad8df50ca6298caf15de6e52e24aaf54d5"
 [[package]]
 name = "era-compiler-common"
 version = "1.5.0"
-source = "git+https://github.com/matter-labs/era-compiler-common?branch=main#1d4953e08a5ba499e5b9f044f04570ac4e75c000"
+source = "git+https://github.com/matter-labs/era-compiler-common?branch=main#f80878e71d45cba60a0d32d5ee8565ea37f29ae2"
 dependencies = [
  "anyhow",
  "base58",
@@ -416,7 +416,6 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
- "sha3 0.10.8",
  "structopt",
  "which",
  "zkevm_opcode_defs",
