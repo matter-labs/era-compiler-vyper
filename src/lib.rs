@@ -56,7 +56,7 @@ use path_slash::PathExt;
 pub fn llvm_ir(
     input_paths: Vec<PathBuf>,
     output_selection: &[VyperSelection],
-    include_metadata_hash: bool,
+    metadata_hash_type: era_compiler_common::HashType,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
     suppressed_messages: Vec<MessageType>,
@@ -71,7 +71,7 @@ pub fn llvm_ir(
 
     let build = project.compile(
         None,
-        include_metadata_hash,
+        metadata_hash_type,
         optimizer_settings,
         llvm_options,
         suppressed_messages,
@@ -86,7 +86,7 @@ pub fn llvm_ir(
 pub fn eravm_assembly(
     input_paths: Vec<PathBuf>,
     output_selection: &[VyperSelection],
-    include_metadata_hash: bool,
+    metadata_hash_type: era_compiler_common::HashType,
     llvm_options: Vec<String>,
     suppressed_messages: Vec<MessageType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
@@ -101,7 +101,7 @@ pub fn eravm_assembly(
     let optimizer_settings = era_compiler_llvm_context::OptimizerSettings::cycles();
     let build = project.compile(
         None,
-        include_metadata_hash,
+        metadata_hash_type,
         optimizer_settings,
         llvm_options,
         suppressed_messages,
@@ -119,7 +119,7 @@ pub fn standard_output(
     output_selection: &[VyperSelection],
     evm_version: Option<era_compiler_common::EVMVersion>,
     enable_decimals: bool,
-    include_metadata_hash: bool,
+    metadata_hash_type: era_compiler_common::HashType,
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
@@ -145,7 +145,7 @@ pub fn standard_output(
 
     let build = project.compile(
         evm_version,
-        include_metadata_hash,
+        metadata_hash_type,
         optimizer_settings,
         llvm_options,
         suppressed_messages,
@@ -162,7 +162,7 @@ pub fn combined_json(
     vyper: &VyperCompiler,
     evm_version: Option<era_compiler_common::EVMVersion>,
     enable_decimals: bool,
-    include_metadata_hash: bool,
+    metadata_hash_type: era_compiler_common::HashType,
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
@@ -198,7 +198,7 @@ pub fn combined_json(
 
     let build = project.compile(
         evm_version,
-        include_metadata_hash,
+        metadata_hash_type,
         optimizer_settings,
         llvm_options,
         suppressed_messages,

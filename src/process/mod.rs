@@ -26,7 +26,7 @@ pub fn run() -> anyhow::Result<()> {
 
     let build = input.contract.into_owned().compile(
         input.full_path.as_str(),
-        input.source_code_hash,
+        input.metadata_hash_type,
         input.evm_version,
         input.optimizer_settings,
         input.llvm_options,

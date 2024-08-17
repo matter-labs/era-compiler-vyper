@@ -53,7 +53,7 @@ impl Contract {
     pub fn compile(
         self,
         contract_path: &str,
-        source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
+        metadata_hash_type: era_compiler_common::HashType,
         evm_version: Option<era_compiler_common::EVMVersion>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
@@ -64,7 +64,7 @@ impl Contract {
         match self {
             Self::Vyper(inner) => inner.compile(
                 contract_path,
-                source_code_hash,
+                metadata_hash_type,
                 evm_version,
                 optimizer_settings,
                 llvm_options,
@@ -74,7 +74,7 @@ impl Contract {
             ),
             Self::LLVMIR(inner) => inner.compile(
                 contract_path,
-                source_code_hash,
+                metadata_hash_type,
                 optimizer_settings,
                 llvm_options,
                 output_selection,
@@ -83,7 +83,7 @@ impl Contract {
             ),
             Self::EraVMAssembly(inner) => inner.compile(
                 contract_path,
-                source_code_hash,
+                metadata_hash_type,
                 optimizer_settings,
                 llvm_options,
                 output_selection,

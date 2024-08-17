@@ -157,7 +157,7 @@ impl Contract {
     pub fn compile(
         mut self,
         contract_path: &str,
-        source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
+        metadata_hash_type: era_compiler_common::HashType,
         evm_version: Option<era_compiler_common::EVMVersion>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
@@ -170,19 +170,26 @@ impl Contract {
             .get_messages(&self.ast.ast, suppressed_messages.as_slice());
 
         let llvm = inkwell::context::Context::create();
-        let optimizer = era_compiler_llvm_context::Optimizer::new(optimizer_settings);
+        let optimizer = era_compiler_llvm_context::Optimizer::new(optimizer_settings.clone());
 
-        let metadata_hash = source_code_hash.map(|source_code_hash| {
-            ContractMetadata::new(
-                &source_code_hash,
-                &self.version,
-                evm_version,
-                semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
-                optimizer.settings().to_owned(),
-                llvm_options.as_slice(),
-            )
-            .keccak256()
-        });
+        let metadata = ContractMetadata::new(
+            self.source_code.as_str(),
+            &self.version,
+            evm_version,
+            semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
+            optimizer_settings,
+            llvm_options.as_slice(),
+        );
+        let metadata_bytes = serde_json::to_vec(&metadata).expect("Always valid");
+        let metadata_hash = match metadata_hash_type {
+            era_compiler_common::HashType::None => None,
+            era_compiler_common::HashType::Keccak256 => Some(era_compiler_common::Hash::keccak256(
+                metadata_bytes.as_slice(),
+            )),
+            era_compiler_common::HashType::Ipfs => {
+                Some(era_compiler_common::Hash::ipfs(metadata_bytes.as_slice()))
+            }
+        };
 
         let dependency_data = DependencyData::default();
         let mut context = era_compiler_llvm_context::EraVMContext::<DependencyData>::new(

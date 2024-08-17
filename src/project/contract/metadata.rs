@@ -2,8 +2,6 @@
 //! The Vyper contract metadata.
 //!
 
-use sha3::Digest;
-
 ///
 /// The Vyper contract metadata.
 ///
@@ -11,8 +9,8 @@ use sha3::Digest;
 ///
 #[derive(Debug, serde::Serialize)]
 pub struct Metadata<'a> {
-    /// The source code hash.
-    pub source_hash: &'a [u8; era_compiler_common::BYTE_LENGTH_FIELD],
+    /// The source code.
+    pub source_code: &'a str,
     /// The source file upstream Vyper compiler version.
     pub source_version: &'a semver::Version,
     /// The EVM target version.
@@ -30,7 +28,7 @@ impl<'a> Metadata<'a> {
     /// A shortcut constructor.
     ///
     pub fn new(
-        source_hash: &'a [u8; era_compiler_common::BYTE_LENGTH_FIELD],
+        source_code: &'a str,
         source_version: &'a semver::Version,
         evm_version: Option<era_compiler_common::EVMVersion>,
         zk_version: semver::Version,
@@ -38,21 +36,12 @@ impl<'a> Metadata<'a> {
         llvm_options: &'a [String],
     ) -> Self {
         Self {
-            source_hash,
+            source_code,
             source_version,
             evm_version,
             zk_version,
             optimizer_settings: optimizer_settings.to_string(),
             llvm_options,
         }
-    }
-
-    ///
-    /// Returns the `keccak256` hash of the metadata.
-    ///
-    pub fn keccak256(&self) -> [u8; era_compiler_common::BYTE_LENGTH_FIELD] {
-        let json = serde_json::to_vec(self).expect("Always valid");
-        let hash = sha3::Keccak256::digest(json.as_slice());
-        hash.into()
     }
 }

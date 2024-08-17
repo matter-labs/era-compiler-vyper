@@ -189,18 +189,13 @@ impl Project {
     pub fn compile(
         self,
         evm_version: Option<era_compiler_common::EVMVersion>,
-        include_metadata_hash: bool,
+        metadata_hash_type: era_compiler_common::HashType,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
         suppressed_messages: Vec<MessageType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<Build> {
         let mut build = Build::default();
-        let source_code_hash = if include_metadata_hash {
-            Some(self.source_code_hash)
-        } else {
-            None
-        };
         let results: BTreeMap<String, anyhow::Result<ContractBuild>> = self
             .contracts
             .par_iter()
@@ -210,7 +205,7 @@ impl Project {
                     ProcessInput::new(
                         Cow::Borrowed(full_path),
                         Cow::Borrowed(contract),
-                        source_code_hash,
+                        metadata_hash_type,
                         evm_version,
                         self.output_selection.clone(),
                         optimizer_settings.clone(),
