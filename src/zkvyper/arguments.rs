@@ -60,7 +60,7 @@ pub struct Arguments {
     /// The EVM version to generate IR for.
     /// See https://github.com/matter-labs/era-compiler-common/blob/main/src/evm_version.rs for reference.
     #[structopt(long = "evm-version")]
-    pub evm_version: Option<String>,
+    pub evm_version: Option<era_compiler_common::EVMVersion>,
 
     /// Enables decimals in the underlying `vyper` compiler.
     /// Only available in `vyper` v0.4.0 and later.

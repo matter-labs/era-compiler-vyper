@@ -81,13 +81,6 @@ fn main_inner() -> anyhow::Result<()> {
         None => vec![],
     };
 
-    let evm_version = match arguments.evm_version {
-        Some(evm_version) => Some(era_compiler_common::EVMVersion::try_from(
-            evm_version.as_str(),
-        )?),
-        None => None,
-    };
-
     let output_selection = match arguments.format.as_ref() {
         Some(format) => format
             .split(',')
@@ -161,7 +154,7 @@ fn main_inner() -> anyhow::Result<()> {
             let combined_json = era_compiler_vyper::combined_json(
                 arguments.input_paths,
                 &vyper,
-                evm_version,
+                arguments.evm_version,
                 arguments.enable_decimals,
                 include_metadata_hash,
                 vyper_optimizer_enabled,
@@ -186,7 +179,7 @@ fn main_inner() -> anyhow::Result<()> {
             arguments.input_paths,
             &vyper,
             output_selection.as_slice(),
-            evm_version,
+            arguments.evm_version,
             arguments.enable_decimals,
             include_metadata_hash,
             vyper_optimizer_enabled,
