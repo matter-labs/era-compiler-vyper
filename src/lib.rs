@@ -7,13 +7,13 @@
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::assigning_clones)]
 
-pub(crate) mod build;
-pub(crate) mod r#const;
-pub(crate) mod message_type;
-pub(crate) mod metadata;
-pub(crate) mod process;
-pub(crate) mod project;
-pub(crate) mod vyper;
+pub mod build;
+pub mod r#const;
+pub mod message_type;
+pub mod metadata;
+pub mod process;
+pub mod project;
+pub mod vyper;
 
 pub use self::build::contract::Contract as ContractBuild;
 pub use self::build::Build;
@@ -41,8 +41,6 @@ pub use self::vyper::standard_json::output::error::Error as VyperCompilerStandar
 pub use self::vyper::standard_json::output::Output as VyperCompilerStandardOutputJson;
 pub use self::vyper::version::Version as VyperVersion;
 pub use self::vyper::Compiler as VyperCompiler;
-
-mod tests;
 
 use std::io::Write;
 use std::path::Path;
