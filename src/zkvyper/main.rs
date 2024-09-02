@@ -142,6 +142,9 @@ fn main_inner() -> anyhow::Result<()> {
             suppressed_messages,
             debug_config,
         )
+    } else if arguments.disassemble {
+        era_compiler_vyper::disassemble_eravm(arguments.input_paths)?;
+        return Ok(());
     } else {
         let vyper = era_compiler_vyper::VyperCompiler::new(
             arguments

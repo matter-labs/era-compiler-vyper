@@ -10,6 +10,7 @@ use std::process::Command;
 mod basic;
 mod debug_output_dir;
 mod disable_vyper_optimizer;
+mod disassembler;
 mod eravm_assembly;
 mod fallback;
 mod format;
@@ -45,6 +46,12 @@ pub const TEST_LLVM_CONTRACT_PATH: &'static str = "tests/cli/contracts/llvm/cont
 
 /// The standard JSON contract path
 pub const TEST_JSON_CONTRACT_PATH: &'static str = "tests/cli/contracts/json/contract.json";
+
+/// The binary bytecode sample path
+pub const TEST_BINARY_BYTECODE_PATH: &'static str = "tests/cli/bytecodes/bytecode.zbin";
+
+/// The hexadecimal string bytecode sample path
+pub const TEST_HEXADECIMAL_BYTECODE_PATH: &'static str = "tests/cli/bytecodes/bytecode.hex";
 
 /// LLVM IR file extension
 pub const LLVM_IR_EXTENSION: &'static str = ".ll";

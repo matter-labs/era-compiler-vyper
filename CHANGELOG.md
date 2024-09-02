@@ -1,5 +1,11 @@
 # The `zkvyper` changelog
 
+## [Unreleased]
+
+### Added
+
+- The EraVM disassembler
+
 ## [1.5.4] - 2024-08-27
 
 ### Added
