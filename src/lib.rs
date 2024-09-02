@@ -244,10 +244,9 @@ pub fn disassemble_eravm(paths: Vec<PathBuf>) -> anyhow::Result<()> {
         .collect::<anyhow::Result<Vec<(PathBuf, String)>>>()?;
 
     for (path, disassembly) in disassemblies.into_iter() {
-        writeln!(
-            std::io::stdout(),
-            "File {path:?} disassembly:\n\n{disassembly}\n\n"
-        )?;
+        writeln!(std::io::stderr(), "File {path:?} disassembly:\n\n")?;
+        writeln!(std::io::stdout(), "{disassembly}")?;
+        writeln!(std::io::stderr(), "\n\n")?;
     }
     std::process::exit(era_compiler_common::EXIT_CODE_SUCCESS);
 }
