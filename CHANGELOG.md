@@ -5,12 +5,23 @@
 ### Added
 
 - The support for IPFS metadata hash type
+- The EraVM disassembler
+
+## [1.5.4] - 2024-08-27
+
+### Added
+
+- More LLVM optimizations
 
 ### Changed
 
 - Source code files do not affect one another's metadata hash anymore
 - Migrated to the LLVM-based assembler and linker
 - Updated to Rust v1.80.1
+
+### Fixed
+
+- The complex bitwise operations misoptimization
 
 ## [1.5.3] - 2024-07-31
 

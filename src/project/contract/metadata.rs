@@ -9,8 +9,8 @@
 ///
 #[derive(Debug, serde::Serialize)]
 pub struct Metadata<'a> {
-    /// The source code.
-    pub source_code: &'a str,
+    /// The source code hash.
+    pub source_code_hash: &'a [u8],
     /// The source file upstream Vyper compiler version.
     pub source_version: &'a semver::Version,
     /// The EVM target version.
@@ -28,7 +28,7 @@ impl<'a> Metadata<'a> {
     /// A shortcut constructor.
     ///
     pub fn new(
-        source_code: &'a str,
+        source_code_hash: &'a [u8],
         source_version: &'a semver::Version,
         evm_version: Option<era_compiler_common::EVMVersion>,
         zk_version: semver::Version,
@@ -36,7 +36,7 @@ impl<'a> Metadata<'a> {
         llvm_options: &'a [String],
     ) -> Self {
         Self {
-            source_code,
+            source_code_hash,
             source_version,
             evm_version,
             zk_version,

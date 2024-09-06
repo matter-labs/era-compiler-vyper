@@ -23,6 +23,8 @@ pub struct CombinedJson {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
 
+    /// The project metadata.
+    pub project_metadata: serde_json::Value,
     /// The `zkvyper` compiler version.
     pub zk_version: String,
 }
@@ -36,11 +38,13 @@ impl CombinedJson {
     pub fn new(
         contracts: BTreeMap<String, Contract>,
         version: Option<&semver::Version>,
+        project_metadata: serde_json::Value,
         zk_version: &semver::Version,
     ) -> Self {
         Self {
             contracts,
             version: version.map(|version| version.to_string()),
+            project_metadata,
             zk_version: zk_version.to_string(),
         }
     }

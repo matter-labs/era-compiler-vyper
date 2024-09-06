@@ -14,7 +14,6 @@ use era_compiler_llvm_context::IContext;
 use crate::build::contract::Contract as ContractBuild;
 use crate::message_type::MessageType;
 use crate::metadata::Metadata as SourceMetadata;
-use crate::project::contract::metadata::Metadata as ContractMetadata;
 use crate::project::dependency_data::DependencyData;
 use crate::vyper::selection::Selection as VyperSelection;
 
@@ -134,6 +133,9 @@ impl Contract {
                 VyperSelection::EraVMAssembly => {
                     panic!("EraVM assembly cannot be requested from `vyper` executable");
                 }
+                VyperSelection::ProjectMetadata => {
+                    panic!("Project metadata cannot be requested from `vyper` executable");
+                }
             }
         }
 
@@ -157,8 +159,7 @@ impl Contract {
     pub fn compile(
         mut self,
         contract_path: &str,
-        metadata_hash_type: era_compiler_common::HashType,
-        evm_version: Option<era_compiler_common::EVMVersion>,
+        metadata_hash: Option<era_compiler_common::Hash>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
         output_selection: Vec<VyperSelection>,
@@ -171,25 +172,6 @@ impl Contract {
 
         let llvm = inkwell::context::Context::create();
         let optimizer = era_compiler_llvm_context::Optimizer::new(optimizer_settings.clone());
-
-        let metadata = ContractMetadata::new(
-            self.source_code.as_str(),
-            &self.version,
-            evm_version,
-            semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
-            optimizer_settings,
-            llvm_options.as_slice(),
-        );
-        let metadata_bytes = serde_json::to_vec(&metadata).expect("Always valid");
-        let metadata_hash = match metadata_hash_type {
-            era_compiler_common::HashType::None => None,
-            era_compiler_common::HashType::Keccak256 => Some(era_compiler_common::Hash::keccak256(
-                metadata_bytes.as_slice(),
-            )),
-            era_compiler_common::HashType::Ipfs => {
-                Some(era_compiler_common::Hash::ipfs(metadata_bytes.as_slice()))
-            }
-        };
 
         let dependency_data = DependencyData::default();
         let mut context = era_compiler_llvm_context::EraVMContext::<DependencyData>::new(

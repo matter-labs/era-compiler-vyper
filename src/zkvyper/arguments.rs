@@ -90,11 +90,17 @@ pub struct Arguments {
     #[structopt(long = "eravm-assembly")]
     pub eravm_assembly: bool,
 
+    /// Specify the bytecode file to disassemble.
+    /// Two file types are allowed: raw binary bytecode (*.zbin), and hexadecimal string (*.hex).
+    /// Cannot be used with combined and standard JSON modes.
+    #[structopt(long = "disassemble")]
+    pub disassemble: bool,
+
     /// Set the metadata hash type.
     /// Available types: `none`, `keccak256`, `ipfs`.
     /// The default is `keccak256`.
-    #[structopt(long = "metadata-hash", default_value = "keccak256")]
-    pub metadata_hash_type: era_compiler_common::HashType,
+    #[structopt(long = "metadata-hash")]
+    pub metadata_hash_type: Option<era_compiler_common::HashType>,
 
     /// Dump all IR (LLL, LLVM IR, assembly) to files in the specified directory.
     /// Only for testing and debugging.
@@ -150,13 +156,18 @@ impl Arguments {
             anyhow::bail!("Error: No other options are allowed in recursive mode.");
         }
 
-        let modes_count = [self.llvm_ir, self.eravm_assembly, self.format.is_some()]
-            .iter()
-            .filter(|&&x| x)
-            .count();
+        let modes_count = [
+            self.llvm_ir,
+            self.eravm_assembly,
+            self.disassemble,
+            self.format.is_some(),
+        ]
+        .iter()
+        .filter(|&&x| x)
+        .count();
         if modes_count > 1 {
             anyhow::bail!(
-                "Error: Only one modes is allowed at the same time: Vyper, LLVM IR, EraVM assembly."
+                "Error: Only one modes is allowed at the same time: Vyper, LLVM IR, EraVM assembly, disassembler."
             );
         }
 
@@ -184,6 +195,10 @@ impl Arguments {
                     "Error: Falling back to -Oz is not supported in EraVM assembly mode."
                 );
             }
+        }
+
+        if self.disassemble && std::env::args().count() > self.input_paths.len() + 2 {
+            anyhow::bail!("Error: No other options are allowed in disassembler mode.");
         }
 
         Ok(())

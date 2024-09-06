@@ -7,13 +7,13 @@
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::assigning_clones)]
 
-pub(crate) mod build;
-pub(crate) mod r#const;
-pub(crate) mod message_type;
-pub(crate) mod metadata;
-pub(crate) mod process;
-pub(crate) mod project;
-pub(crate) mod vyper;
+pub mod build;
+pub mod r#const;
+pub mod message_type;
+pub mod metadata;
+pub mod process;
+pub mod project;
+pub mod vyper;
 
 pub use self::build::contract::Contract as ContractBuild;
 pub use self::build::Build;
@@ -41,8 +41,6 @@ pub use self::vyper::standard_json::output::error::Error as VyperCompilerStandar
 pub use self::vyper::standard_json::output::Output as VyperCompilerStandardOutputJson;
 pub use self::vyper::version::Version as VyperVersion;
 pub use self::vyper::Compiler as VyperCompiler;
-
-mod tests;
 
 use std::io::Write;
 use std::path::Path;
@@ -177,6 +175,7 @@ pub fn combined_json(
         VyperSelection::StorageLayout,
         VyperSelection::UserDocumentation,
         VyperSelection::DeveloperDocumentation,
+        VyperSelection::ProjectMetadata,
     ];
 
     let project: Project = vyper.batch(
@@ -208,6 +207,49 @@ pub fn combined_json(
     let combined_json = build.into_combined_json(Some(&vyper.version.default), &zkvyper_version);
 
     Ok(combined_json)
+}
+
+///
+/// Runs the disassembler for EraVM bytecode file and prints the output to stdout.
+///
+pub fn disassemble_eravm(paths: Vec<PathBuf>) -> anyhow::Result<()> {
+    let target_machine = era_compiler_llvm_context::TargetMachine::new(
+        era_compiler_common::Target::EraVM,
+        &era_compiler_llvm_context::OptimizerSettings::cycles(),
+        &[],
+    )?;
+
+    let disassemblies: Vec<(PathBuf, String)> = paths
+        .into_iter()
+        .map(|path| {
+            let bytecode = match path.extension().and_then(|extension| extension.to_str()) {
+                Some("hex") => {
+                    let string = std::fs::read_to_string(path.as_path())?;
+                    let hexadecimal_string =
+                        string.trim().strip_prefix("0x").unwrap_or(string.as_str());
+                    hex::decode(hexadecimal_string)?
+                }
+                Some("zbin") => std::fs::read(path.as_path())?,
+                Some(extension) => anyhow::bail!(
+                    "Invalid file extension: {extension}. Supported extensions: *.hex, *.zbin"
+                ),
+                None => {
+                    anyhow::bail!("Missing file extension. Supported extensions: *.hex, *.zbin")
+                }
+            };
+
+            let disassembly =
+                era_compiler_llvm_context::eravm_disassemble(&target_machine, bytecode.as_slice())?;
+            Ok((path, disassembly))
+        })
+        .collect::<anyhow::Result<Vec<(PathBuf, String)>>>()?;
+
+    for (path, disassembly) in disassemblies.into_iter() {
+        writeln!(std::io::stderr(), "File {path:?} disassembly:\n\n")?;
+        writeln!(std::io::stdout(), "{disassembly}")?;
+        writeln!(std::io::stderr(), "\n\n")?;
+    }
+    std::process::exit(era_compiler_common::EXIT_CODE_SUCCESS);
 }
 
 ///

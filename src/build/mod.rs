@@ -5,6 +5,8 @@
 pub mod contract;
 
 use std::collections::BTreeMap;
+use std::fs::File;
+use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -19,19 +21,36 @@ use self::contract::Contract;
 ///
 /// The Vyper project build.
 ///
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Build {
     /// The contract data,
     pub contracts: BTreeMap<String, Contract>,
+    /// The project metadata.
+    pub project_metadata: serde_json::Value,
 }
 
 impl Build {
+    ///
+    /// A shortcut constructor.
+    ///
+    pub fn new(project_metadata: serde_json::Value) -> Self {
+        Self {
+            contracts: BTreeMap::new(),
+            project_metadata,
+        }
+    }
+
     ///
     /// Writes all contracts to the terminal.
     ///
     pub fn write_to_terminal(self, selection: &[VyperSelection]) -> anyhow::Result<()> {
         for (path, contract) in self.contracts.into_iter() {
             contract.write_to_terminal(path, selection)?;
+        }
+
+        if selection.contains(&VyperSelection::ProjectMetadata) {
+            writeln!(std::io::stderr(), "Project metadata:")?;
+            writeln!(std::io::stdout(), "{}", self.project_metadata)?;
         }
 
         Ok(())
@@ -55,6 +74,29 @@ impl Build {
                 PathBuf::from(contract_path).as_path(),
                 overwrite,
             )?;
+        }
+
+        if selection.contains(&VyperSelection::ProjectMetadata) {
+            let metadata_file_name = format!("meta.{}", era_compiler_common::EXTENSION_JSON);
+            let mut metadata_file_path = output_directory.to_owned();
+            metadata_file_path.push(metadata_file_name);
+            if metadata_file_path.exists() && !overwrite {
+                anyhow::bail!(
+                    "Refusing to overwrite an existing file {metadata_file_path:?} (use --overwrite to force).",
+                );
+            }
+            File::create(&metadata_file_path)
+                .map_err(|error| {
+                    anyhow::anyhow!("File {:?} creating error: {}", metadata_file_path, error)
+                })?
+                .write_all(
+                    serde_json::to_string(&self.project_metadata)
+                        .expect("Always valid")
+                        .as_bytes(),
+                )
+                .map_err(|error| {
+                    anyhow::anyhow!("File {:?} writing error: {}", metadata_file_path, error)
+                })?;
         }
 
         Ok(())
@@ -100,6 +142,6 @@ impl Build {
             })
             .collect();
 
-        CombinedJson::new(contracts, version, zkvyper_version)
+        CombinedJson::new(contracts, version, self.project_metadata, zkvyper_version)
     }
 }

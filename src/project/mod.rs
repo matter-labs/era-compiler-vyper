@@ -26,6 +26,7 @@ use crate::vyper::standard_json::output::Output as VyperStandardJsonOutput;
 
 use self::contract::eravm_assembly::Contract as EraVMAssemblyContract;
 use self::contract::llvm_ir::Contract as LLVMIRContract;
+use self::contract::metadata::Metadata as ContractMetadata;
 use self::contract::Contract;
 
 ///
@@ -39,6 +40,8 @@ pub struct Project {
     pub contracts: BTreeMap<String, Contract>,
     /// The selection output.
     pub output_selection: Vec<VyperSelection>,
+    /// The project source code hash.
+    pub project_hash: era_compiler_common::Hash,
 }
 
 impl Project {
@@ -50,10 +53,17 @@ impl Project {
         contracts: BTreeMap<String, Contract>,
         output_selection: Vec<VyperSelection>,
     ) -> Self {
+        let source_codes = contracts
+            .values()
+            .map(|contract| contract.source_code().as_bytes())
+            .collect::<Vec<&[u8]>>();
+        let project_hash = era_compiler_common::Hash::keccak256_multiple(source_codes.as_slice());
+
         Self {
             version,
             contracts,
             output_selection,
+            project_hash,
         }
     }
 
@@ -183,7 +193,27 @@ impl Project {
         suppressed_messages: Vec<MessageType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<Build> {
-        let mut build = Build::default();
+        let metadata = ContractMetadata::new(
+            self.project_hash.as_bytes(),
+            &self.version,
+            evm_version,
+            semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
+            optimizer_settings.clone(),
+            llvm_options.as_slice(),
+        );
+        let metadata_json = serde_json::to_value(&metadata).expect("Always valid");
+        let metadata_bytes = metadata_json.to_string().into_bytes();
+        let metadata_hash = match metadata_hash_type {
+            era_compiler_common::HashType::None => None,
+            era_compiler_common::HashType::Keccak256 => Some(era_compiler_common::Hash::keccak256(
+                metadata_bytes.as_slice(),
+            )),
+            era_compiler_common::HashType::Ipfs => {
+                Some(era_compiler_common::Hash::ipfs(metadata_bytes.as_slice()))
+            }
+        };
+
+        let mut build = Build::new(metadata_json);
         let results: BTreeMap<String, anyhow::Result<ContractBuild>> = self
             .contracts
             .par_iter()
@@ -193,8 +223,7 @@ impl Project {
                     ProcessInput::new(
                         Cow::Borrowed(full_path),
                         Cow::Borrowed(contract),
-                        metadata_hash_type,
-                        evm_version,
+                        metadata_hash.clone(),
                         self.output_selection.clone(),
                         optimizer_settings.clone(),
                         llvm_options.clone(),

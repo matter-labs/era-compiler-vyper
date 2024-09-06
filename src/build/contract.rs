@@ -189,6 +189,7 @@ impl Contract {
                         self.build.assembly.as_ref().expect("Always exists")
                     )?;
                 }
+                VyperSelection::ProjectMetadata => {}
 
                 VyperSelection::CombinedJson => {
                     panic!("Combined JSON is printed with another pipeline");
@@ -346,6 +347,7 @@ impl Contract {
                             )
                         })?;
                 }
+                VyperSelection::ProjectMetadata => {}
 
                 VyperSelection::CombinedJson => {
                     panic!("Combined JSON is printed with another pipeline");

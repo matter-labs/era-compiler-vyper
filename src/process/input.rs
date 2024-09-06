@@ -19,10 +19,8 @@ pub struct Input<'a> {
     pub full_path: Cow<'a, String>,
     /// The contract representation.
     pub contract: Cow<'a, Contract>,
-    /// The metadata hash type.
-    pub metadata_hash_type: era_compiler_common::HashType,
-    /// The EVM target version.
-    pub evm_version: Option<era_compiler_common::EVMVersion>,
+    /// The metadata hash.
+    pub metadata_hash: Option<era_compiler_common::Hash>,
     /// The output selection flags.
     pub output_selection: Vec<VyperSelection>,
     /// The optimizer settings.
@@ -42,8 +40,7 @@ impl<'a> Input<'a> {
     pub fn new(
         full_path: Cow<'a, String>,
         contract: Cow<'a, Contract>,
-        metadata_hash_type: era_compiler_common::HashType,
-        evm_version: Option<era_compiler_common::EVMVersion>,
+        metadata_hash: Option<era_compiler_common::Hash>,
         output_selection: Vec<VyperSelection>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
@@ -53,8 +50,7 @@ impl<'a> Input<'a> {
         Self {
             full_path,
             contract,
-            metadata_hash_type,
-            evm_version,
+            metadata_hash,
             output_selection,
             optimizer_settings,
             llvm_options,
