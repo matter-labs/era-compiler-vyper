@@ -96,10 +96,11 @@ pub struct Arguments {
     #[structopt(long = "disassemble")]
     pub disassemble: bool,
 
-    /// Set metadata hash mode: `keccak256` | `none`.
-    /// `keccak256` is enabled by default.
+    /// Set the metadata hash type.
+    /// Available types: `none`, `keccak256`, `ipfs`.
+    /// The default is `keccak256`.
     #[structopt(long = "metadata-hash")]
-    pub metadata_hash: Option<String>,
+    pub metadata_hash_type: Option<era_compiler_common::HashType>,
 
     /// Dump all IR (LLL, LLVM IR, assembly) to files in the specified directory.
     /// Only for testing and debugging.

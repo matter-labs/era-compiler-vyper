@@ -11,8 +11,6 @@ use std::path::Path;
 
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
-use sha3::digest::FixedOutput;
-use sha3::Digest;
 
 use crate::build::contract::Contract as ContractBuild;
 use crate::build::Build;
@@ -28,6 +26,7 @@ use crate::vyper::standard_json::output::Output as VyperStandardJsonOutput;
 
 use self::contract::eravm_assembly::Contract as EraVMAssemblyContract;
 use self::contract::llvm_ir::Contract as LLVMIRContract;
+use self::contract::metadata::Metadata as ContractMetadata;
 use self::contract::Contract;
 
 ///
@@ -37,12 +36,12 @@ use self::contract::Contract;
 pub struct Project {
     /// The Vyper compiler version.
     pub version: semver::Version,
-    /// The project source code hash.
-    pub source_code_hash: [u8; era_compiler_common::BYTE_LENGTH_FIELD],
     /// The contract data,
     pub contracts: BTreeMap<String, Contract>,
     /// The selection output.
     pub output_selection: Vec<VyperSelection>,
+    /// The project source code hash.
+    pub project_hash: era_compiler_common::Hash,
 }
 
 impl Project {
@@ -54,18 +53,17 @@ impl Project {
         contracts: BTreeMap<String, Contract>,
         output_selection: Vec<VyperSelection>,
     ) -> Self {
-        let mut source_code_hasher = sha3::Keccak256::new();
-        for (_path, contract) in contracts.iter() {
-            source_code_hasher.update(contract.source_code().as_bytes());
-        }
-        let source_code_hash: [u8; era_compiler_common::BYTE_LENGTH_FIELD] =
-            source_code_hasher.finalize_fixed().into();
+        let source_codes = contracts
+            .values()
+            .map(|contract| contract.source_code().as_bytes())
+            .collect::<Vec<&[u8]>>();
+        let project_hash = era_compiler_common::Hash::keccak256_multiple(source_codes.as_slice());
 
         Self {
             version,
-            source_code_hash,
             contracts,
             output_selection,
+            project_hash,
         }
     }
 
@@ -189,18 +187,33 @@ impl Project {
     pub fn compile(
         self,
         evm_version: Option<era_compiler_common::EVMVersion>,
-        include_metadata_hash: bool,
+        metadata_hash_type: era_compiler_common::HashType,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
         suppressed_messages: Vec<MessageType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<Build> {
-        let mut build = Build::default();
-        let source_code_hash = if include_metadata_hash {
-            Some(self.source_code_hash)
-        } else {
-            None
+        let metadata = ContractMetadata::new(
+            self.project_hash.as_bytes(),
+            &self.version,
+            evm_version,
+            semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
+            optimizer_settings.clone(),
+            llvm_options.as_slice(),
+        );
+        let metadata_json = serde_json::to_value(&metadata).expect("Always valid");
+        let metadata_bytes = metadata_json.to_string().into_bytes();
+        let metadata_hash = match metadata_hash_type {
+            era_compiler_common::HashType::None => None,
+            era_compiler_common::HashType::Keccak256 => Some(era_compiler_common::Hash::keccak256(
+                metadata_bytes.as_slice(),
+            )),
+            era_compiler_common::HashType::Ipfs => {
+                Some(era_compiler_common::Hash::ipfs(metadata_bytes.as_slice()))
+            }
         };
+
+        let mut build = Build::new(metadata_json);
         let results: BTreeMap<String, anyhow::Result<ContractBuild>> = self
             .contracts
             .par_iter()
@@ -210,8 +223,7 @@ impl Project {
                     ProcessInput::new(
                         Cow::Borrowed(full_path),
                         Cow::Borrowed(contract),
-                        source_code_hash,
-                        evm_version,
+                        metadata_hash.clone(),
                         self.output_selection.clone(),
                         optimizer_settings.clone(),
                         llvm_options.clone(),

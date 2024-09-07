@@ -113,21 +113,17 @@ fn main_inner() -> anyhow::Result<()> {
         .map(|options| options.split(' ').map(|option| option.to_owned()).collect())
         .unwrap_or_default();
 
-    let include_metadata_hash = match arguments.metadata_hash {
-        Some(metadata_hash) => {
-            let metadata = era_compiler_common::HashType::from_str(metadata_hash.as_str())?;
-            metadata != era_compiler_common::HashType::None
-        }
-        None => true,
-    };
-
     let vyper_optimizer_enabled = !arguments.disable_vyper_optimizer;
+
+    let metadata_hash_type = arguments
+        .metadata_hash_type
+        .unwrap_or(era_compiler_common::HashType::Keccak256);
 
     let build = if arguments.llvm_ir {
         era_compiler_vyper::llvm_ir(
             arguments.input_paths,
             output_selection.as_slice(),
-            include_metadata_hash,
+            metadata_hash_type,
             optimizer_settings,
             llvm_options,
             suppressed_messages,
@@ -137,7 +133,7 @@ fn main_inner() -> anyhow::Result<()> {
         era_compiler_vyper::eravm_assembly(
             arguments.input_paths,
             output_selection.as_slice(),
-            include_metadata_hash,
+            metadata_hash_type,
             llvm_options,
             suppressed_messages,
             debug_config,
@@ -159,7 +155,7 @@ fn main_inner() -> anyhow::Result<()> {
                 &vyper,
                 arguments.evm_version,
                 arguments.enable_decimals,
-                include_metadata_hash,
+                metadata_hash_type,
                 vyper_optimizer_enabled,
                 optimizer_settings,
                 llvm_options,
@@ -184,7 +180,7 @@ fn main_inner() -> anyhow::Result<()> {
             output_selection.as_slice(),
             arguments.evm_version,
             arguments.enable_decimals,
-            include_metadata_hash,
+            metadata_hash_type,
             vyper_optimizer_enabled,
             optimizer_settings,
             llvm_options,

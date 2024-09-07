@@ -14,7 +14,6 @@ use era_compiler_llvm_context::IContext;
 use crate::build::contract::Contract as ContractBuild;
 use crate::message_type::MessageType;
 use crate::metadata::Metadata as SourceMetadata;
-use crate::project::contract::metadata::Metadata as ContractMetadata;
 use crate::project::dependency_data::DependencyData;
 use crate::vyper::selection::Selection as VyperSelection;
 
@@ -134,6 +133,9 @@ impl Contract {
                 VyperSelection::EraVMAssembly => {
                     panic!("EraVM assembly cannot be requested from `vyper` executable");
                 }
+                VyperSelection::ProjectMetadata => {
+                    panic!("Project metadata cannot be requested from `vyper` executable");
+                }
             }
         }
 
@@ -157,8 +159,7 @@ impl Contract {
     pub fn compile(
         mut self,
         contract_path: &str,
-        source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
-        evm_version: Option<era_compiler_common::EVMVersion>,
+        metadata_hash: Option<era_compiler_common::Hash>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
         output_selection: Vec<VyperSelection>,
@@ -170,19 +171,7 @@ impl Contract {
             .get_messages(&self.ast.ast, suppressed_messages.as_slice());
 
         let llvm = inkwell::context::Context::create();
-        let optimizer = era_compiler_llvm_context::Optimizer::new(optimizer_settings);
-
-        let metadata_hash = source_code_hash.map(|source_code_hash| {
-            ContractMetadata::new(
-                &source_code_hash,
-                &self.version,
-                evm_version,
-                semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
-                optimizer.settings().to_owned(),
-                llvm_options.as_slice(),
-            )
-            .keccak256()
-        });
+        let optimizer = era_compiler_llvm_context::Optimizer::new(optimizer_settings.clone());
 
         let dependency_data = DependencyData::default();
         let mut context = era_compiler_llvm_context::EraVMContext::<DependencyData>::new(

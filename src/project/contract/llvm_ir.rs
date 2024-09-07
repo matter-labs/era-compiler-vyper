@@ -4,7 +4,6 @@
 
 use crate::build::contract::Contract as ContractBuild;
 use crate::message_type::MessageType;
-use crate::project::contract::metadata::Metadata as ContractMetadata;
 use crate::vyper::selection::Selection as VyperSelection;
 
 ///
@@ -35,7 +34,7 @@ impl Contract {
     pub fn compile(
         self,
         contract_path: &str,
-        source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
+        metadata_hash: Option<era_compiler_common::Hash>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
         output_selection: Vec<VyperSelection>,
@@ -43,19 +42,7 @@ impl Contract {
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
         let llvm = inkwell::context::Context::create();
-        let optimizer = era_compiler_llvm_context::Optimizer::new(optimizer_settings);
-
-        let metadata_hash = source_code_hash.map(|source_code_hash| {
-            ContractMetadata::new(
-                &source_code_hash,
-                &self.version,
-                None,
-                semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
-                optimizer.settings().to_owned(),
-                llvm_options.as_slice(),
-            )
-            .keccak256()
-        });
+        let optimizer = era_compiler_llvm_context::Optimizer::new(optimizer_settings.clone());
 
         let memory_buffer = inkwell::memory_buffer::MemoryBuffer::create_from_memory_range_copy(
             self.source_code.as_bytes(),

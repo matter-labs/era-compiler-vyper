@@ -38,7 +38,14 @@ pub fn build_vyper_standard_json(
     let output = vyper.standard_json(input)?;
 
     let project = Project::try_from_standard_json(output, &vyper.version.default)?;
-    let build = project.compile(None, true, optimizer_settings, vec![], vec![], None)?;
+    let build = project.compile(
+        None,
+        era_compiler_common::HashType::Ipfs,
+        optimizer_settings,
+        vec![],
+        vec![],
+        None,
+    )?;
 
     Ok(build)
 }
@@ -60,7 +67,14 @@ pub fn build_vyper_combined_json(
     let project: Project =
         vyper.batch(&vyper.version.default, input_paths, &[], None, true, true)?;
 
-    let build = project.compile(None, true, optimizer_settings, vec![], vec![], None)?;
+    let build = project.compile(
+        None,
+        era_compiler_common::HashType::Ipfs,
+        optimizer_settings,
+        vec![],
+        vec![],
+        None,
+    )?;
 
     Ok(build)
 }
