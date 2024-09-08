@@ -56,6 +56,7 @@ impl Contract {
 
         let build = era_compiler_llvm_context::eravm_build(
             bytecode_buffer,
+            &[],
             metadata_hash,
             Some(self.source_code),
         )?;

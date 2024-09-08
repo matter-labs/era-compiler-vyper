@@ -57,6 +57,7 @@ impl Contract {
 
         let build = context.build(
             contract_path,
+            &[],
             metadata_hash,
             output_selection.contains(&VyperSelection::EraVMAssembly),
             false,

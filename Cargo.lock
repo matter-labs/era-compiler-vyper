@@ -532,7 +532,7 @@ dependencies = [
 [[package]]
 name = "era-compiler-llvm-context"
 version = "1.5.0"
-source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=main#7c1ba758b7f68c9391c16db766f69df47834f4ea"
+source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=az-cpr-1805-supporting-post-compiler-time-library-linkage-in-eravm#8f5492785d21ed37791c6dd7f94a09ff5616b143"
 dependencies = [
  "anyhow",
  "era-compiler-common",
@@ -976,7 +976,7 @@ dependencies = [
 [[package]]
 name = "inkwell"
 version = "0.4.0"
-source = "git+https://github.com/matter-labs-forks/inkwell?branch=llvm-17#fd415e819f185f5a4b5ed60cff4e67814b9c9b53"
+source = "git+https://github.com/matter-labs-forks/inkwell?branch=az-cpr-1805-supporting-post-compiler-time-library-linkage-in-eravm#78b25ccb1e77ff5bc49a152a170383daf1e56a18"
 dependencies = [
  "either",
  "inkwell_internals",
@@ -991,7 +991,7 @@ dependencies = [
 [[package]]
 name = "inkwell_internals"
 version = "0.9.0"
-source = "git+https://github.com/matter-labs-forks/inkwell?branch=llvm-17#fd415e819f185f5a4b5ed60cff4e67814b9c9b53"
+source = "git+https://github.com/matter-labs-forks/inkwell?branch=az-cpr-1805-supporting-post-compiler-time-library-linkage-in-eravm#78b25ccb1e77ff5bc49a152a170383daf1e56a18"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1116,7 +1116,7 @@ checksum = "78b3ae25bc7c8c38cec158d1f2757ee79e9b3740fbc7ccf0e59e4b08d793fa89"
 [[package]]
 name = "llvm-sys"
 version = "170.0.1"
-source = "git+https://github.com/matter-labs-forks/llvm-sys.rs?branch=llvm-17.0#a0eca916803d6123b22d9a67d1e7d2cd07227d26"
+source = "git+https://github.com/matter-labs-forks/llvm-sys.rs?branch=az-cpr-1805-supporting-post-compiler-time-library-linkage-in-eravm#de855f19d52973d9d9003b319d1a08efa77ab39c"
 dependencies = [
  "anyhow",
  "cc",
