@@ -28,6 +28,23 @@ fn run_zkvyper_without_any_options() -> anyhow::Result<()> {
 
 /// id1978
 #[test]
+fn default_run_without_input_files() -> anyhow::Result<()> {
+    let _ = common::setup();
+    let args = &["-f", "ast"];
+
+    // Execute zkvyper command
+    let result = cli::execute_zkvyper(args)?;
+    let zkvyper_status = result.get_output().status.code().expect("No exit code.");
+
+    // Compare with vyper
+    let vyper_result = cli::execute_vyper(args)?;
+    vyper_result.code(zkvyper_status);
+
+    Ok(())
+}
+
+/// id1978
+#[test]
 fn default_run_with_a_contract_only() -> anyhow::Result<()> {
     let _ = common::setup();
     let args = &[cli::TEST_VYPER_CONTRACT_PATH];
