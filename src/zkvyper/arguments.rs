@@ -146,14 +146,22 @@ impl Arguments {
     /// Validates the arguments.
     ///
     pub fn validate(&self) -> anyhow::Result<()> {
+        if self.recursive_process {
+            if std::env::args().count() > 2 {
+                anyhow::bail!("Error: No other options are allowed in recursive mode.");
+            } else {
+                return Ok(());
+            }
+        }
+
         if self.version && std::env::args().count() > 2 {
             anyhow::bail!(
                 "Error: No other options are allowed while getting the compiler version."
             );
         }
 
-        if self.recursive_process && std::env::args().count() > 2 {
-            anyhow::bail!("Error: No other options are allowed in recursive mode.");
+        if self.input_paths.is_empty() {
+            anyhow::bail!("Error: No input files provided.");
         }
 
         let modes_count = [
@@ -169,6 +177,10 @@ impl Arguments {
             anyhow::bail!(
                 "Error: Only one modes is allowed at the same time: Vyper, LLVM IR, EraVM assembly, disassembler."
             );
+        }
+
+        if self.disassemble && std::env::args().count() > self.input_paths.len() + 2 {
+            anyhow::bail!("Error: No other options are allowed in disassembler mode.");
         }
 
         if self.llvm_ir || self.eravm_assembly {
@@ -195,10 +207,6 @@ impl Arguments {
                     "Error: Falling back to -Oz is not supported in EraVM assembly mode."
                 );
             }
-        }
-
-        if self.disassemble && std::env::args().count() > self.input_paths.len() + 2 {
-            anyhow::bail!("Error: No other options are allowed in disassembler mode.");
         }
 
         Ok(())

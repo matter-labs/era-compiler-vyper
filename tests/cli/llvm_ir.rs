@@ -21,11 +21,10 @@ fn run_only_with_llvm_ir() -> anyhow::Result<()> {
     let args = &["--llvm-ir"];
 
     // Execute zkvyper command
-    // TODO: change success() to failure() after CPR-1804 fix
     let result = cli::execute_zkvyper(args)?;
     result
-        .success()
-        .stderr(predicate::str::contains("No input sources provided"));
+        .failure()
+        .stderr(predicate::str::contains("No input files provided"));
 
     Ok(())
 }
