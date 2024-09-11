@@ -30,7 +30,7 @@ fn test_optimization_missing_contract() -> anyhow::Result<()> {
         let result = cli::execute_zkvyper(args)?;
 
         result.failure().stderr(predicate::str::contains(
-            "the following arguments are required",
+            "No input files provided",
         ));
     }
 

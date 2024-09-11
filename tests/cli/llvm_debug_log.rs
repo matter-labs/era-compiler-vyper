@@ -24,7 +24,7 @@ fn run_only_with_llvm_debug_logging() -> anyhow::Result<()> {
     let result = cli::execute_zkvyper(args)?;
     result
         .failure()
-        .stderr(predicate::str::contains("arguments are required"));
+        .stderr(predicate::str::contains("No input files provided"));
 
     Ok(())
 }

@@ -34,11 +34,16 @@ fn default_run_without_input_files() -> anyhow::Result<()> {
 
     // Execute zkvyper command
     let result = cli::execute_zkvyper(args)?;
-    let zkvyper_status = result.get_output().status.code().expect("No exit code.");
+    let zkvyper_status = result
+        .failure()
+        .stderr(predicate::str::contains("No input files provided"))
+        .get_output().status.code().expect("No exit code.");
 
     // Compare with vyper
+    // Use `ge` predicate to check if zkvyper exit code is greater than or equal to vyper exit code
+    // because vyper exit code is 2, but zkvyper exit code is 1
     let vyper_result = cli::execute_vyper(args)?;
-    vyper_result.code(zkvyper_status);
+    vyper_result.code(predicate::ge(zkvyper_status));
 
     Ok(())
 }
