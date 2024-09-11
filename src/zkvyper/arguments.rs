@@ -146,14 +146,18 @@ impl Arguments {
     /// Validates the arguments.
     ///
     pub fn validate(&self) -> anyhow::Result<()> {
+        if self.recursive_process {
+            if std::env::args().count() > 2 {
+                anyhow::bail!("Error: No other options are allowed in recursive mode.");
+            } else {
+                return Ok(());
+            }
+        }
+
         if self.version && std::env::args().count() > 2 {
             anyhow::bail!(
                 "Error: No other options are allowed while getting the compiler version."
             );
-        }
-
-        if self.recursive_process && std::env::args().count() > 2 {
-            anyhow::bail!("Error: No other options are allowed in recursive mode.");
         }
 
         if self.input_paths.is_empty() {
