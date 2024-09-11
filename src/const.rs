@@ -4,6 +4,8 @@
 
 #![allow(dead_code)]
 
+use std::collections::BTreeMap;
+
 use lazy_static::lazy_static;
 
 /// The default executable name.
@@ -75,7 +77,7 @@ lazy_static! {
                 .expect("Minimal proxy target machine initialization error");
         let assembly_buffer = era_compiler_llvm_context::eravm_assemble(&target_machine, MINIMAL_PROXY_CONTRACT_NAME, MINIMAL_PROXY_CONTRACT_ASSEMBLY, None)
                 .expect("Minimal proxy assembling error");
-        let build = era_compiler_llvm_context::eravm_build(assembly_buffer, &[], None, Some(MINIMAL_PROXY_CONTRACT_ASSEMBLY.to_owned()))
+        let build = era_compiler_llvm_context::eravm_build(assembly_buffer, &BTreeMap::new(), None, Some(MINIMAL_PROXY_CONTRACT_ASSEMBLY.to_owned()))
                 .expect("Minimal proxy building error");
         build.bytecode
     };

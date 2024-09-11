@@ -532,7 +532,7 @@ dependencies = [
 [[package]]
 name = "era-compiler-llvm-context"
 version = "1.5.0"
-source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=az-cpr-1805-supporting-post-compiler-time-library-linkage-in-eravm#d48c5d0b6ace8ff9c2e2165586874089256c95fc"
+source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=az-cpr-1805-supporting-post-compiler-time-library-linkage-in-eravm#da8153aa8298f7a70345308546fc62a290fccec2"
 dependencies = [
  "anyhow",
  "era-compiler-common",
@@ -976,7 +976,7 @@ dependencies = [
 [[package]]
 name = "inkwell"
 version = "0.4.0"
-source = "git+https://github.com/matter-labs-forks/inkwell?branch=az-cpr-1805-supporting-post-compiler-time-library-linkage-in-eravm#c7cd605070ace08e9ff1d06e547853cf771ea6a6"
+source = "git+https://github.com/matter-labs-forks/inkwell?branch=az-cpr-1805-supporting-post-compiler-time-library-linkage-in-eravm#2eaf4273d6b47187a0e133f57a057acaa878c29a"
 dependencies = [
  "either",
  "inkwell_internals",
@@ -991,7 +991,7 @@ dependencies = [
 [[package]]
 name = "inkwell_internals"
 version = "0.9.0"
-source = "git+https://github.com/matter-labs-forks/inkwell?branch=az-cpr-1805-supporting-post-compiler-time-library-linkage-in-eravm#c7cd605070ace08e9ff1d06e547853cf771ea6a6"
+source = "git+https://github.com/matter-labs-forks/inkwell?branch=az-cpr-1805-supporting-post-compiler-time-library-linkage-in-eravm#2eaf4273d6b47187a0e133f57a057acaa878c29a"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1116,7 +1116,7 @@ checksum = "78b3ae25bc7c8c38cec158d1f2757ee79e9b3740fbc7ccf0e59e4b08d793fa89"
 [[package]]
 name = "llvm-sys"
 version = "170.0.1"
-source = "git+https://github.com/matter-labs-forks/llvm-sys.rs?branch=az-cpr-1805-supporting-post-compiler-time-library-linkage-in-eravm#34300c4270778a50a98d35efdcdf874d60044e3c"
+source = "git+https://github.com/matter-labs-forks/llvm-sys.rs?branch=az-cpr-1805-supporting-post-compiler-time-library-linkage-in-eravm#7dc170a025e971e41c53685d69c875bfbf20dc6a"
 dependencies = [
  "anyhow",
  "cc",
