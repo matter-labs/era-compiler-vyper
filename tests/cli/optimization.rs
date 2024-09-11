@@ -29,9 +29,9 @@ fn test_optimization_missing_contract() -> anyhow::Result<()> {
         let args = &[opt_param.as_str()];
         let result = cli::execute_zkvyper(args)?;
 
-        result.failure().stderr(predicate::str::contains(
-            "No input files provided",
-        ));
+        result
+            .failure()
+            .stderr(predicate::str::contains("No input files provided"));
     }
 
     Ok(())

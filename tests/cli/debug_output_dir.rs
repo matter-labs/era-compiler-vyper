@@ -55,9 +55,9 @@ fn run_without_contract_with_debug_output_dir() -> anyhow::Result<()> {
 
     // Execute zkvyper command
     let result = cli::execute_zkvyper(args)?;
-    result.failure().stderr(predicate::str::contains(
-        "No input files provided",
-    ));
+    result
+        .failure()
+        .stderr(predicate::str::contains("No input files provided"));
 
     Ok(())
 }
