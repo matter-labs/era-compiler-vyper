@@ -95,7 +95,7 @@ impl Contract {
     pub fn new_minimal_proxy(output_assembly: bool) -> Self {
         let build = era_compiler_llvm_context::EraVMBuild::new(
             crate::r#const::MINIMAL_PROXY_CONTRACT_BYTECODE.clone(),
-            *crate::r#const::MINIMAL_PROXY_CONTRACT_HASH,
+            Some(*crate::r#const::MINIMAL_PROXY_CONTRACT_HASH),
             None,
             if output_assembly {
                 Some(crate::r#const::MINIMAL_PROXY_CONTRACT_ASSEMBLY.to_owned())
