@@ -2,8 +2,6 @@
 //! The LLVM IR contract.
 //!
 
-use std::collections::BTreeMap;
-
 use crate::build::contract::Contract as ContractBuild;
 use crate::message_type::MessageType;
 use crate::vyper::selection::Selection as VyperSelection;
@@ -59,7 +57,6 @@ impl Contract {
 
         let build = context.build(
             contract_path,
-            &BTreeMap::new(),
             metadata_hash,
             output_selection.contains(&VyperSelection::EraVMAssembly),
             false,

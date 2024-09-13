@@ -242,7 +242,6 @@ impl Contract {
         let is_minimal_proxy_used = context.vyper().is_minimal_proxy_used();
         let mut build = context.build(
             contract_path,
-            &BTreeMap::new(),
             metadata_hash,
             output_selection.contains(&VyperSelection::EraVMAssembly),
             false,
