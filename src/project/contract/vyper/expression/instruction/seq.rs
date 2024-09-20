@@ -4,9 +4,6 @@
 
 use std::collections::BTreeMap;
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use era_compiler_llvm_context::IContext;
 
 use crate::project::contract::vyper::expression::instruction::label::Label as LabelInstruction;
@@ -23,7 +20,7 @@ use crate::project::contract::vyper::expression::Expression;
 /// Among the methods there are tools of extracting the runtime code from the deploy code's
 /// return statement and some logic of hoisting the contract methods to the upper levels.
 ///
-#[derive(Debug, Default, Serialize, Deserialize, Clone)]
+#[derive(Debug, Default, serde::Serialize, serde::Deserialize, Clone)]
 pub struct Seq(Vec<Expression>);
 
 impl Seq {
@@ -140,7 +137,7 @@ impl Seq {
     pub fn function_name(&self) -> anyhow::Result<String> {
         match self.0.first() {
             Some(Expression::Instruction(Instruction::Label(label))) => label.name(),
-            expression => anyhow::bail!("Expected a function sequence, found `{:?}`", expression),
+            expression => anyhow::bail!("Expected a function sequence, found `{expression:?}`"),
         }
     }
 
@@ -152,7 +149,7 @@ impl Seq {
         context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         let (mut labels, expressions) = self.drain_and_split();
 
@@ -178,7 +175,7 @@ impl Seq {
 
 impl<D> era_compiler_llvm_context::EraVMWriteLLVM<D> for Seq
 where
-    D: era_compiler_llvm_context::EraVMDependency + Clone,
+    D: era_compiler_llvm_context::Dependency,
 {
     fn into_llvm(
         mut self,

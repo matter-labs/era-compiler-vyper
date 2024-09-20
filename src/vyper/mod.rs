@@ -3,25 +3,26 @@
 //!
 
 pub mod combined_json;
+pub mod selection;
 pub mod standard_json;
 pub mod version;
 
 use std::collections::BTreeMap;
-use std::io::Write;
-use std::path::Path;
+use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::OnceLock;
+use std::sync::RwLock;
 
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
-use sha3::digest::FixedOutput;
-use sha3::Digest;
 
 use crate::project::contract::vyper::Contract as VyperContract;
 use crate::project::contract::Contract;
 use crate::project::Project;
 
-use self::combined_json::CombinedJson;
+use self::selection::Selection;
+use self::standard_json::input::settings::optimize::Optimize as StandardJsonInputSettingsOptimize;
 use self::standard_json::input::Input as StandardJsonInput;
 use self::standard_json::output::Output as StandardJsonOutput;
 use self::version::Version;
@@ -29,10 +30,11 @@ use self::version::Version;
 ///
 /// The Vyper compiler.
 ///
+#[derive(Debug, Clone)]
 pub struct Compiler {
     /// The binary executable name.
     pub executable: String,
-    /// The binary version.
+    /// The `vyper` compiler version.
     pub version: Version,
 }
 
@@ -41,11 +43,22 @@ impl Compiler {
     pub const DEFAULT_EXECUTABLE_NAME: &'static str = "vyper";
 
     /// The supported versions of `vyper`.
-    pub const SUPPORTED_VERSIONS: [semver::Version; 3] = [
+    pub const SUPPORTED_VERSIONS: [semver::Version; 4] = [
         semver::Version::new(0, 3, 3),
         semver::Version::new(0, 3, 9),
         semver::Version::new(0, 3, 10),
+        semver::Version::new(0, 4, 0),
     ];
+
+    /// The first version where we cannot use the optimizer.
+    pub const FIRST_VERSION_OPTIMIZER_UNUSABLE: semver::Version = semver::Version::new(0, 3, 10);
+
+    /// The first version supporting `--enable-decimals`.
+    pub const FIRST_VERSION_ENABLE_DECIMALS_SUPPORT: semver::Version =
+        semver::Version::new(0, 4, 0);
+
+    /// The first version returning absolute paths.
+    pub const FIRST_VERSION_ABSOLUTE_PATHS: semver::Version = semver::Version::new(0, 4, 0);
 
     ///
     /// A shortcut constructor.
@@ -54,66 +67,30 @@ impl Compiler {
     /// uses `vyper-<version>` format.
     ///
     pub fn new(executable: &str) -> anyhow::Result<Self> {
+        if let Some(executable) = Self::executables()
+            .read()
+            .expect("Sync")
+            .get(executable)
+            .cloned()
+        {
+            return Ok(executable);
+        }
+        let mut executables = Self::executables().write().expect("Sync");
+
         if let Err(error) = which::which(executable) {
             anyhow::bail!(
                 "The `{executable}` executable not found in ${{PATH}}: {}",
                 error
             );
         }
-        let version = Self::version(executable)?;
-        Ok(Self {
+        let version = Self::parse_version(executable)?;
+        let compiler = Self {
             executable: executable.to_owned(),
             version,
-        })
-    }
+        };
 
-    ///
-    /// The `vyper -f combined_json input_files...` mirror.
-    ///
-    pub fn combined_json(
-        &self,
-        paths: &[PathBuf],
-        evm_version: Option<era_compiler_common::EVMVersion>,
-    ) -> anyhow::Result<CombinedJson> {
-        let mut command = std::process::Command::new(self.executable.as_str());
-        if let Some(evm_version) = evm_version {
-            command.arg("--evm-version");
-            command.arg(evm_version.to_string());
-        }
-        command.arg("-f");
-        command.arg("combined_json");
-        command.args(paths);
-        if self.version.default >= semver::Version::new(0, 3, 10) {
-            command.arg("--no-optimize");
-        }
-        let output = command.output().map_err(|error| {
-            anyhow::anyhow!("{} subprocess error: {:?}", self.executable, error)
-        })?;
-        if !output.status.success() {
-            anyhow::bail!(
-                "{} error: {}",
-                self.executable,
-                String::from_utf8_lossy(output.stderr.as_slice()).to_string()
-            );
-        }
-
-        let mut combined_json: CombinedJson = era_compiler_common::deserialize_from_slice(
-            output.stdout.as_slice(),
-        )
-        .map_err(|error| {
-            anyhow::anyhow!(
-                "{} subprocess output parsing error: {}\n{}",
-                self.executable,
-                error,
-                era_compiler_common::deserialize_from_slice::<serde_json::Value>(
-                    output.stdout.as_slice()
-                )
-                .map(|json| serde_json::to_string_pretty(&json).expect("Always valid"))
-                .unwrap_or_else(|_| String::from_utf8_lossy(output.stdout.as_slice()).to_string()),
-            )
-        })?;
-        combined_json.remove_evm();
-        Ok(combined_json)
+        executables.insert(executable.to_owned(), compiler.clone());
+        Ok(compiler)
     }
 
     ///
@@ -126,51 +103,51 @@ impl Compiler {
         let mut command = std::process::Command::new(self.executable.as_str());
         command.stdin(std::process::Stdio::piped());
         command.stdout(std::process::Stdio::piped());
+        command.stderr(std::process::Stdio::piped());
         command.arg("--standard-json");
 
-        if self.version.default >= semver::Version::new(0, 3, 10) {
-            input.settings.optimize = false;
+        if self.version.default >= Self::FIRST_VERSION_OPTIMIZER_UNUSABLE {
+            input.settings.optimize = StandardJsonInputSettingsOptimize::None;
         }
-        let input_json = serde_json::to_vec(&input).expect("Always valid");
 
-        let process = command.spawn().map_err(|error| {
-            anyhow::anyhow!("{} subprocess spawning error: {:?}", self.executable, error)
+        let mut process = command.spawn().map_err(|error| {
+            anyhow::anyhow!("{} subprocess spawning error: {error:?}", self.executable)
         })?;
-        process
-            .stdin
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("{} stdin getting error", self.executable))?
-            .write_all(input_json.as_slice())
-            .map_err(|error| {
-                anyhow::anyhow!("{} stdin writing error: {:?}", self.executable, error)
-            })?;
+        let stdin = process.stdin.take().ok_or_else(|| {
+            anyhow::anyhow!("{:?} subprocess stdin getting error", self.executable)
+        })?;
+        serde_json::to_writer(stdin, &input).map_err(|error| {
+            anyhow::anyhow!(
+                "{} subprocess stdin writing error: {error:?}",
+                self.executable
+            )
+        })?;
 
-        let output = process.wait_with_output().map_err(|error| {
-            anyhow::anyhow!("{} subprocess output error: {:?}", self.executable, error)
+        let result = process.wait_with_output().map_err(|error| {
+            anyhow::anyhow!(
+                "{} subprocess output reading error: {error:?}",
+                self.executable
+            )
         })?;
-        if !output.status.success() {
+        let mut output = match era_compiler_common::deserialize_from_slice::<StandardJsonOutput>(
+            result.stdout.as_slice(),
+        ) {
+            Ok(output) => output,
+            Err(error) => {
+                anyhow::bail!(
+                    "{} subprocess stdout parsing error: {error:?} (stderr: {})",
+                    self.executable,
+                    String::from_utf8_lossy(result.stderr.as_slice())
+                );
+            }
+        };
+        if !result.status.success() {
             anyhow::bail!(
                 "{} error: {}",
                 self.executable,
-                String::from_utf8_lossy(output.stderr.as_slice()).to_string()
+                String::from_utf8_lossy(result.stderr.as_slice())
             );
         }
-
-        let mut output: StandardJsonOutput = era_compiler_common::deserialize_from_slice(
-            output.stdout.as_slice(),
-        )
-        .map_err(|error| {
-            anyhow::anyhow!(
-                "{} subprocess output parsing error: {}\n{}",
-                self.executable,
-                error,
-                era_compiler_common::deserialize_from_slice::<serde_json::Value>(
-                    output.stdout.as_slice()
-                )
-                .map(|json| serde_json::to_string_pretty(&json).expect("Always valid"))
-                .unwrap_or_else(|_| String::from_utf8_lossy(output.stdout.as_slice()).to_string()),
-            )
-        })?;
 
         for (full_path, source) in input.sources.into_iter() {
             let last_slash_position = full_path.rfind('/');
@@ -205,65 +182,54 @@ impl Compiler {
     }
 
     ///
-    /// Returns the Vyper LLL in the native format for the contract at `path`.
-    ///
-    /// Is used to print the IR for debugging.
-    ///
-    pub fn lll_debug(
-        &self,
-        path: &Path,
-        evm_version: Option<era_compiler_common::EVMVersion>,
-        optimize: bool,
-    ) -> anyhow::Result<String> {
-        let mut command = std::process::Command::new(self.executable.as_str());
-        if let Some(evm_version) = evm_version {
-            command.arg("--evm-version");
-            command.arg(evm_version.to_string());
-        }
-        command.arg("-f");
-        command.arg("ir");
-        if !optimize || self.version.default >= semver::Version::new(0, 3, 10) {
-            command.arg("--no-optimize");
-        }
-        command.arg(path);
-
-        let output = command.output().map_err(|error| {
-            anyhow::anyhow!("{} subprocess error: {:?}", self.executable, error)
-        })?;
-
-        if !output.status.success() {
-            anyhow::bail!(
-                "{} error: {}",
-                self.executable,
-                String::from_utf8_lossy(output.stderr.as_slice()).to_string()
-            );
-        }
-
-        let stdout = String::from_utf8_lossy(output.stdout.as_slice()).to_string();
-
-        Ok(stdout)
-    }
-
-    ///
     /// Returns all the Vyper data required to compile the contracts at `paths`.
     ///
     pub fn batch(
         &self,
         version: &semver::Version,
         mut paths: Vec<PathBuf>,
+        selection: &[Selection],
         evm_version: Option<era_compiler_common::EVMVersion>,
+        enable_decimals: bool,
         optimize: bool,
     ) -> anyhow::Result<Project> {
         paths.sort();
+
+        let mut vyper_selection = selection.to_owned();
+        vyper_selection.retain(|flag| flag.is_requested_from_vyper());
+        vyper_selection.extend(
+            [
+                Selection::IRJson,
+                Selection::Metadata,
+                Selection::AST,
+                Selection::ABI,
+                Selection::MethodIdentifiers,
+            ]
+            .iter()
+            .filter(|flag| !vyper_selection.contains(flag))
+            .collect::<Vec<&Selection>>(),
+        );
 
         let mut command = std::process::Command::new(self.executable.as_str());
         if let Some(evm_version) = evm_version {
             command.arg("--evm-version");
             command.arg(evm_version.to_string());
         }
+        if enable_decimals && self.version.default >= Self::FIRST_VERSION_ENABLE_DECIMALS_SUPPORT {
+            command.arg("--enable-decimals");
+        }
         command.arg("-f");
-        command.arg("ir_json,metadata,method_identifiers,ast");
-        if !optimize || self.version.default >= semver::Version::new(0, 3, 10) {
+        command.arg(
+            vyper_selection
+                .iter()
+                .map(|selection| selection.to_string())
+                .collect::<Vec<String>>()
+                .join(","),
+        );
+        if self.version.default >= Self::FIRST_VERSION_OPTIMIZER_UNUSABLE {
+            command.arg("--optimize");
+            command.arg("none");
+        } else if !optimize {
             command.arg("--no-optimize");
         }
         command.args(paths.as_slice());
@@ -271,7 +237,6 @@ impl Compiler {
         let output = command.output().map_err(|error| {
             anyhow::anyhow!("{} subprocess error: {:?}", self.executable, error)
         })?;
-
         if !output.status.success() {
             anyhow::bail!(
                 "{} error: {}",
@@ -284,7 +249,7 @@ impl Compiler {
         let lines: Vec<&str> = stdout.lines().collect();
         let results: BTreeMap<String, anyhow::Result<VyperContract>> = paths
             .into_par_iter()
-            .zip(lines.into_par_iter().chunks(VyperContract::EXPECTED_LINES))
+            .zip(lines.into_par_iter().chunks(vyper_selection.len()))
             .map(|(path, group)| {
                 let path_str = path.to_string_lossy().to_string();
                 let source_code = match std::fs::read_to_string(path).map_err(|error| {
@@ -299,15 +264,15 @@ impl Compiler {
                     return (path_str, Err(error));
                 }
 
-                let contract_result =
-                    VyperContract::try_from_lines(version.to_owned(), source_code, group.to_vec())
-                        .map_err(|error| {
-                            anyhow::anyhow!(
-                                "Contract `{}` JSON output parsing: {}",
-                                path_str,
-                                error
-                            )
-                        });
+                let contract_result = VyperContract::try_from_lines(
+                    version.to_owned(),
+                    source_code,
+                    vyper_selection.as_slice(),
+                    group.to_vec(),
+                )
+                .map_err(|error| {
+                    anyhow::anyhow!("Contract `{}` JSON output parsing: {}", path_str, error)
+                });
 
                 (path_str, contract_result)
             })
@@ -320,47 +285,9 @@ impl Compiler {
                     Ok::<BTreeMap<String, Contract>, anyhow::Error>(accumulator)
                 })?;
 
-        let mut source_code_hasher = sha3::Keccak256::new();
-        for (_path, contract) in contracts.iter() {
-            source_code_hasher.update(contract.source_code().as_bytes());
-        }
-        let source_code_hash: [u8; era_compiler_common::BYTE_LENGTH_FIELD] =
-            source_code_hasher.finalize_fixed().into();
-
-        let project = Project::new(version.to_owned(), source_code_hash, contracts);
+        let project = Project::new(version.to_owned(), contracts, selection.to_owned());
 
         Ok(project)
-    }
-
-    ///
-    /// The `vyper -f <identifiers> ...` mirror.
-    ///
-    pub fn extra_output(
-        &self,
-        path: &Path,
-        evm_version: Option<era_compiler_common::EVMVersion>,
-        extra_output: &str,
-    ) -> anyhow::Result<String> {
-        let mut command = std::process::Command::new(self.executable.as_str());
-        if let Some(evm_version) = evm_version {
-            command.arg("--evm-version");
-            command.arg(evm_version.to_string());
-        }
-        command.arg("-f");
-        command.arg(extra_output);
-        command.arg(path);
-        let output = command.output().map_err(|error| {
-            anyhow::anyhow!("{} subprocess error: {:?}", self.executable, error)
-        })?;
-        if !output.status.success() {
-            anyhow::bail!(
-                "{} error: {}",
-                self.executable,
-                String::from_utf8_lossy(output.stderr.as_slice()).to_string()
-            );
-        }
-
-        Ok(String::from_utf8_lossy(output.stdout.as_slice()).to_string())
     }
 
     ///
@@ -380,9 +307,17 @@ impl Compiler {
     }
 
     ///
+    /// Returns the global shared array of `vyper` executables.
+    ///
+    fn executables() -> &'static RwLock<HashMap<String, Self>> {
+        static EXECUTABLES: OnceLock<RwLock<HashMap<String, Compiler>>> = OnceLock::new();
+        EXECUTABLES.get_or_init(|| RwLock::new(HashMap::new()))
+    }
+
+    ///
     /// The `vyper --version` mini-parser.
     ///
-    fn version(executable: &str) -> anyhow::Result<Version> {
+    fn parse_version(executable: &str) -> anyhow::Result<Version> {
         let mut command = std::process::Command::new(executable);
         command.arg("--version");
         let output = command

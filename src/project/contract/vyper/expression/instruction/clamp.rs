@@ -17,7 +17,7 @@ pub fn ordinary<'ctx, D>(
     is_signed: bool,
 ) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>>
 where
-    D: era_compiler_llvm_context::EraVMDependency + Clone,
+    D: era_compiler_llvm_context::Dependency,
 {
     let error_block = context.append_basic_block("if_error");
     let join_block = context.append_basic_block("if_join");
@@ -46,8 +46,8 @@ where
     context.build_conditional_branch(condition, join_block, error_block)?;
 
     context.set_basic_block(error_block);
-    context.build_exit(
-        context.llvm_runtime().revert,
+    era_compiler_llvm_context::eravm_evm_return::revert(
+        context,
         context.field_const(0),
         context.field_const(0),
     )?;
@@ -67,7 +67,7 @@ pub fn with_predicate<'ctx, D>(
     predicate: inkwell::IntPredicate,
 ) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>>
 where
-    D: era_compiler_llvm_context::EraVMDependency + Clone,
+    D: era_compiler_llvm_context::Dependency,
 {
     let error_block = context.append_basic_block("clamp_single_error");
     let join_block = context.append_basic_block("clamp_single_join");
@@ -81,8 +81,8 @@ where
     context.build_conditional_branch(condition, join_block, error_block)?;
 
     context.set_basic_block(error_block);
-    context.build_exit(
-        context.llvm_runtime().revert,
+    era_compiler_llvm_context::eravm_evm_return::revert(
+        context,
         context.field_const(0),
         context.field_const(0),
     )?;

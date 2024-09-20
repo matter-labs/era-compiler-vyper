@@ -1,0 +1,35 @@
+{
+  "binaries": {
+    "0.3.3": {
+      "is_enabled": true,
+      "protocol": "https",
+      "source": "https://github.com/vyperlang/vyper/releases/download/v${VERSION}/vyper.${VERSION}+commit.48e326f0.${PLATFORM}",
+      "destination": "./vyper-bin/vyper-${VERSION}"
+    },
+    "0.3.9": {
+      "is_enabled": true,
+      "protocol": "https",
+      "source": "https://github.com/vyperlang/vyper/releases/download/v${VERSION}/vyper.${VERSION}+commit.66b96705.${PLATFORM}",
+      "destination": "./vyper-bin/vyper-${VERSION}"
+    },
+    "0.3.10": {
+      "is_enabled": true,
+      "protocol": "https",
+      "source": "https://github.com/vyperlang/vyper/releases/download/v${VERSION}/vyper.${VERSION}+commit.91361694.${PLATFORM}",
+      "destination": "./vyper-bin/vyper-${VERSION}"
+    },
+    "0.4.0": {
+      "is_enabled": true,
+      "protocol": "https",
+      "source": "https://github.com/vyperlang/vyper/releases/download/v${VERSION}/vyper.${VERSION}+commit.e9db8d9f.${PLATFORM}",
+      "destination": "./vyper-bin/vyper-${VERSION}"
+    }
+  },
+  "platforms": {
+    "linux-amd64": "linux",
+    "linux-arm64": "linux",
+    "macos-amd64": "darwin",
+    "macos-arm64": "darwin",
+    "windows-amd64": "windows"
+  }
+}

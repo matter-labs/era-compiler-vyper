@@ -7,8 +7,6 @@ pub mod instruction;
 use std::collections::BTreeMap;
 
 use inkwell::values::BasicValue;
-use serde::Deserialize;
-use serde::Serialize;
 use serde_json::Number;
 
 use era_compiler_llvm_context::IContext;
@@ -19,7 +17,7 @@ use self::instruction::Instruction;
 ///
 /// The LLL IR JSON expression.
 ///
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
 #[serde(untagged)]
 pub enum Expression {
     /// The LLL IR instruction.
@@ -54,7 +52,7 @@ impl Expression {
                 sequence.normalize_deploy_code();
                 Ok(sequence)
             }
-            instruction => anyhow::bail!("Expected [`seq`, `deploy`], found `{:?}`", instruction),
+            instruction => anyhow::bail!("Expected [`seq`, `deploy`], found `{instruction:?}`"),
         }
     }
 
@@ -77,7 +75,7 @@ impl Expression {
                 runtime_code.normalize_runtime_code();
                 Ok(Some((runtime_code, immutables_size)))
             }
-            instruction => anyhow::bail!("Expected [`seq`, `deploy`], found `{:?}`", instruction),
+            instruction => anyhow::bail!("Expected [`seq`, `deploy`], found `{instruction:?}`"),
         }
     }
 
@@ -86,9 +84,21 @@ impl Expression {
     ///
     pub fn try_into_identifier(&self) -> anyhow::Result<String> {
         match self {
-            Self::Identifier(string) => Ok(string.to_owned()),
-            expression => anyhow::bail!("Expected identifier, found `{:?}`", expression),
+            Self::Identifier(identifier) => Ok(identifier.to_owned()),
+            expression => anyhow::bail!("Expected identifier, found `{expression:?}`"),
         }
+    }
+
+    ///
+    /// Converts the string into a normalized label.
+    ///
+    pub fn safe_label(label: &str) -> String {
+        let identifier = label.replace(['(', ')', '[', ']', ',', ' '], "_");
+        let hash = era_compiler_common::Hash::keccak256(identifier.as_bytes()).to_string();
+        format!(
+            "{identifier}_{}",
+            hash.strip_prefix("0x").unwrap_or(hash.as_str())
+        )
     }
 
     ///
@@ -117,7 +127,7 @@ impl Expression {
     pub fn function_name(&self) -> anyhow::Result<String> {
         match self {
             Expression::Instruction(inner) => inner.function_name(),
-            expression => anyhow::bail!("Expected a function sequence, found `{:?}`", expression),
+            expression => anyhow::bail!("Expected a function sequence, found `{expression:?}`"),
         }
     }
 
@@ -129,7 +139,7 @@ impl Expression {
         context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         match self {
             Self::Instruction(inner) => inner.into_llvm_value(context),
@@ -160,8 +170,8 @@ impl Expression {
             }
             Self::Identifier(identifier) => {
                 if identifier.as_str() == crate::r#const::DEFAULT_SEQUENCE_IDENTIFIER {
-                    context.build_exit(
-                        context.llvm_runtime().revert,
+                    era_compiler_llvm_context::eravm_evm_return::revert(
+                        context,
                         context.field_const(0),
                         context.field_const(0),
                     )?;
@@ -180,7 +190,7 @@ impl Expression {
             }
 
             Self::Unknown(value) => {
-                anyhow::bail!("Unknown LLL expression: {}", value);
+                anyhow::bail!("Unknown LLL expression: {value}");
             }
         }
     }

@@ -11,9 +11,9 @@ use std::path::PathBuf;
 
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
-use serde::Serialize;
 
 use self::language::Language;
+use self::settings::optimize::Optimize;
 use self::settings::selection::Selection;
 use self::settings::Settings;
 use self::source::Source;
@@ -21,7 +21,7 @@ use self::source::Source;
 ///
 /// The `vyper --standard-json` input.
 ///
-#[derive(Debug, Serialize)]
+#[derive(Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Input {
     /// The input language.
@@ -41,9 +41,10 @@ impl Input {
         paths: &[PathBuf],
         evm_version: Option<era_compiler_common::EVMVersion>,
         output_selection: BTreeMap<String, Vec<Selection>>,
-        optimize: bool,
+        optimize: Optimize,
+        enable_decimals: bool,
         fallback_to_optimizing_for_size: bool,
-        disable_system_request_memoization: bool,
+        llvm_options: Vec<String>,
     ) -> anyhow::Result<Self> {
         let sources = paths
             .into_par_iter()
@@ -62,8 +63,9 @@ impl Input {
                 evm_version,
                 output_selection,
                 optimize,
+                enable_decimals,
                 fallback_to_optimizing_for_size,
-                disable_system_request_memoization,
+                llvm_options,
             ),
         })
     }
@@ -77,9 +79,10 @@ impl Input {
         sources: BTreeMap<String, String>,
         evm_version: Option<era_compiler_common::EVMVersion>,
         output_selection: BTreeMap<String, Vec<Selection>>,
-        optimize: bool,
+        optimize: Optimize,
+        enable_decimals: bool,
         fallback_to_optimizing_for_size: bool,
-        disable_system_request_memoization: bool,
+        llvm_options: Vec<String>,
     ) -> anyhow::Result<Self> {
         let sources = sources
             .into_iter()
@@ -93,8 +96,9 @@ impl Input {
                 evm_version,
                 output_selection,
                 optimize,
+                enable_decimals,
                 fallback_to_optimizing_for_size,
-                disable_system_request_memoization,
+                llvm_options,
             ),
         })
     }

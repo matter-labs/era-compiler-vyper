@@ -8,18 +8,14 @@ pub mod function;
 
 use std::collections::BTreeMap;
 
-use serde::Deserialize;
-use serde::Serialize;
-
-use era_compiler_llvm_context::EraVMDependency;
 use era_compiler_llvm_context::EraVMWriteLLVM;
 use era_compiler_llvm_context::IContext;
 
 use crate::build::contract::Contract as ContractBuild;
+use crate::message_type::MessageType;
 use crate::metadata::Metadata as SourceMetadata;
-use crate::project::contract::metadata::Metadata as ContractMetadata;
 use crate::project::dependency_data::DependencyData;
-use crate::warning_type::WarningType;
+use crate::vyper::selection::Selection as VyperSelection;
 
 use self::ast::AST;
 use self::expression::Expression;
@@ -28,83 +24,132 @@ use self::function::Function;
 ///
 /// The Vyper contract.
 ///
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Contract {
     /// The Vyper compiler version.
     pub version: semver::Version,
     /// The Vyper contract source code.
     pub source_code: String,
+    /// The LLL IR parsed from JSON.
+    pub ir: Expression,
     /// The source metadata.
     pub source_metadata: SourceMetadata,
-    /// The inner expression.
-    pub expression: Expression,
-    /// The contract ABI data.
-    pub abi: BTreeMap<String, String>,
     /// The contract AST.
     pub ast: AST,
+    /// The contract ABI.
+    pub abi: serde_json::Value,
+    /// The contract method identifiers.
+    pub method_identifiers: BTreeMap<String, String>,
+    /// The contract storage layout.
+    pub layout: Option<serde_json::Value>,
+    /// The contract user documentation.
+    pub userdoc: Option<serde_json::Value>,
+    /// The contract developer documentation.
+    pub devdoc: Option<serde_json::Value>,
     /// The dependency data.
     pub dependency_data: DependencyData,
 }
 
 impl Contract {
-    /// The number of vyper compiler output lines per contract.
-    pub const EXPECTED_LINES: usize = 4;
-
     ///
     /// A shortcut constructor.
     ///
     pub fn new(
         version: semver::Version,
         source_code: String,
+        ir: Expression,
         source_metadata: SourceMetadata,
-        expression: Expression,
-        abi: BTreeMap<String, String>,
         ast: AST,
+        abi: serde_json::Value,
+        method_identifiers: BTreeMap<String, String>,
+        layout: Option<serde_json::Value>,
+        userdoc: Option<serde_json::Value>,
+        devdoc: Option<serde_json::Value>,
     ) -> Self {
         Self {
             version,
             source_code,
+            ir,
             source_metadata,
-            expression,
-            abi,
             ast,
+            abi,
+            method_identifiers,
+            layout,
+            userdoc,
+            devdoc,
             dependency_data: DependencyData::default(),
         }
     }
 
     ///
-    /// Parses three lines with JSONs, returned by the Vyper compiler.
-    /// The order must be:
-    /// 1. The LLL IR JSON
-    /// 2. The contract functions metadata
-    /// 3. The contract ABI data
-    /// 4. The contract AST
+    /// Parses output lines returned by the Vyper compiler.
+    /// The order of `lines` is expected to match that of `selection`.
     ///
     pub fn try_from_lines(
         version: semver::Version,
         source_code: String,
-        mut lines: Vec<&str>,
+        selection: &[VyperSelection],
+        lines: Vec<&str>,
     ) -> anyhow::Result<Self> {
-        if lines.len() != Self::EXPECTED_LINES {
-            anyhow::bail!(
-                "Expected {} lines with JSONs, found {}",
-                Self::EXPECTED_LINES,
-                lines.len()
-            );
-        }
+        let mut ir = None;
+        let mut metadata = None;
+        let mut ast = None;
+        let mut abi = None;
+        let mut method_identifiers = None;
+        let mut layout = None;
+        let mut userdoc = None;
+        let mut devdoc = None;
 
-        let expression: Expression = era_compiler_common::deserialize_from_str(lines.remove(0))?;
-        let metadata: SourceMetadata = serde_json::from_str(lines.remove(0))?;
-        let abi: BTreeMap<String, String> = serde_json::from_str(lines.remove(0))?;
-        let ast: AST = serde_json::from_str(lines.remove(0))?;
+        for (line, selection) in lines.into_iter().zip(selection) {
+            match selection {
+                VyperSelection::IRJson => {
+                    ir = Some(era_compiler_common::deserialize_from_str(line)?);
+                }
+                VyperSelection::Metadata => {
+                    metadata = Some(era_compiler_common::deserialize_from_str(line)?);
+                }
+                VyperSelection::AST => {
+                    ast = Some(era_compiler_common::deserialize_from_str(line)?);
+                }
+                VyperSelection::ABI => {
+                    abi = Some(era_compiler_common::deserialize_from_str(line)?);
+                }
+                VyperSelection::MethodIdentifiers => {
+                    method_identifiers = Some(era_compiler_common::deserialize_from_str(line)?);
+                }
+                VyperSelection::StorageLayout => {
+                    layout = Some(era_compiler_common::deserialize_from_str(line)?);
+                }
+                VyperSelection::UserDocumentation => {
+                    userdoc = Some(era_compiler_common::deserialize_from_str(line)?);
+                }
+                VyperSelection::DeveloperDocumentation => {
+                    devdoc = Some(era_compiler_common::deserialize_from_str(line)?);
+                }
+
+                VyperSelection::CombinedJson => {
+                    panic!("Combined JSON cannot be requested with other types of output");
+                }
+                VyperSelection::EraVMAssembly => {
+                    panic!("EraVM assembly cannot be requested from `vyper` executable");
+                }
+                VyperSelection::ProjectMetadata => {
+                    panic!("Project metadata cannot be requested from `vyper` executable");
+                }
+            }
+        }
 
         Ok(Self::new(
             version,
             source_code,
-            metadata,
-            expression,
-            abi,
-            ast,
+            ir.expect("Always exists"),
+            metadata.expect("Always exists"),
+            ast.expect("Always exists"),
+            abi.expect("Always exists"),
+            method_identifiers.expect("Always exists"),
+            layout,
+            userdoc,
+            devdoc,
         ))
     }
 
@@ -114,39 +159,70 @@ impl Contract {
     pub fn compile(
         mut self,
         contract_path: &str,
-        source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
-        evm_version: Option<era_compiler_common::EVMVersion>,
+        metadata_hash: Option<era_compiler_common::Hash>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
-        suppressed_warnings: Vec<WarningType>,
+        llvm_options: Vec<String>,
+        output_selection: Vec<VyperSelection>,
+        suppressed_messages: Vec<MessageType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
         let warnings = self
             .ast
-            .get_messages(&self.ast.ast, suppressed_warnings.as_slice());
+            .get_messages(&self.ast.ast, suppressed_messages.as_slice());
 
         let llvm = inkwell::context::Context::create();
-        let optimizer = era_compiler_llvm_context::Optimizer::new(optimizer_settings);
-
-        let metadata_hash = source_code_hash.map(|source_code_hash| {
-            ContractMetadata::new(
-                &source_code_hash,
-                &self.version,
-                evm_version,
-                semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
-                optimizer.settings().to_owned(),
-            )
-            .keccak256()
-        });
+        let optimizer = era_compiler_llvm_context::Optimizer::new(optimizer_settings.clone());
 
         let dependency_data = DependencyData::default();
         let mut context = era_compiler_llvm_context::EraVMContext::<DependencyData>::new(
             &llvm,
             llvm.create_module(contract_path),
+            llvm_options,
             optimizer,
             Some(dependency_data),
-            metadata_hash.is_some(),
             debug_config,
         );
+
+        let ir = if output_selection.contains(&VyperSelection::IRJson) {
+            Some(self.ir.clone())
+        } else {
+            None
+        };
+        let source_metadata = if output_selection.contains(&VyperSelection::Metadata) {
+            Some(self.source_metadata.clone())
+        } else {
+            None
+        };
+        let ast = if output_selection.contains(&VyperSelection::AST) {
+            Some(self.ast.clone())
+        } else {
+            None
+        };
+        let abi = if output_selection.contains(&VyperSelection::ABI) {
+            Some(self.abi.clone())
+        } else {
+            None
+        };
+        let method_identifiers = if output_selection.contains(&VyperSelection::MethodIdentifiers) {
+            Some(self.method_identifiers.clone())
+        } else {
+            None
+        };
+        let layout = if output_selection.contains(&VyperSelection::StorageLayout) {
+            self.layout.take()
+        } else {
+            None
+        };
+        let userdoc = if output_selection.contains(&VyperSelection::UserDocumentation) {
+            self.userdoc.take()
+        } else {
+            None
+        };
+        let devdoc = if output_selection.contains(&VyperSelection::DeveloperDocumentation) {
+            self.devdoc.take()
+        } else {
+            None
+        };
 
         self.declare(&mut context).map_err(|error| {
             anyhow::anyhow!(
@@ -164,22 +240,38 @@ impl Contract {
         })?;
 
         let is_minimal_proxy_used = context.vyper().is_minimal_proxy_used();
-        let mut build = context.build(contract_path, metadata_hash)?;
+        let mut build = context.build(
+            contract_path,
+            metadata_hash,
+            output_selection.contains(&VyperSelection::EraVMAssembly),
+            false,
+        )?;
 
         if is_minimal_proxy_used {
             build.factory_dependencies.insert(
-                crate::r#const::FORWARDER_CONTRACT_HASH.clone(),
+                hex::encode(crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.as_slice()),
                 crate::r#const::MINIMAL_PROXY_CONTRACT_NAME.to_owned(),
             );
         }
 
-        Ok(ContractBuild::new(build, warnings))
+        Ok(ContractBuild::new(
+            build,
+            ir,
+            source_metadata,
+            ast,
+            method_identifiers,
+            abi,
+            layout,
+            userdoc,
+            devdoc,
+            warnings,
+        ))
     }
 }
 
 impl<D> EraVMWriteLLVM<D> for Contract
 where
-    D: EraVMDependency + Clone,
+    D: era_compiler_llvm_context::Dependency,
 {
     fn declare(
         &mut self,
@@ -209,7 +301,7 @@ where
         {
             context
                 .get_function(name)
-                .expect("Always exists")
+                .ok_or_else(|| anyhow::anyhow!("Function `{name}` does not exist"))?
                 .borrow_mut()
                 .set_vyper_data(era_compiler_llvm_context::EraVMFunctionVyperData::default());
         }
@@ -226,21 +318,21 @@ where
         context: &mut era_compiler_llvm_context::EraVMContext<D>,
     ) -> anyhow::Result<()> {
         let (mut runtime_code, immutables_size) =
-            self.expression.extract_runtime_code()?.unwrap_or_default();
-        let mut deploy_code = self.expression.try_into_deploy_code()?;
+            self.ir.extract_runtime_code()?.unwrap_or_default();
+        let mut deploy_code = self.ir.try_into_deploy_code()?;
 
         match immutables_size {
             Expression::IntegerLiteral(number) => {
                 let immutables_size = number
                     .as_u64()
-                    .ok_or_else(|| anyhow::anyhow!("Immutable size `{}` parsing error", number))?;
+                    .ok_or_else(|| anyhow::anyhow!("Immutable size `{number}` parsing error"))?;
                 let vyper_data = era_compiler_llvm_context::EraVMContextVyperData::new(
                     immutables_size as usize,
                     false,
                 );
                 context.set_vyper_data(vyper_data);
             }
-            expression => anyhow::bail!("Invalid immutables size format: {:?}", expression),
+            expression => anyhow::bail!("Invalid immutables size format: {expression:?}"),
         }
 
         let mut function_expressions = deploy_code
@@ -285,7 +377,7 @@ where
                     .function_info
                     .iter()
                     .find_map(|(name, function)| {
-                        if metadata_label == function.ir_identifier.as_str() {
+                        if Expression::safe_label(metadata_label) == function.ir_identifier() {
                             Some(name.to_owned())
                         } else {
                             None
@@ -299,7 +391,10 @@ where
                     .cloned(),
                 None => None,
             };
-            functions.push((Function::new(label, metadata, expression), code_type));
+            functions.push((
+                Function::new(Expression::safe_label(label.as_str()), metadata, expression),
+                code_type,
+            ));
         }
         for (function, _code_type) in functions.iter_mut() {
             function.declare(context)?;
@@ -317,23 +412,18 @@ where
     }
 }
 
-impl EraVMDependency for DependencyData {
-    fn compile(
-        _contract: Self,
-        _name: &str,
-        _optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
-        _is_system_mode: bool,
-        _include_metadata_hash: bool,
-        _debug_config: Option<era_compiler_llvm_context::DebugConfig>,
-    ) -> anyhow::Result<String> {
-        Ok(crate::r#const::FORWARDER_CONTRACT_HASH.clone())
+impl era_compiler_llvm_context::Dependency for DependencyData {
+    fn get(&self, _name: &str) -> anyhow::Result<String> {
+        Ok(hex::encode(
+            crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.as_slice(),
+        ))
     }
 
     fn resolve_path(&self, _identifier: &str) -> anyhow::Result<String> {
-        anyhow::bail!("The dependency mechanism is not available in Vyper");
+        anyhow::bail!("Dependency mechanism is not available in Vyper");
     }
 
-    fn resolve_library(&self, _path: &str) -> anyhow::Result<String> {
-        anyhow::bail!("The dependency mechanism is not available in Vyper");
+    fn resolve_library(&self, _path: &str) -> Option<String> {
+        None
     }
 }

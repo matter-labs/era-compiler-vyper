@@ -4,8 +4,6 @@
 
 pub mod evm;
 
-use serde::Deserialize;
-
 use crate::project::contract::vyper::expression::Expression;
 
 use self::evm::EVM;
@@ -13,7 +11,7 @@ use self::evm::EVM;
 ///
 /// The `vyper --standard-json` output contract.
 ///
-#[derive(Debug, Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 pub struct Contract {
     /// The source code.
     pub source_code: Option<String>,

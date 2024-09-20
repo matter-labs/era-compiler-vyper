@@ -2,9 +2,6 @@
 //! The `deploy` instruction.
 //!
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use crate::project::contract::vyper::expression::instruction::seq::Seq as SeqInstruction;
 use crate::project::contract::vyper::expression::instruction::Instruction;
 use crate::project::contract::vyper::expression::Expression;
@@ -15,10 +12,10 @@ use crate::project::contract::vyper::expression::Expression;
 /// It is the upper level instruction which describes the deploy code. The runtime code is located
 /// in its return statement.
 ///
-/// Since the deploy and runtime code in zkSync are not separated, they are flattened and
+/// Since the deploy and runtime code in ZKsync are not separated, they are flattened and
 /// translated as entities of the same level with branching in the contract entry.
 ///
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct Deploy(Vec<Expression>);
 
 impl Deploy {
@@ -32,7 +29,7 @@ impl Deploy {
 
         match expression {
             Expression::Instruction(Instruction::Seq(sequence)) => Ok((sequence, immutables_size)),
-            expression => anyhow::bail!("Expected `seq`, found `{:?}`", expression),
+            expression => anyhow::bail!("Expected `seq`, found `{expression:?}`"),
         }
     }
 }

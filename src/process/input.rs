@@ -4,58 +4,57 @@
 //! The input data.
 //!
 
-use serde::Deserialize;
-use serde::Serialize;
+use std::borrow::Cow;
 
+use crate::message_type::MessageType;
 use crate::project::contract::Contract;
-use crate::warning_type::WarningType;
+use crate::vyper::selection::Selection as VyperSelection;
 
 ///
 /// The input data.
 ///
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Input {
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct Input<'a> {
     /// The contract full path.
-    pub full_path: String,
+    pub full_path: Cow<'a, String>,
     /// The contract representation.
-    pub contract: Contract,
-    /// The source code hash.
-    pub source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
-    /// Enables the test bytecode encoding.
-    pub enable_test_encoding: bool,
-    /// The EVM target version.
-    pub evm_version: Option<era_compiler_common::EVMVersion>,
+    pub contract: Cow<'a, Contract>,
+    /// The metadata hash.
+    pub metadata_hash: Option<era_compiler_common::Hash>,
+    /// The output selection flags.
+    pub output_selection: Vec<VyperSelection>,
     /// The optimizer settings.
     pub optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
-    /// The suppressed warnings.
-    pub suppressed_warnings: Vec<WarningType>,
+    /// The extra LLVM arguments.
+    pub llvm_options: Vec<String>,
+    /// The suppressed messages.
+    pub suppressed_messages: Vec<MessageType>,
     /// The debug output config.
     pub debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 }
 
-impl Input {
+impl<'a> Input<'a> {
     ///
     /// A shortcut constructor.
     ///
-    #[allow(clippy::too_many_arguments)]
     pub fn new(
-        full_path: String,
-        contract: Contract,
-        source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
-        enable_test_encoding: bool,
-        evm_version: Option<era_compiler_common::EVMVersion>,
+        full_path: Cow<'a, String>,
+        contract: Cow<'a, Contract>,
+        metadata_hash: Option<era_compiler_common::Hash>,
+        output_selection: Vec<VyperSelection>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
-        suppressed_warnings: Vec<WarningType>,
+        llvm_options: Vec<String>,
+        suppressed_messages: Vec<MessageType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> Self {
         Self {
             full_path,
             contract,
-            source_code_hash,
-            enable_test_encoding,
-            evm_version,
+            metadata_hash,
+            output_selection,
             optimizer_settings,
-            suppressed_warnings,
+            llvm_options,
+            suppressed_messages,
             debug_config,
         }
     }

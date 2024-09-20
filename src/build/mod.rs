@@ -5,38 +5,98 @@
 pub mod contract;
 
 use std::collections::BTreeMap;
+use std::fs::File;
+use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
-use crate::vyper::combined_json::contract::Contract as CombinedJsonContract;
+use normpath::PathExt;
+
 use crate::vyper::combined_json::CombinedJson;
+use crate::vyper::selection::Selection as VyperSelection;
+use crate::vyper::Compiler as VyperCompiler;
 
 use self::contract::Contract;
 
 ///
 /// The Vyper project build.
 ///
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Build {
     /// The contract data,
     pub contracts: BTreeMap<String, Contract>,
+    /// The project metadata.
+    pub project_metadata: serde_json::Value,
 }
 
 impl Build {
+    ///
+    /// A shortcut constructor.
+    ///
+    pub fn new(project_metadata: serde_json::Value) -> Self {
+        Self {
+            contracts: BTreeMap::new(),
+            project_metadata,
+        }
+    }
+
+    ///
+    /// Writes all contracts to the terminal.
+    ///
+    pub fn write_to_terminal(self, selection: &[VyperSelection]) -> anyhow::Result<()> {
+        for (path, contract) in self.contracts.into_iter() {
+            contract.write_to_terminal(path, selection)?;
+        }
+
+        if selection.contains(&VyperSelection::ProjectMetadata) {
+            writeln!(std::io::stderr(), "Project metadata:")?;
+            writeln!(std::io::stdout(), "{}", self.project_metadata)?;
+        }
+
+        Ok(())
+    }
+
     ///
     /// Writes all contracts to the specified directory.
     ///
     pub fn write_to_directory(
         self,
+        selection: &[VyperSelection],
         output_directory: &Path,
         overwrite: bool,
     ) -> anyhow::Result<()> {
+        std::fs::create_dir_all(output_directory)?;
+
         for (contract_path, contract) in self.contracts.into_iter() {
             contract.write_to_directory(
+                selection,
                 output_directory,
                 PathBuf::from(contract_path).as_path(),
                 overwrite,
             )?;
+        }
+
+        if selection.contains(&VyperSelection::ProjectMetadata) {
+            let metadata_file_name = format!("meta.{}", era_compiler_common::EXTENSION_JSON);
+            let mut metadata_file_path = output_directory.to_owned();
+            metadata_file_path.push(metadata_file_name);
+            if metadata_file_path.exists() && !overwrite {
+                anyhow::bail!(
+                    "Refusing to overwrite an existing file {metadata_file_path:?} (use --overwrite to force).",
+                );
+            }
+            File::create(&metadata_file_path)
+                .map_err(|error| {
+                    anyhow::anyhow!("File {:?} creating error: {}", metadata_file_path, error)
+                })?
+                .write_all(
+                    serde_json::to_string(&self.project_metadata)
+                        .expect("Always valid")
+                        .as_bytes(),
+                )
+                .map_err(|error| {
+                    anyhow::anyhow!("File {:?} writing error: {}", metadata_file_path, error)
+                })?;
         }
 
         Ok(())
@@ -45,40 +105,43 @@ impl Build {
     ///
     /// Writes all contracts to the combined JSON.
     ///
-    pub fn write_to_combined_json(
+    pub fn into_combined_json(
         self,
-        combined_json: &mut CombinedJson,
+        version: Option<&semver::Version>,
         zkvyper_version: &semver::Version,
-    ) -> anyhow::Result<()> {
-        for (path, contract) in self.contracts.into_iter() {
-            let combined_json_contract =
-                combined_json
-                    .contracts
-                    .iter_mut()
-                    .find_map(|(json_path, contract)| {
-                        if path.ends_with(json_path) {
-                            Some(contract)
-                        } else {
-                            None
-                        }
-                    });
+    ) -> CombinedJson {
+        let contracts = self
+            .contracts
+            .into_iter()
+            .map(|(path, contract)| {
+                let contract_path = PathBuf::from(path.as_str());
+                let contract_path = contract_path
+                    .normalize()
+                    .map(|path| path.into_path_buf())
+                    .unwrap_or(contract_path);
 
-            match combined_json_contract {
-                Some(combined_json_contract) => {
-                    contract.write_to_combined_json(combined_json_contract)?
-                }
-                None => {
-                    if path.as_str() == crate::r#const::MINIMAL_PROXY_CONTRACT_NAME {
-                        combined_json
-                            .contracts
-                            .insert(path, CombinedJsonContract::new_minimal_proxy());
-                    }
-                }
-            }
-        }
+                let contract_path = if version < Some(&VyperCompiler::FIRST_VERSION_ABSOLUTE_PATHS)
+                {
+                    std::env::current_dir()
+                        .map_err(anyhow::Error::from)
+                        .and_then(|path| crate::path_to_posix(path.as_path()))
+                        .and_then(|path| {
+                            contract_path
+                                .strip_prefix(path)
+                                .map_err(anyhow::Error::from)
+                        })
+                        .unwrap_or(contract_path.as_path())
+                } else {
+                    contract_path.as_path()
+                };
 
-        combined_json.zk_version = Some(zkvyper_version.to_string());
+                (
+                    contract_path.to_string_lossy().to_string(),
+                    contract.into_combined_json(),
+                )
+            })
+            .collect();
 
-        Ok(())
+        CombinedJson::new(contracts, version, self.project_metadata, zkvyper_version)
     }
 }

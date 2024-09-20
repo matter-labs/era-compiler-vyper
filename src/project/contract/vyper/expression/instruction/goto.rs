@@ -2,9 +2,6 @@
 //! The `goto` instruction.
 //!
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use era_compiler_llvm_context::IContext;
 
 use crate::project::contract::vyper::expression::Expression;
@@ -12,7 +9,7 @@ use crate::project::contract::vyper::expression::Expression;
 ///
 /// The Vyper LLL-specific `goto` instruction.
 ///
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct Goto(Vec<Expression>);
 
 impl Goto {
@@ -32,15 +29,15 @@ impl Goto {
         label_name: String,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         let function = context
             .get_function(label_name.as_str())
-            .ok_or_else(|| anyhow::anyhow!("Function `{}` does not exist", label_name))?;
+            .ok_or_else(|| anyhow::anyhow!("Function `{label_name}` does not exist"))?;
 
         let mut arguments = Vec::new();
         for expression in self.0.into_iter() {
-            if let Expression::Identifier(ref identifier) = expression {
+            if let Ok(identifier) = expression.try_into_identifier() {
                 if identifier.starts_with(crate::r#const::LABEL_DESTINATION_PREFIX) {
                     continue;
                 }
@@ -68,7 +65,7 @@ impl Goto {
         label_name: String,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         let block = context
             .current_function()
@@ -77,7 +74,10 @@ impl Goto {
             .value
             .get_basic_blocks()
             .iter()
-            .find(|block| block.get_name().to_string_lossy() == label_name)
+            .find(|block| {
+                block.get_name().to_string_lossy()
+                    == Expression::safe_label(label_name.as_str()).as_str()
+            })
             .copied()
             .ok_or_else(|| anyhow::anyhow!("Block `{}` does not exist", label_name))?;
 
@@ -111,7 +111,7 @@ impl Goto {
         context: &mut era_compiler_llvm_context::EraVMContext<D>,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         let label_name = self.0.remove(0).try_into_identifier()?;
 
@@ -121,6 +121,6 @@ impl Goto {
             return self.into_block_call(context, label_name);
         }
 
-        self.into_function_call(context, label_name)
+        self.into_function_call(context, Expression::safe_label(label_name.as_str()))
     }
 }

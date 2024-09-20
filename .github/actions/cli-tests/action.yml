@@ -8,7 +8,7 @@ inputs:
   zkvyper-version:
     description: 'Prebuilt version of zkvyper compiler to download and use in tests.'
     required: true
-    default: '1.4.0'
+    default: '1.5.0'
 runs:
   using: "composite"
   steps:
@@ -17,7 +17,7 @@ runs:
       if: inputs.use-prebuilt-zkvyper == 'true'
       env:
         ZKVYPER_DOWNLOAD_URL: "https://github.com/matter-labs/era-compiler-vyper/releases/download"
-        ZKVYPER_VERSION: ${{ inputs.zkvyper-version }}
+        ZKVYPER_VERSION: ${{ inputs.zkvyper-version || '1.5.0' }}
       run: |
         OUTPUT=zkvyper
         case "${RUNNER_OS}-${RUNNER_ARCH}" in
@@ -55,18 +55,29 @@ runs:
         npm install
         npx jest --ci --runInBand --reporters=default --reporters=jest-junit
 
-    - name: Upload results (MacOS and Windows)
-      if: runner.os != 'Linux'
-      uses: EnricoMi/publish-unit-test-result-action/composite@v2.12.0
-      with:
-        check_name: CLI Tests Results ${{ runner.os }} ${{ runner.arch }}
-        files: cli-tests/junit.xml
-        action_fail_on_inconclusive: true
-
-    - name: Upload results (Linux)
+    - name: Upload results Linux
       if: runner.os == 'Linux'
-      uses: EnricoMi/publish-unit-test-result-action@v2.12.0
+      uses: EnricoMi/publish-unit-test-result-action@v2
       with:
-        check_name: CLI Tests Results ${{ runner.os }} ${{ runner.arch }}
+        check_name: CLI Tests ${{ runner.os }} ${{ runner.arch }} (prebuilt - ${{ inputs.use-prebuilt-zkvyper }})
         files: cli-tests/junit.xml
         action_fail_on_inconclusive: true
+        comment_mode: off
+
+    - name: Upload results MacOS
+      if: runner.os == 'macOS'
+      uses: EnricoMi/publish-unit-test-result-action/macos@v2
+      with:
+        check_name: CLI Tests Results ${{ runner.os }} ${{ runner.arch }} (prebuilt - ${{ inputs.use-prebuilt-zkvyper }})
+        files: cli-tests/junit.xml
+        action_fail_on_inconclusive: true
+        comment_mode: off
+
+    - name: Upload results Windows
+      if: runner.os == 'Windows'
+      uses: EnricoMi/publish-unit-test-result-action/windows@v2
+      with:
+        check_name: CLI Tests Results ${{ runner.os }} ${{ runner.arch }} (prebuilt - ${{ inputs.use-prebuilt-zkvyper }})
+        files: cli-tests/junit.xml
+        action_fail_on_inconclusive: true
+        comment_mode: off

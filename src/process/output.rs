@@ -4,15 +4,12 @@
 //! The output data.
 //!
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use crate::build::contract::Contract as ContractBuild;
 
 ///
 /// The output data.
 ///
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Output {
     /// The contract build.
     pub build: ContractBuild,

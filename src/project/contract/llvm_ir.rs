@@ -2,17 +2,14 @@
 //! The LLVM IR contract.
 //!
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use crate::build::contract::Contract as ContractBuild;
-use crate::project::contract::metadata::Metadata as ContractMetadata;
-use crate::warning_type::WarningType;
+use crate::message_type::MessageType;
+use crate::vyper::selection::Selection as VyperSelection;
 
 ///
 /// The LLVM IR contract.
 ///
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Contract {
     /// The LLVM framework version.
     pub version: semver::Version,
@@ -37,24 +34,15 @@ impl Contract {
     pub fn compile(
         self,
         contract_path: &str,
-        source_code_hash: Option<[u8; era_compiler_common::BYTE_LENGTH_FIELD]>,
+        metadata_hash: Option<era_compiler_common::Hash>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
-        _suppressed_warnings: Vec<WarningType>,
+        llvm_options: Vec<String>,
+        output_selection: Vec<VyperSelection>,
+        _suppressed_messages: Vec<MessageType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
         let llvm = inkwell::context::Context::create();
-        let optimizer = era_compiler_llvm_context::Optimizer::new(optimizer_settings);
-
-        let metadata_hash = source_code_hash.map(|source_code_hash| {
-            ContractMetadata::new(
-                &source_code_hash,
-                &self.version,
-                None,
-                semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid"),
-                optimizer.settings().to_owned(),
-            )
-            .keccak256()
-        });
+        let optimizer = era_compiler_llvm_context::Optimizer::new(optimizer_settings.clone());
 
         let memory_buffer = inkwell::memory_buffer::MemoryBuffer::create_from_memory_range_copy(
             self.source_code.as_bytes(),
@@ -64,18 +52,16 @@ impl Contract {
             .create_module_from_ir(memory_buffer)
             .map_err(|error| anyhow::anyhow!(error.to_string()))?;
         let context = era_compiler_llvm_context::EraVMContext::<
-            era_compiler_llvm_context::EraVMDummyDependency,
-        >::new(
-            &llvm,
-            module,
-            optimizer,
-            None,
-            metadata_hash.is_some(),
-            debug_config,
-        );
+            era_compiler_llvm_context::DummyDependency,
+        >::new(&llvm, module, llvm_options, optimizer, None, debug_config);
 
-        let build = context.build(contract_path, metadata_hash)?;
+        let build = context.build(
+            contract_path,
+            metadata_hash,
+            output_selection.contains(&VyperSelection::EraVMAssembly),
+            false,
+        )?;
 
-        Ok(ContractBuild::new(build, vec![]))
+        Ok(ContractBuild::new_inner(build))
     }
 }

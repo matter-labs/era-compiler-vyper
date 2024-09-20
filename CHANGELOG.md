@@ -1,6 +1,107 @@
 # The `zkvyper` changelog
 
-### [Unreleased]
+## [Unreleased]
+
+### Added
+
+- The support for IPFS metadata hash type
+- The EraVM disassembler
+
+### Fixed
+
+- The error code when no input files are provided
+
+## [1.5.4] - 2024-08-27
+
+### Added
+
+- More LLVM optimizations
+
+### Changed
+
+- Source code files do not affect one another's metadata hash anymore
+- Migrated to the LLVM-based assembler and linker
+- Updated to Rust v1.80.1
+
+### Fixed
+
+- The complex bitwise operations misoptimization
+
+## [1.5.3] - 2024-07-31
+
+### Added
+
+- The `layout`, `userdoc`, `devdoc` fields to all output modes
+
+### Changed
+
+- EraVM assembly must now be requested with `zkvyper -f eravm_assembly ...`
+
+### Removed
+
+- Redundant calls to `vyper` that were increasing the compilation time
+
+### Fixed
+
+- missing `0x` prefix in the combined JSON bytecode output
+- `bound` argument that was ignored in loop ranges
+- `assert_unreachable` is now translated to `INVALID`, burning all gas
+
+## [1.5.2] - 2024-07-01
+
+### Removed
+
+- Obsolete warnings for `extcodesize` and `ecrecover`
+
+### Fixed
+
+- Path normalization error with the internal minimal proxy contract
+
+## [1.5.1] - 2024-06-27
+
+### Added
+
+- The vyper v0.4.0 support
+- The `--enable-decimals` parameter
+- The support for compiling multiple files in Yul, LLVM IR, and EraVM assembly modes
+- More LLVM optimizations
+
+### Changed
+
+- Assembly is now only returned if requested with `--output-assembly`
+- Renamed the `zkasm` flag to `eravm-assembly`
+- Updated to Rust v1.79.0
+
+### Fixed
+
+- Missing output with non-canonical input paths in combined JSON output
+
+## [1.5.0] - 2024-06-10
+
+### Added
+
+- More LLVM optimizations
+- The `--llvm-options` parameter to pass arbitrary options to LLVM
+- The `--threads` parameter to control the number of threads
+- Caching of the underlying compiler's metadata, including `--version`
+
+### Changed
+
+- Updated to EraVM v1.5.0
+- Renamed the `zkasm` flag to `eravm`
+- Updated to Rust v1.78.0
+
+### Deprecated
+
+- `zkasm` alias of `eravm` flag
+
+### Fixed
+
+- The bytes-to-cells LLVM misoptimization
+- Excessive RAM usage and compilation time with some projects
+- Redundancy in error printing
+
+## [1.4.1] - 2024-04-24
 
 ### Added
 
@@ -13,6 +114,7 @@
 
 ### Fixed
 
+- The `xor(zext(cmp), -1)` optimization bug
 - Printing `--help` if no arguments are provided
 - Missing `--overwrite` flag now triggers an error
 - Bytecode is now printed to `--output-dir` as a hexadecimal string
@@ -115,7 +217,7 @@
 
 ### Added
 
-- The zkEVM assembly compilation mode (`--zkasm`)
+- The EraVM assembly compilation mode (`--zkasm`)
 - The vyper v0.3.9 support
 
 ### Fixed
@@ -198,7 +300,7 @@
 
 - System contract calls now use remaining ergs instead of 0
 - The LLVM optimization manager to the new one
-- The contract ABI to match that of zkEVM v1.3
+- The contract ABI to match that of EraVM v1.3
 - Moved the event decoding to the system contracts
 - Simplified the CLI arguments used for debugging
 

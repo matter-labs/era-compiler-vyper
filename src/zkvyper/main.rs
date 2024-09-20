@@ -1,11 +1,10 @@
 //!
-//! Vyper to EraVM compiler binary.
+//! Vyper compiler binary.
 //!
 
 pub mod arguments;
 
 use std::io::Write;
-use std::path::PathBuf;
 use std::str::FromStr;
 
 use self::arguments::Arguments;
@@ -24,7 +23,9 @@ fn main() -> anyhow::Result<()> {
     std::process::exit(match main_inner() {
         Ok(()) => era_compiler_common::EXIT_CODE_SUCCESS,
         Err(error) => {
-            writeln!(std::io::stderr(), "{error}")?;
+            std::io::stderr()
+                .write_all(error.to_string().as_bytes())
+                .expect("Stderr writing error");
             era_compiler_common::EXIT_CODE_FAILURE
         }
     })
@@ -38,12 +39,17 @@ fn main_inner() -> anyhow::Result<()> {
     arguments.validate()?;
     arguments.normalize_input_paths()?;
 
-    rayon::ThreadPoolBuilder::new()
+    let mut thread_pool_builder = rayon::ThreadPoolBuilder::new();
+    if let Some(threads) = arguments.threads {
+        thread_pool_builder = thread_pool_builder.num_threads(threads);
+    }
+    thread_pool_builder
         .stack_size(RAYON_WORKER_STACK_SIZE)
         .build_global()
         .expect("Thread pool configuration failure");
+
     inkwell::support::enable_llvm_pretty_stack_trace();
-    era_compiler_llvm_context::initialize_target(era_compiler_llvm_context::Target::EraVM); // TODO: pass from CLI
+    era_compiler_llvm_context::initialize_target(era_compiler_common::Target::EraVM); // TODO: pass from CLI
 
     if arguments.version {
         writeln!(
@@ -57,7 +63,7 @@ fn main_inner() -> anyhow::Result<()> {
     }
 
     if arguments.recursive_process {
-        return era_compiler_vyper::run_process();
+        return era_compiler_vyper::run_recursive();
     }
 
     let debug_config = match arguments.debug_output_directory {
@@ -70,17 +76,26 @@ fn main_inner() -> anyhow::Result<()> {
         None => None,
     };
 
-    let suppressed_warnings = match arguments.suppress_warnings {
-        Some(warnings) => era_compiler_vyper::WarningType::try_from_strings(warnings.as_slice())?,
+    let suppressed_messages = match arguments.suppressed_warnings {
+        Some(warnings) => era_compiler_vyper::MessageType::try_from_strings(warnings.as_slice())?,
         None => vec![],
     };
 
-    let evm_version = match arguments.evm_version {
-        Some(evm_version) => Some(era_compiler_common::EVMVersion::try_from(
-            evm_version.as_str(),
-        )?),
-        None => None,
+    let output_selection = match arguments.format.as_ref() {
+        Some(format) => format
+            .split(',')
+            .map(era_compiler_vyper::VyperSelection::from_str)
+            .collect::<anyhow::Result<Vec<era_compiler_vyper::VyperSelection>>>()?,
+        None => vec![],
     };
+    let is_combined_json =
+        output_selection.contains(&era_compiler_vyper::VyperSelection::CombinedJson);
+    if is_combined_json && output_selection.len() > 1 {
+        anyhow::bail!(
+            "`combined_json` cannot be requested together with other output: `{:?}`",
+            output_selection,
+        );
+    }
 
     let mut optimizer_settings = match arguments.optimization {
         Some(mode) => era_compiler_llvm_context::OptimizerSettings::try_from_cli(mode)?,
@@ -89,39 +104,43 @@ fn main_inner() -> anyhow::Result<()> {
     if arguments.fallback_to_optimizing_for_size {
         optimizer_settings.enable_fallback_to_size();
     }
-    if arguments.disable_system_request_memoization {
-        optimizer_settings.disable_system_request_memoization();
-    }
-    if let Some(value) = arguments.jump_table_density_threshold {
-        optimizer_settings.set_jump_table_density_threshold(value);
-    }
     optimizer_settings.is_verify_each_enabled = arguments.llvm_verify_each;
     optimizer_settings.is_debug_logging_enabled = arguments.llvm_debug_logging;
 
-    let include_metadata_hash = match arguments.metadata_hash {
-        Some(metadata_hash) => {
-            let metadata =
-                era_compiler_llvm_context::EraVMMetadataHash::from_str(metadata_hash.as_str())?;
-            metadata != era_compiler_llvm_context::EraVMMetadataHash::None
-        }
-        None => true,
-    };
+    let llvm_options: Vec<String> = arguments
+        .llvm_options
+        .as_ref()
+        .map(|options| options.split(' ').map(|option| option.to_owned()).collect())
+        .unwrap_or_default();
+
+    let vyper_optimizer_enabled = !arguments.disable_vyper_optimizer;
+
+    let metadata_hash_type = arguments
+        .metadata_hash_type
+        .unwrap_or(era_compiler_common::HashType::Keccak256);
 
     let build = if arguments.llvm_ir {
         era_compiler_vyper::llvm_ir(
-            arguments.input_files,
+            arguments.input_paths,
+            output_selection.as_slice(),
+            metadata_hash_type,
             optimizer_settings,
-            include_metadata_hash,
-            suppressed_warnings,
+            llvm_options,
+            suppressed_messages,
             debug_config,
         )
-    } else if arguments.zkasm {
-        era_compiler_vyper::zkasm(
-            arguments.input_files,
-            include_metadata_hash,
-            suppressed_warnings,
+    } else if arguments.eravm_assembly {
+        era_compiler_vyper::eravm_assembly(
+            arguments.input_paths,
+            output_selection.as_slice(),
+            metadata_hash_type,
+            llvm_options,
+            suppressed_messages,
             debug_config,
         )
+    } else if arguments.disassemble {
+        era_compiler_vyper::disassemble_eravm(arguments.input_paths)?;
+        return Ok(());
     } else {
         let vyper = era_compiler_vyper::VyperCompiler::new(
             arguments
@@ -129,72 +148,57 @@ fn main_inner() -> anyhow::Result<()> {
                 .as_deref()
                 .unwrap_or(era_compiler_vyper::VyperCompiler::DEFAULT_EXECUTABLE_NAME),
         )?;
-        match arguments.format.as_deref() {
-            Some("combined_json") => {
-                era_compiler_vyper::combined_json(
-                    arguments.input_files,
-                    &vyper,
-                    evm_version,
-                    !arguments.disable_vyper_optimizer,
-                    optimizer_settings,
-                    include_metadata_hash,
-                    suppressed_warnings,
-                    debug_config,
-                    arguments.output_directory,
-                    arguments.overwrite,
-                )?;
-                return Ok(());
-            }
-            Some(format) if format.split(',').any(|format| format == "combined_json") => {
-                anyhow::bail!("`combined_json` must be the only output format requested");
-            }
-            Some(_) | None => era_compiler_vyper::standard_output(
-                arguments.input_files,
+
+        if is_combined_json {
+            let combined_json = era_compiler_vyper::combined_json(
+                arguments.input_paths,
                 &vyper,
-                evm_version,
-                !arguments.disable_vyper_optimizer,
+                arguments.evm_version,
+                arguments.enable_decimals,
+                metadata_hash_type,
+                vyper_optimizer_enabled,
                 optimizer_settings,
-                include_metadata_hash,
-                suppressed_warnings,
+                llvm_options,
+                suppressed_messages,
                 debug_config,
-            ),
+            )?;
+
+            match arguments.output_directory {
+                Some(output_directory) => {
+                    combined_json
+                        .write_to_directory(output_directory.as_path(), arguments.overwrite)?;
+                }
+                None => serde_json::to_writer(std::io::stdout(), &combined_json)
+                    .expect("Stdout writing error"),
+            }
+            std::process::exit(era_compiler_common::EXIT_CODE_SUCCESS);
         }
+
+        era_compiler_vyper::standard_output(
+            arguments.input_paths,
+            &vyper,
+            output_selection.as_slice(),
+            arguments.evm_version,
+            arguments.enable_decimals,
+            metadata_hash_type,
+            vyper_optimizer_enabled,
+            optimizer_settings,
+            llvm_options,
+            suppressed_messages,
+            debug_config,
+        )
     }?;
 
     match arguments.output_directory {
         Some(output_directory) => {
-            for (_path, contract) in build.contracts.iter() {
-                for warning in contract.warnings.iter() {
-                    writeln!(std::io::stderr(), "\n{}", warning)?;
-                }
-            }
-
-            std::fs::create_dir_all(output_directory.as_path())?;
-
-            build.write_to_directory(output_directory.as_path(), arguments.overwrite)?;
+            build.write_to_directory(
+                output_selection.as_slice(),
+                output_directory.as_path(),
+                arguments.overwrite,
+            )?;
         }
         None => {
-            for (path, contract) in build.contracts.into_iter() {
-                writeln!(std::io::stderr(), "Contract `{path}`:")?;
-                for warning in contract.warnings.iter() {
-                    writeln!(std::io::stderr(), "\n{}", warning)?;
-                }
-
-                let bytecode_string = hex::encode(contract.build.bytecode);
-                writeln!(std::io::stdout(), "0x{bytecode_string}")?;
-
-                if let Some(format) = arguments.format.as_deref() {
-                    let vyper = era_compiler_vyper::VyperCompiler::new(
-                        arguments
-                            .vyper
-                            .as_deref()
-                            .unwrap_or(era_compiler_vyper::VyperCompiler::DEFAULT_EXECUTABLE_NAME),
-                    )?;
-                    let extra_output =
-                        vyper.extra_output(PathBuf::from(path).as_path(), evm_version, format)?;
-                    writeln!(std::io::stdout(), "\n{extra_output}")?;
-                }
-            }
+            build.write_to_terminal(output_selection.as_slice())?;
         }
     }
 

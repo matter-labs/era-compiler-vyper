@@ -21,11 +21,8 @@ pub mod with;
 
 use std::collections::BTreeMap;
 
-use inkwell::values::BasicValue;
-use serde::Deserialize;
-use serde::Serialize;
-
 use era_compiler_llvm_context::IContext;
+use inkwell::values::BasicValue;
 
 use crate::project::contract::vyper::expression::Expression;
 
@@ -45,10 +42,8 @@ use self::with::With;
 ///
 /// The LLL IR instruction.
 ///
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
 #[serde(rename_all = "lowercase")]
-#[allow(non_camel_case_types)]
-#[allow(clippy::upper_case_acronyms)]
 pub enum Instruction {
     /// The LLL IR `with` expression.
     With(With),
@@ -333,7 +328,7 @@ impl Instruction {
         context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
     ) -> anyhow::Result<[inkwell::values::BasicValueEnum<'ctx>; N]>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         let debug_string = format!("`{arguments:?}`");
 
@@ -351,10 +346,8 @@ impl Instruction {
 
         if values.len() != N {
             anyhow::bail!(
-                "Expected {} arguments, found only {}: `{:?}`",
-                N,
+                "Expected {N} arguments, found only {}: `{values:?}`",
                 values.len(),
-                values
             );
         }
 
@@ -370,7 +363,7 @@ impl Instruction {
         context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
     ) -> anyhow::Result<[era_compiler_llvm_context::Value<'ctx>; N]>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         let debug_string = format!("`{arguments:?}`");
 
@@ -399,10 +392,8 @@ impl Instruction {
 
         if values.len() != N {
             anyhow::bail!(
-                "Expected {} arguments, found only {}: `{:?}`",
-                N,
+                "Expected {N} arguments, found only {}: `{values:?}`",
                 values.len(),
-                values
             );
         }
 
@@ -439,7 +430,7 @@ impl Instruction {
     pub fn function_name(&self) -> anyhow::Result<String> {
         match self {
             Self::Seq(inner) => inner.function_name(),
-            expression => anyhow::bail!("Expected a function sequence, found `{:?}`", expression),
+            expression => anyhow::bail!("Expected a function sequence, found `{expression:?}`"),
         }
     }
 
@@ -451,7 +442,7 @@ impl Instruction {
         context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         match self {
             Self::With(inner) => inner.into_llvm_value(context),
@@ -618,8 +609,8 @@ impl Instruction {
                 )?))
             }
 
-            Self::Assert(inner) => inner.into_llvm_value(context).map(|_| None),
-            Self::Assert_Unreachable(inner) => inner.into_llvm_value(context).map(|_| None),
+            Self::Assert(inner) => inner.into_llvm_value(context, false).map(|_| None),
+            Self::Assert_Unreachable(inner) => inner.into_llvm_value(context, true).map(|_| None),
 
             Self::Var_List(_inner) => Ok(None),
 
@@ -1046,12 +1037,21 @@ impl Instruction {
                 .map(|_| None)
             }
             Self::TLOAD(arguments) => {
-                let _arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
-                anyhow::bail!("The `TLOAD` instruction is not supported until zkVM v1.5.0")
+                let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
+                era_compiler_llvm_context::eravm_evm_storage::transient_load(
+                    context,
+                    arguments[0].into_int_value(),
+                )
+                .map(Some)
             }
             Self::TSTORE(arguments) => {
-                let _arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
-                anyhow::bail!("The `TSTORE` instruction is not supported until zkVM v1.5.0")
+                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                era_compiler_llvm_context::eravm_evm_storage::transient_store(
+                    context,
+                    arguments[0].into_int_value(),
+                    arguments[1].into_int_value(),
+                )
+                .map(|_| None)
             }
 
             Self::ILOAD(arguments) => {
@@ -1134,9 +1134,7 @@ impl Instruction {
 
                 match context.code_type() {
                     None => {
-                        anyhow::bail!(
-                            "Immutables are not available if the contract part is undefined"
-                        );
+                        panic!("code part is undefined");
                     }
                     Some(era_compiler_llvm_context::CodeType::Deploy) => {
                         era_compiler_llvm_context::eravm_evm_calldata::load(
@@ -1582,7 +1580,7 @@ impl Instruction {
             }
 
             Self::Unknown(value) => {
-                anyhow::bail!("Unknown LLL instruction: {}", value);
+                anyhow::bail!("Unknown LLL instruction: {value}");
             }
         }
     }
@@ -1595,7 +1593,7 @@ impl Instruction {
         arguments: &[Box<Expression>; 2],
     ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         if let Expression::Instruction(Instruction::EXTCODESIZE(extcodesize_arguments)) =
             *(arguments[0].clone())

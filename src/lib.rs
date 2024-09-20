@@ -1,28 +1,35 @@
 //!
-//! Vyper to EraVM compiler library.
+//! Vyper compiler library.
 //!
 
-pub(crate) mod build;
-pub(crate) mod r#const;
-pub(crate) mod metadata;
-pub(crate) mod process;
-pub(crate) mod project;
-pub(crate) mod vyper;
-pub(crate) mod warning_type;
+#![allow(non_camel_case_types)]
+#![allow(clippy::upper_case_acronyms)]
+#![allow(clippy::too_many_arguments)]
+#![allow(clippy::assigning_clones)]
+
+pub mod build;
+pub mod r#const;
+pub mod message_type;
+pub mod metadata;
+pub mod process;
+pub mod project;
+pub mod vyper;
 
 pub use self::build::contract::Contract as ContractBuild;
 pub use self::build::Build;
+pub use self::message_type::MessageType;
 pub use self::metadata::function::Function as FunctionMetadata;
 pub use self::metadata::Metadata;
 pub use self::process::input::Input as ProcessInput;
 pub use self::process::output::Output as ProcessOutput;
-pub use self::process::run as run_process;
+pub use self::process::run as run_recursive;
 pub use self::process::EXECUTABLE;
 pub use self::project::contract::Contract;
 pub use self::project::Project;
 pub use self::r#const::*;
 pub use self::vyper::combined_json::contract::Contract as VyperCompilerCombinedJsonContract;
 pub use self::vyper::combined_json::CombinedJson as VyperCompilerCombinedJson;
+pub use self::vyper::selection::Selection as VyperSelection;
 pub use self::vyper::standard_json::input::language::Language as VyperCompilerStandardInputJsonLanguage;
 pub use self::vyper::standard_json::input::settings::selection::Selection as VyperCompilerStandardInputJsonSettingsSelection;
 pub use self::vyper::standard_json::input::settings::Settings as VyperCompilerStandardInputJsonSettings;
@@ -34,175 +41,225 @@ pub use self::vyper::standard_json::output::error::Error as VyperCompilerStandar
 pub use self::vyper::standard_json::output::Output as VyperCompilerStandardOutputJson;
 pub use self::vyper::version::Version as VyperVersion;
 pub use self::vyper::Compiler as VyperCompiler;
-pub use self::warning_type::WarningType;
-
-mod tests;
 
 use std::io::Write;
+use std::path::Path;
 use std::path::PathBuf;
+
+use path_slash::PathExt;
 
 ///
 /// Runs the LLVM IR mode.
 ///
 pub fn llvm_ir(
-    mut input_files: Vec<PathBuf>,
+    input_paths: Vec<PathBuf>,
+    output_selection: &[VyperSelection],
+    metadata_hash_type: era_compiler_common::HashType,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
-    include_metadata_hash: bool,
-    suppressed_warnings: Vec<WarningType>,
+    llvm_options: Vec<String>,
+    suppressed_messages: Vec<MessageType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
-    let path = match input_files.len() {
-        1 => input_files.remove(0),
-        0 => anyhow::bail!("The input file is missing"),
-        length => anyhow::bail!(
-            "Only one input file is allowed in LLVM IR mode, but found {}",
-            length
-        ),
-    };
+    if input_paths.is_empty() {
+        writeln!(std::io::stderr(), "No input sources provided").expect("Stderr writing error");
+    }
 
-    let project = Project::try_from_llvm_ir_path(&path)?;
+    let paths: Vec<&Path> = input_paths.iter().map(|path| path.as_path()).collect();
+    let project = Project::try_from_llvm_ir_paths(paths.as_slice(), output_selection)?;
 
     let build = project.compile(
         None,
+        metadata_hash_type,
         optimizer_settings,
-        include_metadata_hash,
-        zkevm_assembly::RunningVmEncodingMode::Production,
-        suppressed_warnings,
+        llvm_options,
+        suppressed_messages,
         debug_config,
     )?;
-
     Ok(build)
 }
 
 ///
 /// Runs the EraVM assembly mode.
 ///
-pub fn zkasm(
-    mut input_files: Vec<PathBuf>,
-    include_metadata_hash: bool,
-    suppressed_warnings: Vec<WarningType>,
+pub fn eravm_assembly(
+    input_paths: Vec<PathBuf>,
+    output_selection: &[VyperSelection],
+    metadata_hash_type: era_compiler_common::HashType,
+    llvm_options: Vec<String>,
+    suppressed_messages: Vec<MessageType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
-    let path = match input_files.len() {
-        1 => input_files.remove(0),
-        0 => anyhow::bail!("The input file is missing"),
-        length => anyhow::bail!(
-            "Only one input file is allowed in EraVM assembly mode, but found {}",
-            length
-        ),
-    };
+    if input_paths.is_empty() {
+        writeln!(std::io::stderr(), "No input sources provided").expect("Stderr writing error");
+    }
 
-    let project = Project::try_from_zkasm_path(&path)?;
+    let paths: Vec<&Path> = input_paths.iter().map(|path| path.as_path()).collect();
+    let project = Project::try_from_eravm_assembly_paths(paths.as_slice(), output_selection)?;
 
-    let optimizer_settings = era_compiler_llvm_context::OptimizerSettings::none();
+    let optimizer_settings = era_compiler_llvm_context::OptimizerSettings::cycles();
     let build = project.compile(
         None,
+        metadata_hash_type,
         optimizer_settings,
-        include_metadata_hash,
-        zkevm_assembly::RunningVmEncodingMode::Production,
-        suppressed_warnings,
+        llvm_options,
+        suppressed_messages,
         debug_config,
     )?;
-
     Ok(build)
 }
 
 ///
 /// Runs the standard output mode.
 ///
-#[allow(clippy::too_many_arguments)]
 pub fn standard_output(
-    input_files: Vec<PathBuf>,
+    input_paths: Vec<PathBuf>,
     vyper: &VyperCompiler,
+    output_selection: &[VyperSelection],
     evm_version: Option<era_compiler_common::EVMVersion>,
+    enable_decimals: bool,
+    metadata_hash_type: era_compiler_common::HashType,
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
-    include_metadata_hash: bool,
-    suppressed_warnings: Vec<WarningType>,
+    llvm_options: Vec<String>,
+    suppressed_messages: Vec<MessageType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
-    if let Some(ref debug_config) = debug_config {
-        for path in input_files.iter() {
-            let lll_debug = vyper.lll_debug(path.as_path(), evm_version, true)?;
-            debug_config.dump_lll(path.to_string_lossy().as_ref(), None, lll_debug.as_str())?;
-        }
-    }
-
     let project = vyper.batch(
         &vyper.version.default,
-        input_files,
+        input_paths,
+        output_selection,
         evm_version,
+        enable_decimals,
         vyper_optimizer_enabled,
     )?;
 
+    if let Some(ref debug_config) = debug_config {
+        for (path, contract) in project.contracts.iter() {
+            if let Some(ir_string) = contract.ir_string() {
+                debug_config.dump_lll(path.as_str(), None, ir_string.as_str())?;
+            }
+        }
+    }
+
     let build = project.compile(
         evm_version,
+        metadata_hash_type,
         optimizer_settings,
-        include_metadata_hash,
-        zkevm_assembly::RunningVmEncodingMode::Production,
-        suppressed_warnings,
+        llvm_options,
+        suppressed_messages,
         debug_config,
     )?;
-
     Ok(build)
 }
 
 ///
 /// Runs the combined JSON mode.
 ///
-#[allow(clippy::too_many_arguments)]
 pub fn combined_json(
-    input_files: Vec<PathBuf>,
+    input_paths: Vec<PathBuf>,
     vyper: &VyperCompiler,
     evm_version: Option<era_compiler_common::EVMVersion>,
+    enable_decimals: bool,
+    metadata_hash_type: era_compiler_common::HashType,
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
-    include_metadata_hash: bool,
-    suppressed_warnings: Vec<WarningType>,
+    llvm_options: Vec<String>,
+    suppressed_messages: Vec<MessageType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
-    output_directory: Option<PathBuf>,
-    overwrite: bool,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<VyperCompilerCombinedJson> {
     let zkvyper_version = semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid");
 
-    if let Some(ref debug_config) = debug_config {
-        for path in input_files.iter() {
-            let lll_debug =
-                vyper.lll_debug(path.as_path(), evm_version, vyper_optimizer_enabled)?;
-            debug_config.dump_lll(path.to_string_lossy().as_ref(), None, lll_debug.as_str())?;
-        }
-    }
+    let output_selection = vec![
+        VyperSelection::ABI,
+        VyperSelection::MethodIdentifiers,
+        VyperSelection::StorageLayout,
+        VyperSelection::UserDocumentation,
+        VyperSelection::DeveloperDocumentation,
+        VyperSelection::ProjectMetadata,
+    ];
 
     let project: Project = vyper.batch(
         &vyper.version.default,
-        input_files.clone(),
+        input_paths,
+        output_selection.as_slice(),
         evm_version,
+        enable_decimals,
         vyper_optimizer_enabled,
     )?;
 
+    if let Some(ref debug_config) = debug_config {
+        for (path, contract) in project.contracts.iter() {
+            if let Some(ir_string) = contract.ir_string() {
+                debug_config.dump_lll(path.as_str(), None, ir_string.as_str())?;
+            }
+        }
+    }
+
     let build = project.compile(
         evm_version,
+        metadata_hash_type,
         optimizer_settings,
-        include_metadata_hash,
-        zkevm_assembly::RunningVmEncodingMode::Production,
-        suppressed_warnings,
+        llvm_options,
+        suppressed_messages,
         debug_config,
     )?;
 
-    let mut combined_json = vyper.combined_json(input_files.as_slice(), evm_version)?;
-    build.write_to_combined_json(&mut combined_json, &zkvyper_version)?;
+    let combined_json = build.into_combined_json(Some(&vyper.version.default), &zkvyper_version);
 
-    match output_directory {
-        Some(output_directory) => {
-            std::fs::create_dir_all(output_directory.as_path())?;
+    Ok(combined_json)
+}
 
-            combined_json.write_to_directory(output_directory.as_path(), overwrite)?;
-        }
-        None => writeln!(
-            std::io::stdout(),
-            "{}",
-            serde_json::to_string(&combined_json).expect("Always valid")
-        )?,
+///
+/// Runs the disassembler for EraVM bytecode file and prints the output to stdout.
+///
+pub fn disassemble_eravm(paths: Vec<PathBuf>) -> anyhow::Result<()> {
+    let target_machine = era_compiler_llvm_context::TargetMachine::new(
+        era_compiler_common::Target::EraVM,
+        &era_compiler_llvm_context::OptimizerSettings::cycles(),
+        &[],
+    )?;
+
+    let disassemblies: Vec<(PathBuf, String)> = paths
+        .into_iter()
+        .map(|path| {
+            let bytecode = match path.extension().and_then(|extension| extension.to_str()) {
+                Some("hex") => {
+                    let string = std::fs::read_to_string(path.as_path())?;
+                    let hexadecimal_string =
+                        string.trim().strip_prefix("0x").unwrap_or(string.as_str());
+                    hex::decode(hexadecimal_string)?
+                }
+                Some("zbin") => std::fs::read(path.as_path())?,
+                Some(extension) => anyhow::bail!(
+                    "Invalid file extension: {extension}. Supported extensions: *.hex, *.zbin"
+                ),
+                None => {
+                    anyhow::bail!("Missing file extension. Supported extensions: *.hex, *.zbin")
+                }
+            };
+
+            let disassembly =
+                era_compiler_llvm_context::eravm_disassemble(&target_machine, bytecode.as_slice())?;
+            Ok((path, disassembly))
+        })
+        .collect::<anyhow::Result<Vec<(PathBuf, String)>>>()?;
+
+    for (path, disassembly) in disassemblies.into_iter() {
+        writeln!(std::io::stderr(), "File {path:?} disassembly:\n\n")?;
+        writeln!(std::io::stdout(), "{disassembly}")?;
+        writeln!(std::io::stderr(), "\n\n")?;
     }
-    std::process::exit(0);
+    std::process::exit(era_compiler_common::EXIT_CODE_SUCCESS);
+}
+
+///
+/// Normalizes an input path by converting it to POSIX format.
+///
+pub fn path_to_posix(path: &Path) -> anyhow::Result<PathBuf> {
+    let path = path
+        .to_slash()
+        .ok_or_else(|| anyhow::anyhow!("Error: input path {path:?} POSIX conversion error"))?
+        .to_string();
+    let path = PathBuf::from(path.as_str());
+    Ok(path)
 }

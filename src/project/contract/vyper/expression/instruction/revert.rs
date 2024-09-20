@@ -2,16 +2,13 @@
 //! The `revert` instruction.
 //!
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use crate::project::contract::vyper::expression::instruction::Instruction;
 use crate::project::contract::vyper::expression::Expression;
 
 ///
 /// The `revert` instruction.
 ///
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct Revert([Box<Expression>; 2]);
 
 impl Default for Revert {
@@ -31,7 +28,7 @@ impl Revert {
         context: &mut era_compiler_llvm_context::EraVMContext<D>,
     ) -> anyhow::Result<()>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         let arguments = Instruction::translate_arguments_llvm::<D, 2>(self.0, context)?;
         era_compiler_llvm_context::eravm_evm_return::revert(

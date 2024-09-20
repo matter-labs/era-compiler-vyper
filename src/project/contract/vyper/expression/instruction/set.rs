@@ -2,9 +2,6 @@
 //! The `set` instruction.
 //!
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use era_compiler_llvm_context::IContext;
 
 use crate::project::contract::vyper::expression::Expression;
@@ -12,7 +9,7 @@ use crate::project::contract::vyper::expression::Expression;
 ///
 /// The Vyper LLL-specific `set` instruction.
 ///
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct Set([Box<Expression>; 2]);
 
 impl Set {
@@ -24,7 +21,7 @@ impl Set {
         context: &mut era_compiler_llvm_context::EraVMContext<D>,
     ) -> anyhow::Result<()>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         let [identifier, value] = self.0;
         let identifier = identifier.try_into_identifier()?;

@@ -2,9 +2,6 @@
 //! The `exit_to` instruction.
 //!
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use era_compiler_llvm_context::IContext;
 
 use crate::project::contract::vyper::expression::Expression;
@@ -12,7 +9,7 @@ use crate::project::contract::vyper::expression::Expression;
 ///
 /// The Vyper LLL-specific `exit_to` instruction.
 ///
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct ExitTo(Vec<Expression>);
 
 impl ExitTo {
@@ -24,7 +21,7 @@ impl ExitTo {
         context: &mut era_compiler_llvm_context::EraVMContext<D>,
     ) -> anyhow::Result<()>
     where
-        D: era_compiler_llvm_context::EraVMDependency + Clone,
+        D: era_compiler_llvm_context::Dependency,
     {
         let label_name = self.0.remove(0).try_into_identifier()?;
         if label_name.as_str() == crate::r#const::VARIABLE_IDENTIFIER_RETURN_PC {
@@ -43,7 +40,9 @@ impl ExitTo {
             .value
             .get_basic_blocks()
             .iter()
-            .find(|block| block.get_name().to_string_lossy() == label_name)
+            .find(|block| {
+                block.get_name().to_string_lossy() == Expression::safe_label(label_name).as_str()
+            })
             .copied()
             .ok_or_else(|| anyhow::anyhow!("Block `{}` does not exist", label_name))?;
 

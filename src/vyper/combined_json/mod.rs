@@ -9,34 +9,43 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use self::contract::Contract;
 
 ///
 /// The `vyper --combined-json` output.
 ///
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, serde::Serialize)]
 pub struct CombinedJson {
     /// The contract entries.
     #[serde(flatten)]
     pub contracts: BTreeMap<String, Contract>,
     /// The `vyper` compiler version.
-    pub version: String,
-    /// The `zkvyper` compiler version.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub zk_version: Option<String>,
+    pub version: Option<String>,
+
+    /// The project metadata.
+    pub project_metadata: serde_json::Value,
+    /// The `zkvyper` compiler version.
+    pub zk_version: String,
 }
 
 impl CombinedJson {
     ///
-    /// Removes EVM artifacts to prevent their accidental usage.
+    /// A shortcut constructor.
     ///
-    pub fn remove_evm(&mut self) {
-        for (_, contract) in self.contracts.iter_mut() {
-            contract.bytecode = None;
-            contract.bytecode_runtime = None;
+    /// Contracts with ABI and method identifiers must be provided here.
+    ///
+    pub fn new(
+        contracts: BTreeMap<String, Contract>,
+        version: Option<&semver::Version>,
+        project_metadata: serde_json::Value,
+        zk_version: &semver::Version,
+    ) -> Self {
+        Self {
+            contracts,
+            version: version.map(|version| version.to_string()),
+            project_metadata,
+            zk_version: zk_version.to_string(),
         }
     }
 
@@ -57,6 +66,7 @@ impl CombinedJson {
             );
         }
 
+        std::fs::create_dir_all(output_directory)?;
         File::create(&file_path)
             .map_err(|error| anyhow::anyhow!("File {:?} creating error: {}", file_path, error))?
             .write_all(serde_json::to_vec(&self).expect("Always valid").as_slice())
