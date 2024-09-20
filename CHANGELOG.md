@@ -7,6 +7,10 @@
 - The support for IPFS metadata hash type
 - The EraVM disassembler
 
+### Fixed
+
+- The error code when no input files are provided
+
 ## [1.5.4] - 2024-08-27
 
 ### Added
