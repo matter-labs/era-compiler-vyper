@@ -423,7 +423,7 @@ impl era_compiler_llvm_context::Dependency for DependencyData {
         anyhow::bail!("Dependency mechanism is not available in Vyper");
     }
 
-    fn resolve_library(&self, _path: &str) -> anyhow::Result<String> {
-        anyhow::bail!("Dependency mechanism is not available in Vyper");
+    fn resolve_library(&self, _path: &str) -> Option<String> {
+        None
     }
 }
