@@ -37,22 +37,15 @@ jobs:
         uses: matter-labs/era-compiler-ci/.github/actions/build-llvm@v1
         with:
           target-env: 'gnu'
-          enable-assertions: 'false'
+          enable-assertions: 'true'
+          build-type: RelWithDebInfo
           sanitizer: ${{ inputs.llvm-sanitizer || 'Address' }}
-
-      - name: Build zkvyper
-        uses: ./.github/actions/build
-        with:
-          target: ${{ env.TARGET }}
-          sanitizer: ${{ inputs.rust-sanitizer || 'address' }}
-          build-type: 'debug'
 
       - name: Run tests
         uses: matter-labs/era-compiler-ci/.github/actions/rust-unit-tests@v1
         with:
           target: ${{ env.TARGET }}
           sanitizer: ${{ inputs.rust-sanitizer || 'address' }}
-          build-type: 'debug'
 
       - name: Send Slack notification
         uses: 8398a7/action-slack@v3
