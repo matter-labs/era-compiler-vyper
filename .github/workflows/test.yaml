@@ -37,6 +37,9 @@ jobs:
         with:
           target-env: 'gnu'
           enable-assertions: 'false'
+          build-type: Release
+          ccache-key: ${{ format('llvm-{0}-{1}-gnu', runner.os, runner.arch) }}
+          save-ccache: 'false'
 
       - name: Cargo checks
         uses: matter-labs/era-compiler-ci/.github/actions/cargo-check@v1
@@ -92,6 +95,8 @@ jobs:
           target-env: ${{ contains(matrix.target, 'musl') && 'musl' || 'gnu' }}
           enable-assertions: 'true'
           build-type: RelWithDebInfo
+          ccache-key: ${{ format('llvm-{0}-{1}-{2}', runner.os, runner.arch, contains(matrix.target, 'musl') && 'musl' || 'gnu') }}
+          save-ccache: 'false'
 
       - name: Run tests
         uses: matter-labs/era-compiler-ci/.github/actions/rust-unit-tests@v1
