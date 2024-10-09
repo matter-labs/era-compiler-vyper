@@ -16,6 +16,7 @@ mod fallback;
 mod format;
 mod llvm_debug_log;
 mod llvm_ir;
+mod llvm_options;
 mod llvm_verify_each;
 mod metadata_hash;
 mod optimization;

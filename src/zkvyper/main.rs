@@ -110,7 +110,12 @@ fn main_inner() -> anyhow::Result<()> {
     let llvm_options: Vec<String> = arguments
         .llvm_options
         .as_ref()
-        .map(|options| options.split(' ').map(|option| option.to_owned()).collect())
+        .map(|options| {
+            options
+                .split_whitespace()
+                .map(|option| option.to_owned())
+                .collect()
+        })
         .unwrap_or_default();
 
     let vyper_optimizer_enabled = !arguments.disable_vyper_optimizer;
