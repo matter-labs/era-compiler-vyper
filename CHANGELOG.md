@@ -10,6 +10,7 @@
 ### Fixed
 
 - The error code when no input files are provided
+- Several issues with fragile parsing of `--llvm-options`
 
 ## [1.5.4] - 2024-08-27
 
