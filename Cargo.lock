@@ -532,7 +532,7 @@ dependencies = [
 [[package]]
 name = "era-compiler-llvm-context"
 version = "1.5.0"
-source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=main#000c36938519192e5b52fceffb729bbf3f4287c7"
+source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=az-fix-intrinsic-name-pointer-order#a217540e7dbfe266445f1cba0917469bca0f56e5"
 dependencies = [
  "anyhow",
  "era-compiler-common",
