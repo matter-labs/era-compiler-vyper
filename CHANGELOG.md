@@ -1,11 +1,12 @@
 # The `zkvyper` changelog
 
-## [Unreleased]
+## [1.5.5] - 2024-10-14
 
 ### Added
 
 - The support for IPFS metadata hash type
 - The EraVM disassembler
+- More LLVM optimizations
 
 ### Fixed
 
