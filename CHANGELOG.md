@@ -1,5 +1,11 @@
 # The `zkvyper` changelog
 
+## [1.5.6] - 2024-10-16
+
+### Fixed
+
+- The broken `--version` CLI endpoint
+
 ## [1.5.5] - 2024-10-14
 
 ### Added
