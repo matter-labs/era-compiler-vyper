@@ -23,6 +23,7 @@ mod optimization;
 mod output_dir;
 mod overwrite;
 mod supress;
+mod version;
 mod vyper;
 
 /// The solidity contract name
