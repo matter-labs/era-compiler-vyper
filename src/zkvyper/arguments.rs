@@ -156,10 +156,14 @@ impl Arguments {
             }
         }
 
-        if self.version && std::env::args().count() > 2 {
-            anyhow::bail!(
-                "Error: No other options are allowed while getting the compiler version."
-            );
+        if self.version {
+            if std::env::args().count() > 2 {
+                anyhow::bail!(
+                    "Error: No other options are allowed while getting the compiler version."
+                );
+            } else {
+                return Ok(());
+            }
         }
 
         if self.input_paths.is_empty() {
