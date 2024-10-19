@@ -3,6 +3,7 @@
 //!
 
 pub mod contract;
+pub mod extra_data;
 
 use std::collections::BTreeMap;
 use std::fs::File;
@@ -10,6 +11,7 @@ use std::io::Write;
 use std::path::Path;
 
 use self::contract::Contract;
+use self::extra_data::ExtraData;
 
 ///
 /// The `vyper --combined-json` output.
@@ -19,12 +21,11 @@ pub struct CombinedJson {
     /// The contract entries.
     #[serde(flatten)]
     pub contracts: BTreeMap<String, Contract>,
+    /// The extra project data.
+    pub extra_data: ExtraData,
     /// The `vyper` compiler version.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
-
-    /// The project metadata.
-    pub project_metadata: serde_json::Value,
     /// The `zkvyper` compiler version.
     pub zk_version: String,
 }
@@ -37,14 +38,14 @@ impl CombinedJson {
     ///
     pub fn new(
         contracts: BTreeMap<String, Contract>,
+        extra_data: ExtraData,
         version: Option<&semver::Version>,
-        project_metadata: serde_json::Value,
         zk_version: &semver::Version,
     ) -> Self {
         Self {
             contracts,
+            extra_data,
             version: version.map(|version| version.to_string()),
-            project_metadata,
             zk_version: zk_version.to_string(),
         }
     }

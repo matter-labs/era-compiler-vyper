@@ -12,6 +12,7 @@ use std::path::PathBuf;
 
 use normpath::PathExt;
 
+use crate::vyper::combined_json::extra_data::ExtraData as CombinedJsonExtraData;
 use crate::vyper::combined_json::CombinedJson;
 use crate::vyper::selection::Selection as VyperSelection;
 use crate::vyper::Compiler as VyperCompiler;
@@ -142,6 +143,8 @@ impl Build {
             })
             .collect();
 
-        CombinedJson::new(contracts, version, self.project_metadata, zkvyper_version)
+        let extra_data = CombinedJsonExtraData::new(self.project_metadata);
+
+        CombinedJson::new(contracts, extra_data, version, zkvyper_version)
     }
 }

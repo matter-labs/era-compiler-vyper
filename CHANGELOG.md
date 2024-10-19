@@ -1,5 +1,11 @@
 # The `zkvyper` changelog
 
+## [Unreleased]
+
+### Changed
+
+- Wrapped project metadata into another object for future extensibility
+
 ## [1.5.6] - 2024-10-16
 
 ### Fixed
