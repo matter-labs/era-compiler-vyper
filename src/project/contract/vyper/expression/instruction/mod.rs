@@ -1010,7 +1010,7 @@ impl Instruction {
                 )?;
 
                 context.build_memcpy(
-                    context.intrinsics().memory_move,
+                    context.intrinsics().memory_move_heap,
                     destination,
                     source,
                     arguments[2].into_int_value(),
