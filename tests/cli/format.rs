@@ -8,7 +8,6 @@ fn run_with_format_options() -> anyhow::Result<()> {
     let format_args = [
         "combined_json",
         "ir_json",
-        "metadata",
         "ast",
         "abi",
         "method_identifiers",

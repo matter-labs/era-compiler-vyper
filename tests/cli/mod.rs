@@ -22,7 +22,7 @@ mod metadata_hash;
 mod optimization;
 mod output_dir;
 mod overwrite;
-mod supress;
+mod suppress;
 mod version;
 mod vyper;
 

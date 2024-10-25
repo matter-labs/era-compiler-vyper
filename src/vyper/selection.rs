@@ -13,8 +13,6 @@ pub enum Selection {
     CombinedJson,
     /// The JSON LLL IR.
     IRJson,
-    /// The metadata.
-    Metadata,
     /// The AST.
     AST,
     /// The ABI data.
@@ -54,7 +52,6 @@ impl FromStr for Selection {
         Ok(match string {
             "combined_json" => Self::CombinedJson,
             "ir_json" => Self::IRJson,
-            "metadata" => Self::Metadata,
             "ast" => Self::AST,
             "abi" => Self::ABI,
             "method_identifiers" => Self::MethodIdentifiers,
@@ -73,7 +70,6 @@ impl std::fmt::Display for Selection {
         match self {
             Self::CombinedJson => write!(f, "combined_json"),
             Self::IRJson => write!(f, "ir_json"),
-            Self::Metadata => write!(f, "metadata"),
             Self::AST => write!(f, "ast"),
             Self::ABI => write!(f, "abi"),
             Self::MethodIdentifiers => write!(f, "method_identifiers"),

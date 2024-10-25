@@ -7,7 +7,6 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
-use crate::metadata::Metadata as SourceMetadata;
 use crate::project::contract::vyper::ast::AST;
 use crate::project::contract::vyper::expression::Expression as IR;
 use crate::vyper::combined_json::contract::warning::Warning as CombinedJsonContractWarning;
@@ -23,8 +22,6 @@ pub struct Contract {
     pub build: era_compiler_llvm_context::EraVMBuild,
     /// The LLL IR parsed from JSON.
     pub ir: Option<IR>,
-    /// The source metadata.
-    pub source_metadata: Option<SourceMetadata>,
     /// The contract AST.
     pub ast: Option<AST>,
     /// The `vyper` method identifiers output.
@@ -48,7 +45,6 @@ impl Contract {
     pub fn new(
         build: era_compiler_llvm_context::EraVMBuild,
         ir: Option<IR>,
-        source_metadata: Option<SourceMetadata>,
         ast: Option<AST>,
         method_identifiers: Option<BTreeMap<String, String>>,
         abi: Option<serde_json::Value>,
@@ -60,7 +56,6 @@ impl Contract {
         Self {
             build,
             ir,
-            source_metadata,
             ast,
             method_identifiers,
             abi,
@@ -77,7 +72,6 @@ impl Contract {
     pub fn new_inner(build: era_compiler_llvm_context::EraVMBuild) -> Self {
         Self::new(
             build,
-            None,
             None,
             None,
             Some(BTreeMap::new()),
@@ -128,13 +122,6 @@ impl Contract {
                     serde_json::to_writer(
                         std::io::stdout(),
                         self.ir.as_ref().expect("Always exists"),
-                    )?;
-                    writeln!(std::io::stdout())?;
-                }
-                VyperSelection::Metadata => {
-                    serde_json::to_writer(
-                        std::io::stdout(),
-                        self.source_metadata.as_ref().expect("Always exists"),
                     )?;
                     writeln!(std::io::stdout())?;
                 }
@@ -258,13 +245,6 @@ impl Contract {
                     serde_json::to_writer(
                         &extra_output_file,
                         self.ir.as_ref().expect("Always exists"),
-                    )?;
-                    writeln!(&extra_output_file)?;
-                }
-                VyperSelection::Metadata => {
-                    serde_json::to_writer(
-                        &extra_output_file,
-                        self.source_metadata.as_ref().expect("Always exists"),
                     )?;
                     writeln!(&extra_output_file)?;
                 }

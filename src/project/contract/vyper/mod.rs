@@ -13,7 +13,6 @@ use era_compiler_llvm_context::IContext;
 
 use crate::build::contract::Contract as ContractBuild;
 use crate::message_type::MessageType;
-use crate::metadata::Metadata as SourceMetadata;
 use crate::project::dependency_data::DependencyData;
 use crate::vyper::selection::Selection as VyperSelection;
 
@@ -32,8 +31,6 @@ pub struct Contract {
     pub source_code: String,
     /// The LLL IR parsed from JSON.
     pub ir: Expression,
-    /// The source metadata.
-    pub source_metadata: SourceMetadata,
     /// The contract AST.
     pub ast: AST,
     /// The contract ABI.
@@ -58,7 +55,6 @@ impl Contract {
         version: semver::Version,
         source_code: String,
         ir: Expression,
-        source_metadata: SourceMetadata,
         ast: AST,
         abi: serde_json::Value,
         method_identifiers: BTreeMap<String, String>,
@@ -70,7 +66,6 @@ impl Contract {
             version,
             source_code,
             ir,
-            source_metadata,
             ast,
             abi,
             method_identifiers,
@@ -92,7 +87,6 @@ impl Contract {
         lines: Vec<&str>,
     ) -> anyhow::Result<Self> {
         let mut ir = None;
-        let mut metadata = None;
         let mut ast = None;
         let mut abi = None;
         let mut method_identifiers = None;
@@ -104,9 +98,6 @@ impl Contract {
             match selection {
                 VyperSelection::IRJson => {
                     ir = Some(era_compiler_common::deserialize_from_str(line)?);
-                }
-                VyperSelection::Metadata => {
-                    metadata = Some(era_compiler_common::deserialize_from_str(line)?);
                 }
                 VyperSelection::AST => {
                     ast = Some(era_compiler_common::deserialize_from_str(line)?);
@@ -143,7 +134,6 @@ impl Contract {
             version,
             source_code,
             ir.expect("Always exists"),
-            metadata.expect("Always exists"),
             ast.expect("Always exists"),
             abi.expect("Always exists"),
             method_identifiers.expect("Always exists"),
@@ -185,11 +175,6 @@ impl Contract {
 
         let ir = if output_selection.contains(&VyperSelection::IRJson) {
             Some(self.ir.clone())
-        } else {
-            None
-        };
-        let source_metadata = if output_selection.contains(&VyperSelection::Metadata) {
-            Some(self.source_metadata.clone())
         } else {
             None
         };
@@ -257,7 +242,6 @@ impl Contract {
         Ok(ContractBuild::new(
             build,
             ir,
-            source_metadata,
             ast,
             method_identifiers,
             abi,
@@ -362,37 +346,8 @@ where
 
         let mut functions = Vec::with_capacity(function_expressions.capacity());
         for (label, expression, code_type) in function_expressions.into_iter() {
-            let mut metadata_label = label
-                .strip_suffix(format!("_{}", era_compiler_llvm_context::CodeType::Deploy).as_str())
-                .unwrap_or(label.as_str());
-            metadata_label = label
-                .strip_suffix(format!("_{}", era_compiler_llvm_context::CodeType::Runtime).as_str())
-                .unwrap_or(metadata_label);
-            metadata_label = label
-                .strip_suffix(format!("_{}", crate::r#const::LABEL_SUFFIX_COMMON).as_str())
-                .unwrap_or(metadata_label);
-
-            let metadata_name =
-                self.source_metadata
-                    .function_info
-                    .iter()
-                    .find_map(|(name, function)| {
-                        if Expression::safe_label(metadata_label) == function.ir_identifier() {
-                            Some(name.to_owned())
-                        } else {
-                            None
-                        }
-                    });
-            let metadata = match metadata_name {
-                Some(metadata_name) => self
-                    .source_metadata
-                    .function_info
-                    .get(metadata_name.as_str())
-                    .cloned(),
-                None => None,
-            };
             functions.push((
-                Function::new(Expression::safe_label(label.as_str()), metadata, expression),
+                Function::new(Expression::safe_label(label.as_str()), expression),
                 code_type,
             ));
         }

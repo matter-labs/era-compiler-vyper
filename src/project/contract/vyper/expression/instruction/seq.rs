@@ -21,7 +21,7 @@ use crate::project::contract::vyper::expression::Expression;
 /// return statement and some logic of hoisting the contract methods to the upper levels.
 ///
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize, Clone)]
-pub struct Seq(Vec<Expression>);
+pub struct Seq(pub Vec<Expression>);
 
 impl Seq {
     ///
