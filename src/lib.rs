@@ -10,7 +10,6 @@
 pub mod build;
 pub mod r#const;
 pub mod message_type;
-pub mod metadata;
 pub mod process;
 pub mod project;
 pub mod vyper;
@@ -18,8 +17,6 @@ pub mod vyper;
 pub use self::build::contract::Contract as ContractBuild;
 pub use self::build::Build;
 pub use self::message_type::MessageType;
-pub use self::metadata::function::Function as FunctionMetadata;
-pub use self::metadata::Metadata;
 pub use self::process::input::Input as ProcessInput;
 pub use self::process::output::Output as ProcessOutput;
 pub use self::process::run as run_recursive;

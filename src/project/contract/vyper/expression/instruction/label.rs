@@ -14,7 +14,7 @@ use crate::project::contract::vyper::expression::Expression;
 /// The Vyper LLL-specific `label` instruction.
 ///
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
-pub struct Label(Vec<Expression>);
+pub struct Label(pub Vec<Expression>);
 
 impl Label {
     ///
@@ -93,6 +93,32 @@ impl Label {
             Some(_) => false,
             None => true,
         }
+    }
+
+    ///
+    /// Checks whether the label represents a function with a return value.
+    ///
+    pub fn has_return_value(&self) -> bool {
+        let arguments = match self.0.get(1) {
+            Some(Expression::Instruction(Instruction::Var_List(ref arguments))) => arguments,
+            Some(_) | None => return false,
+        };
+        for variable in [
+            crate::r#const::VARIABLE_IDENTIFIER_RETURN_PC,
+            crate::r#const::VARIABLE_IDENTIFIER_RETURN_BUFFER,
+        ]
+        .into_iter()
+        {
+            if !arguments.iter().any(|argument| {
+                argument
+                    .try_into_identifier()
+                    .map(|identifier| identifier.as_str() == variable)
+                    .unwrap_or_default()
+            }) {
+                return false;
+            }
+        }
+        true
     }
 
     ///

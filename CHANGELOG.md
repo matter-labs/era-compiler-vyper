@@ -5,6 +5,11 @@
 ### Changed
 
 - Wrapped project metadata into another object for future extensibility
+- Supported functions with a return buffer without using `vyper` function metadata
+
+### Fixed
+
+- Incorrect handling of return buffer when `vyper` function metadata is missing
 
 ## [1.5.6] - 2024-10-16
 

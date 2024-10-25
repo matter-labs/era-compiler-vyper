@@ -200,7 +200,6 @@ impl Compiler {
         vyper_selection.extend(
             [
                 Selection::IRJson,
-                Selection::Metadata,
                 Selection::AST,
                 Selection::ABI,
                 Selection::MethodIdentifiers,

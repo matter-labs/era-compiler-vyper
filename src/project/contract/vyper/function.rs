@@ -7,7 +7,8 @@ use inkwell::types::BasicType;
 use era_compiler_llvm_context::EraVMWriteLLVM;
 use era_compiler_llvm_context::IContext;
 
-use crate::metadata::function::Function as FunctionMetadata;
+use crate::project::contract::vyper::expression::instruction::seq::Seq;
+use crate::project::contract::vyper::expression::instruction::Instruction;
 use crate::project::contract::vyper::expression::Expression;
 
 ///
@@ -17,8 +18,6 @@ use crate::project::contract::vyper::expression::Expression;
 pub struct Function {
     /// The function name.
     pub name: String,
-    /// The function metadata.
-    pub metadata: Option<FunctionMetadata>,
     /// The function body expression.
     pub expression: Expression,
 }
@@ -27,12 +26,30 @@ impl Function {
     ///
     /// A shortcut constructor.
     ///
-    pub fn new(name: String, metadata: Option<FunctionMetadata>, expression: Expression) -> Self {
-        Self {
-            name,
-            metadata,
-            expression,
+    pub fn new(name: String, expression: Expression) -> Self {
+        Self { name, expression }
+    }
+
+    ///
+    /// Checks whether the function has a return value.
+    ///
+    pub fn has_return_value(&self) -> bool {
+        if !self
+            .name
+            .starts_with(crate::r#const::FUNCTION_PREFIX_INTERNAL)
+        {
+            return false;
         }
+
+        if let Expression::Instruction(Instruction::Seq(Seq(ref expressions))) = self.expression {
+            if let Some(Expression::Instruction(Instruction::Label(label))) = expressions.first() {
+                if label.has_return_value() {
+                    return true;
+                }
+            }
+        }
+
+        false
     }
 }
 
@@ -44,16 +61,9 @@ where
         &mut self,
         context: &mut era_compiler_llvm_context::EraVMContext<D>,
     ) -> anyhow::Result<()> {
-        let mut argument_types = vec![];
-        if self
-            .name
-            .starts_with(crate::r#const::FUNCTION_PREFIX_INTERNAL)
-        {
-            if let Some(ref metadata) = self.metadata {
-                if !metadata.return_type().is_empty() && metadata.return_type() != "None" {
-                    argument_types.push(context.field_type().as_basic_type_enum());
-                }
-            }
+        let mut argument_types = Vec::with_capacity(1);
+        if self.has_return_value() {
+            argument_types.push(context.field_type().as_basic_type_enum());
         }
 
         let function = context.add_function(

@@ -15,7 +15,6 @@ use rayon::iter::ParallelIterator;
 use crate::build::contract::Contract as ContractBuild;
 use crate::build::Build;
 use crate::message_type::MessageType;
-use crate::metadata::Metadata as SourceMetadata;
 use crate::process::input::Input as ProcessInput;
 use crate::process::output::Output as ProcessOutput;
 use crate::project::contract::vyper::ast::AST as VyperAST;
@@ -104,7 +103,6 @@ impl Project {
                     version.to_owned(),
                     contract.source_code.expect("Must be set by the tester"),
                     contract.ir,
-                    SourceMetadata::default(),
                     ast,
                     serde_json::Value::Null,
                     contract.evm.method_identifiers,
