@@ -1,6 +1,10 @@
 # The `zkvyper` changelog
 
-## [Unreleased]
+## [1.5.7] - 2024-10-31
+
+### Added
+
+- More LLVM optimizations
 
 ### Changed
 
