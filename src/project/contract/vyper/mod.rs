@@ -324,39 +324,31 @@ where
             .extract_functions()?
             .into_iter()
             .map(|(label, expression)| {
-                (
-                    label,
-                    expression,
-                    era_compiler_llvm_context::CodeType::Deploy,
-                )
+                (label, expression, era_compiler_common::CodeSegment::Deploy)
             })
-            .collect::<Vec<(String, Expression, era_compiler_llvm_context::CodeType)>>();
+            .collect::<Vec<(String, Expression, era_compiler_common::CodeSegment)>>();
         function_expressions.extend(
             runtime_code
                 .extract_functions()?
                 .into_iter()
                 .map(|(label, expression)| {
-                    (
-                        label,
-                        expression,
-                        era_compiler_llvm_context::CodeType::Runtime,
-                    )
+                    (label, expression, era_compiler_common::CodeSegment::Runtime)
                 })
-                .collect::<Vec<(String, Expression, era_compiler_llvm_context::CodeType)>>(),
+                .collect::<Vec<(String, Expression, era_compiler_common::CodeSegment)>>(),
         );
 
         let mut functions = Vec::with_capacity(function_expressions.capacity());
-        for (label, expression, code_type) in function_expressions.into_iter() {
+        for (label, expression, code_segment) in function_expressions.into_iter() {
             functions.push((
                 Function::new(Expression::safe_label(label.as_str()), expression),
-                code_type,
+                code_segment,
             ));
         }
-        for (function, _code_type) in functions.iter_mut() {
+        for (function, _code_segment) in functions.iter_mut() {
             function.declare(context)?;
         }
-        for (function, code_type) in functions.into_iter() {
-            context.set_code_type(code_type);
+        for (function, code_segment) in functions.into_iter() {
+            context.set_code_segment(code_segment);
             function.into_llvm(context)?;
         }
 
