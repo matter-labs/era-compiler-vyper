@@ -6,6 +6,10 @@
 
 - Updated to Rust v1.82.0
 
+### Fixed
+
+- Cleared return data after calling `CREATE`/`CREATE2`
+
 ## [1.5.7] - 2024-10-31
 
 ### Added
