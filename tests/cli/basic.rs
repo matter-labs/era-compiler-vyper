@@ -2,7 +2,6 @@ use crate::{cli, common};
 use predicates::prelude::*;
 use tempfile::TempDir;
 
-/// id1936
 #[test]
 fn run_zkvyper_without_any_options() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -12,7 +11,7 @@ fn run_zkvyper_without_any_options() -> anyhow::Result<()> {
     let result = cli::execute_zkvyper(args)?;
     let zkvyper_status = result
         .failure()
-        .stderr(predicate::str::contains("Vyper compiler for ZKsync"))
+        .stderr(predicate::str::contains("Error: No input files provided."))
         .get_output()
         .status
         .code()
@@ -26,7 +25,6 @@ fn run_zkvyper_without_any_options() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// id1978
 #[test]
 fn default_run_without_input_files() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -51,7 +49,6 @@ fn default_run_without_input_files() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// id1978
 #[test]
 fn default_run_with_a_contract_only() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -74,7 +71,6 @@ fn default_run_with_a_contract_only() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// id1983
 #[test]
 fn default_run_command_from_help() -> anyhow::Result<()> {
     let _ = common::setup();

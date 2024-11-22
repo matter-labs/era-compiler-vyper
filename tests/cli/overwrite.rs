@@ -2,7 +2,6 @@ use crate::{cli, common};
 use predicates::prelude::*;
 use tempfile::TempDir;
 
-/// id1983
 #[test]
 fn default_run_with_overwrite_output_dir() -> anyhow::Result<()> {
     let _ = common::setup();
