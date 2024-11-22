@@ -532,7 +532,7 @@ dependencies = [
 [[package]]
 name = "era-compiler-llvm-context"
 version = "1.5.0"
-source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=main#5350b284c14ff19309d02c9c38a0fe88c93e037b"
+source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=az-reset-return-data-after-create#683b3348d284d845988fb400d6718dd1d6eb94f9"
 dependencies = [
  "anyhow",
  "era-compiler-common",
@@ -976,7 +976,7 @@ dependencies = [
 [[package]]
 name = "inkwell"
 version = "0.4.0"
-source = "git+https://github.com/matter-labs-forks/inkwell?branch=llvm-17#c506921a593e3d1e11c3e84142d2a32a38d483fc"
+source = "git+https://github.com/matter-labs-forks/inkwell?branch=llvm-17#2b02c986508b68a38f9eb0f46919d5d1a1b0bfc1"
 dependencies = [
  "either",
  "inkwell_internals",
@@ -991,7 +991,7 @@ dependencies = [
 [[package]]
 name = "inkwell_internals"
 version = "0.9.0"
-source = "git+https://github.com/matter-labs-forks/inkwell?branch=llvm-17#c506921a593e3d1e11c3e84142d2a32a38d483fc"
+source = "git+https://github.com/matter-labs-forks/inkwell?branch=llvm-17#2b02c986508b68a38f9eb0f46919d5d1a1b0bfc1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1116,7 +1116,7 @@ checksum = "78b3ae25bc7c8c38cec158d1f2757ee79e9b3740fbc7ccf0e59e4b08d793fa89"
 [[package]]
 name = "llvm-sys"
 version = "170.0.1"
-source = "git+https://github.com/matter-labs-forks/llvm-sys.rs?branch=llvm-17.0#4b0421ff90757ed7a701ce5b81926515605dd4bd"
+source = "git+https://github.com/matter-labs-forks/llvm-sys.rs?branch=llvm-17.0#b06c3d1989fa5d77e491e6aea709dd5c76621aff"
 dependencies = [
  "anyhow",
  "cc",
