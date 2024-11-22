@@ -1,7 +1,6 @@
 use crate::{cli, common};
 use predicates::prelude::*;
 
-/// id1939
 #[test]
 fn run_with_disable_vyper_optimizer() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -14,7 +13,6 @@ fn run_with_disable_vyper_optimizer() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// id1939:I
 #[test]
 fn run_only_with_disable_vyper_optimizer() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -29,7 +27,6 @@ fn run_only_with_disable_vyper_optimizer() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// id1979
 #[test]
 fn run_with_duplicate_disable_vyper_optimizer() -> anyhow::Result<()> {
     let _ = common::setup();

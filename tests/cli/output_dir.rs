@@ -2,7 +2,6 @@ use crate::{cli, common};
 use predicates::prelude::*;
 use tempfile::TempDir;
 
-/// id1983
 #[test]
 fn default_run_with_output_dir() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -33,7 +32,6 @@ fn default_run_with_output_dir() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// id1983:II
 #[test]
 fn default_run_with_output_dir_and_assembly() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -78,7 +76,6 @@ fn default_run_with_output_dir_and_assembly() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// id1984
 #[test]
 fn default_run_with_dual_output_dir_options() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -94,9 +91,9 @@ fn default_run_with_dual_output_dir_options() -> anyhow::Result<()> {
         tmp_dir_path_zk_vyper,
     ];
     let result = cli::execute_zkvyper(args)?;
-    result
-        .failure()
-        .stderr(predicate::str::contains("was provided more than once"));
+    result.failure().stderr(predicate::str::contains(
+        "error: the argument '--output-dir <OUTPUT_DIR>' cannot be used multiple times",
+    ));
 
     Ok(())
 }

@@ -4,7 +4,6 @@ use predicates::prelude::*;
 /// List of optimization arguments
 const OPTIMIZATION_ARGS: [&str; 6] = ["0", "1", "2", "3", "s", "z"];
 
-/// id1937
 #[test]
 fn test_optimization_valid_flags() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -19,7 +18,6 @@ fn test_optimization_valid_flags() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// id1937:I
 #[test]
 fn test_optimization_missing_contract() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -37,7 +35,6 @@ fn test_optimization_missing_contract() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// id1978
 #[test]
 fn test_optimization_duplicate_flags() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -50,9 +47,9 @@ fn test_optimization_duplicate_flags() -> anyhow::Result<()> {
         ];
         let result = cli::execute_zkvyper(args)?;
 
-        result
-            .failure()
-            .stderr(predicate::str::contains("provided more than once"));
+        result.failure().stderr(predicate::str::contains(
+            "error: the argument '--optimization <OPTIMIZATION>' cannot be used multiple times",
+        ));
     }
 
     Ok(())

@@ -3,7 +3,6 @@ use predicates::prelude::*;
 use std::fs;
 use tempfile::TempDir;
 
-/// id1976:I
 #[test]
 fn run_contract_with_debug_output_dir() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -43,7 +42,6 @@ fn run_contract_with_debug_output_dir() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// id1976:II
 #[test]
 fn run_without_contract_with_debug_output_dir() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -62,7 +60,6 @@ fn run_without_contract_with_debug_output_dir() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// id1976:III
 #[test]
 fn run_with_debug_output_dir_no_folder_arg() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -72,14 +69,13 @@ fn run_with_debug_output_dir_no_folder_arg() -> anyhow::Result<()> {
     let result = cli::execute_zkvyper(args)?;
     result
         .failure()
-        .stderr(predicate::str::contains("requires a value"));
+        .stderr(predicate::str::contains("error: a value is required for '--debug-output-dir <DEBUG_OUTPUT_DIR>' but none was supplied"));
 
     Ok(())
 }
 
-/// id1977
 #[test]
-fn run_with_double_debug_output_dir_option() -> anyhow::Result<()> {
+fn run_with_duplicate_debug_output_dir_option() -> anyhow::Result<()> {
     let _ = common::setup();
     let tmp_dir_zkvyper = TempDir::new()?;
     let args = &[
