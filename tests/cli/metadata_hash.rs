@@ -1,7 +1,6 @@
 use crate::{cli, common};
 use predicates::prelude::*;
 
-/// id1941
 #[test]
 fn run_with_metadata_hash_by_default() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -14,7 +13,6 @@ fn run_with_metadata_hash_by_default() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// id1941:II
 #[test]
 fn run_with_incomplete_metadata_hash_option() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -22,14 +20,13 @@ fn run_with_incomplete_metadata_hash_option() -> anyhow::Result<()> {
 
     // Execute zkvyper command
     let result = cli::execute_zkvyper(args)?;
-    result
-        .failure()
-        .stderr(predicate::str::contains("requires a value"));
+    result.failure().stderr(predicate::str::contains(
+        "error: a value is required for '--metadata-hash <METADATA_HASH>' but none was supplied",
+    ));
 
     Ok(())
 }
 
-/// id1941:III
 #[test]
 fn run_only_with_metadata_hash_option() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -44,9 +41,8 @@ fn run_only_with_metadata_hash_option() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// id1975
 #[test]
-fn run_with_double_metadata_hash_option() -> anyhow::Result<()> {
+fn run_with_duplicate_metadata_hash_option() -> anyhow::Result<()> {
     let _ = common::setup();
     let args = &[
         cli::TEST_VYPER_CONTRACT_PATH,
@@ -56,9 +52,9 @@ fn run_with_double_metadata_hash_option() -> anyhow::Result<()> {
 
     // Execute zkvyper command
     let result = cli::execute_zkvyper(args)?;
-    result
-        .failure()
-        .stderr(predicate::str::contains("was provided more than once"));
+    result.failure().stderr(predicate::str::contains(
+        "error: a value is required for '--metadata-hash <METADATA_HASH>' but none was supplied",
+    ));
 
     Ok(())
 }

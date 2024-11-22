@@ -1,6 +1,6 @@
 [package]
 name = "era-compiler-vyper"
-version = "1.5.7"
+version = "1.5.8"
 authors = [
     "Oleksandr Zarudnyi <a.zarudnyy@matterlabs.dev>",
 ]
@@ -17,7 +17,7 @@ path = "src/zkvyper/main.rs"
 doctest = false
 
 [dependencies]
-structopt = { version = "=0.3.26", default-features = false }
+clap = { version = "=4.5.21", features = ["derive"] }
 anyhow = "=1.0.89"
 which = "=6.0.3"
 path-slash = "=0.2.1"
@@ -33,7 +33,7 @@ hex = "=0.4.3"
 zkevm_opcode_defs = "=0.150.6"
 
 era-compiler-common = { git = "https://github.com/matter-labs/era-compiler-common", branch = "main" }
-era-compiler-llvm-context = { git = "https://github.com/matter-labs/era-compiler-llvm-context", branch = "az-reset-return-data-after-create" }
+era-compiler-llvm-context = { git = "https://github.com/matter-labs/era-compiler-llvm-context", branch = "main" }
 
 [dev-dependencies]
 assert_cmd = "=2.0.16"

@@ -1,7 +1,6 @@
 use crate::{cli, common};
 use predicates::prelude::*;
 
-/// id1942
 #[test]
 fn run_with_vyper() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -15,7 +14,6 @@ fn run_with_vyper() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// id1942:II
 #[test]
 fn run_with_vyper_empty_arg() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -24,13 +22,12 @@ fn run_with_vyper_empty_arg() -> anyhow::Result<()> {
     // Execute zkvyper command
     let result = cli::execute_zkvyper(args)?;
     result.failure().stderr(predicate::str::contains(
-        "requires a value but none was supplied",
+        "error: a value is required for '--vyper <VYPER>' but none was supplied",
     ));
 
     Ok(())
 }
 
-/// id1942:III
 #[test]
 fn run_with_vyper_wrong_arg() -> anyhow::Result<()> {
     let _ = common::setup();

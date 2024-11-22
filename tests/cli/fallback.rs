@@ -1,7 +1,6 @@
 use crate::{cli, common};
 use predicates::prelude::*;
 
-/// id1938
 #[test]
 fn run_with_fallback_oz_option() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -14,7 +13,6 @@ fn run_with_fallback_oz_option() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// id1938:I
 #[test]
 fn run_only_with_fallback_oz_option() -> anyhow::Result<()> {
     let _ = common::setup();

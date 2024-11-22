@@ -7,6 +7,8 @@ pub mod arguments;
 use std::io::Write;
 use std::str::FromStr;
 
+use clap::Parser;
+
 use self::arguments::Arguments;
 
 /// The rayon worker stack size.
@@ -35,7 +37,7 @@ fn main() -> anyhow::Result<()> {
 /// The auxiliary `main` function to facilitate the `?` error conversion operator.
 ///
 fn main_inner() -> anyhow::Result<()> {
-    let mut arguments = Arguments::new();
+    let mut arguments = Arguments::try_parse()?;
     arguments.validate()?;
     arguments.normalize_input_paths()?;
 
@@ -66,7 +68,7 @@ fn main_inner() -> anyhow::Result<()> {
         return era_compiler_vyper::run_recursive();
     }
 
-    let debug_config = match arguments.debug_output_directory {
+    let debug_config = match arguments.debug_output_dir {
         Some(debug_output_directory) => {
             std::fs::create_dir_all(debug_output_directory.as_path())?;
             Some(era_compiler_llvm_context::DebugConfig::new(
@@ -76,7 +78,7 @@ fn main_inner() -> anyhow::Result<()> {
         None => None,
     };
 
-    let suppressed_messages = match arguments.suppressed_warnings {
+    let suppressed_messages = match arguments.suppress_warnings {
         Some(warnings) => era_compiler_vyper::MessageType::try_from_strings(warnings.as_slice())?,
         None => vec![],
     };
@@ -121,7 +123,7 @@ fn main_inner() -> anyhow::Result<()> {
     let vyper_optimizer_enabled = !arguments.disable_vyper_optimizer;
 
     let metadata_hash_type = arguments
-        .metadata_hash_type
+        .metadata_hash
         .unwrap_or(era_compiler_common::HashType::Keccak256);
 
     let build = if arguments.llvm_ir {
@@ -168,7 +170,7 @@ fn main_inner() -> anyhow::Result<()> {
                 debug_config,
             )?;
 
-            match arguments.output_directory {
+            match arguments.output_dir {
                 Some(output_directory) => {
                     combined_json
                         .write_to_directory(output_directory.as_path(), arguments.overwrite)?;
@@ -194,7 +196,7 @@ fn main_inner() -> anyhow::Result<()> {
         )
     }?;
 
-    match arguments.output_directory {
+    match arguments.output_dir {
         Some(output_directory) => {
             build.write_to_directory(
                 output_selection.as_slice(),

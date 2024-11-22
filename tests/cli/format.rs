@@ -1,7 +1,6 @@
 use crate::{cli, common};
 use predicates::prelude::*;
 
-/// id1988
 #[test]
 fn run_with_format_options() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -28,7 +27,6 @@ fn run_with_format_options() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// id1989
 #[test]
 fn run_with_unsupported_format() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -43,9 +41,8 @@ fn run_with_unsupported_format() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// id1990
 #[test]
-fn run_with_double_format_option() -> anyhow::Result<()> {
+fn run_with_duplicate_format_option() -> anyhow::Result<()> {
     let _ = common::setup();
     let format_args = ["combined_json", "ir_json"];
     let args = &[

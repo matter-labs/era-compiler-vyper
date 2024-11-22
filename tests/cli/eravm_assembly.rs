@@ -1,7 +1,6 @@
 use crate::{cli, common};
 use predicates::prelude::*;
 
-/// id1961
 #[test]
 fn run_with_eravm_assembly_by_default() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -14,7 +13,6 @@ fn run_with_eravm_assembly_by_default() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// id1963:II
 #[test]
 fn run_only_with_eravm_assembly_option() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -29,9 +27,8 @@ fn run_only_with_eravm_assembly_option() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// id1962
 #[test]
-fn run_with_double_eravm_assembly_option() -> anyhow::Result<()> {
+fn run_with_duplicate_eravm_assembly_option() -> anyhow::Result<()> {
     let _ = common::setup();
     let args = &[
         cli::TEST_ERAVM_ASSEMBLY_CONTRACT_PATH,
@@ -42,7 +39,7 @@ fn run_with_double_eravm_assembly_option() -> anyhow::Result<()> {
     // Execute zkvyper command
     let result = cli::execute_zkvyper(args)?;
     result.failure().stderr(predicate::str::contains(
-        "The argument '--eravm-assembly' was provided more than once",
+        "error: the argument '--eravm-assembly' cannot be used multiple times",
     ));
 
     Ok(())

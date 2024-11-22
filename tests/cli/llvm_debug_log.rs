@@ -1,7 +1,6 @@
 use crate::{cli, common};
 use predicates::prelude::*;
 
-/// id1980
 #[test]
 fn run_with_llvm_debug_logging() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -14,7 +13,6 @@ fn run_with_llvm_debug_logging() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// id1980:II
 #[test]
 fn run_only_with_llvm_debug_logging() -> anyhow::Result<()> {
     let _ = common::setup();
@@ -29,9 +27,8 @@ fn run_only_with_llvm_debug_logging() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// id1981
 #[test]
-fn run_with_double_llvm_debug_logging() -> anyhow::Result<()> {
+fn run_with_duplicate_llvm_debug_logging() -> anyhow::Result<()> {
     let _ = common::setup();
     let args = &[
         cli::TEST_VYPER_CONTRACT_PATH,
@@ -41,14 +38,13 @@ fn run_with_double_llvm_debug_logging() -> anyhow::Result<()> {
 
     // Execute zkvyper command
     let result = cli::execute_zkvyper(args)?;
-    result
-        .failure()
-        .stderr(predicate::str::contains("was provided more than once"));
+    result.failure().stderr(predicate::str::contains(
+        "error: the argument '--llvm-debug-logging' cannot be used multiple times",
+    ));
 
     Ok(())
 }
 
-/// id1965
 #[test]
 fn run_with_incompatible_contract_and_llvm_debug_logging() -> anyhow::Result<()> {
     let _ = common::setup();
