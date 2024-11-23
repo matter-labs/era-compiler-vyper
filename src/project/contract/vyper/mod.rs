@@ -224,9 +224,13 @@ impl Contract {
             )
         })?;
 
-        let is_minimal_proxy_used = context.vyper().is_minimal_proxy_used();
+        let is_minimal_proxy_used = context
+            .vyper()
+            .expect("Always exists")
+            .is_minimal_proxy_used();
         let mut build = context.build(
             contract_path,
+            &BTreeMap::new(),
             &BTreeMap::new(),
             metadata_hash,
             output_selection.contains(&VyperSelection::EraVMAssembly),
@@ -361,12 +365,6 @@ where
 }
 
 impl era_compiler_llvm_context::Dependency for DependencyData {
-    fn get(&self, _name: &str) -> anyhow::Result<String> {
-        Ok(hex::encode(
-            crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.as_slice(),
-        ))
-    }
-
     fn resolve_path(&self, _identifier: &str) -> anyhow::Result<String> {
         anyhow::bail!("Dependency mechanism is not available in Vyper");
     }

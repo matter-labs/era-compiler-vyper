@@ -60,6 +60,7 @@ impl Contract {
         let build = context.build(
             contract_path,
             &BTreeMap::new(),
+            &BTreeMap::new(),
             metadata_hash,
             output_selection.contains(&VyperSelection::EraVMAssembly),
             false,
