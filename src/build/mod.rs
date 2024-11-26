@@ -42,6 +42,37 @@ impl Build {
     }
 
     ///
+    /// Links the EraVM build.
+    ///
+    pub fn link(
+        &mut self,
+        linker_symbols: BTreeMap<String, [u8; era_compiler_common::BYTE_LENGTH_ETH_ADDRESS]>,
+    ) -> anyhow::Result<()> {
+        let mut factory_dependencies = BTreeMap::new();
+        factory_dependencies.insert(
+            crate::r#const::MINIMAL_PROXY_CONTRACT_NAME.to_owned(),
+            crate::r#const::MINIMAL_PROXY_CONTRACT.1,
+        );
+
+        for (path, contract) in self.contracts.iter_mut() {
+            let memory_buffer = inkwell::memory_buffer::MemoryBuffer::create_from_memory_range(
+                contract.build.bytecode.as_slice(),
+                path.as_str(),
+                false,
+            );
+            let (memory_buffer_linked, bytecode_hash) = era_compiler_llvm_context::eravm_link(
+                memory_buffer,
+                &linker_symbols,
+                &factory_dependencies,
+            )?;
+            contract.build.bytecode = memory_buffer_linked.as_slice().to_vec();
+            contract.build.bytecode_hash = bytecode_hash;
+        }
+
+        Ok(())
+    }
+
+    ///
     /// Writes all contracts to the terminal.
     ///
     pub fn write_to_terminal(self, selection: &[VyperSelection]) -> anyhow::Result<()> {

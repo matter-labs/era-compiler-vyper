@@ -39,6 +39,7 @@ pub use self::vyper::standard_json::output::Output as VyperCompilerStandardOutpu
 pub use self::vyper::version::Version as VyperVersion;
 pub use self::vyper::Compiler as VyperCompiler;
 
+use std::collections::BTreeMap;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
@@ -64,7 +65,7 @@ pub fn llvm_ir(
     let paths: Vec<&Path> = input_paths.iter().map(|path| path.as_path()).collect();
     let project = Project::try_from_llvm_ir_paths(paths.as_slice(), output_selection)?;
 
-    let build = project.compile(
+    let mut build = project.compile(
         None,
         metadata_hash_type,
         optimizer_settings,
@@ -72,6 +73,7 @@ pub fn llvm_ir(
         suppressed_messages,
         debug_config,
     )?;
+    build.link(BTreeMap::new())?;
     Ok(build)
 }
 
@@ -94,7 +96,7 @@ pub fn eravm_assembly(
     let project = Project::try_from_eravm_assembly_paths(paths.as_slice(), output_selection)?;
 
     let optimizer_settings = era_compiler_llvm_context::OptimizerSettings::cycles();
-    let build = project.compile(
+    let mut build = project.compile(
         None,
         metadata_hash_type,
         optimizer_settings,
@@ -102,6 +104,7 @@ pub fn eravm_assembly(
         suppressed_messages,
         debug_config,
     )?;
+    build.link(BTreeMap::new())?;
     Ok(build)
 }
 
@@ -138,7 +141,7 @@ pub fn standard_output(
         }
     }
 
-    let build = project.compile(
+    let mut build = project.compile(
         evm_version,
         metadata_hash_type,
         optimizer_settings,
@@ -146,6 +149,7 @@ pub fn standard_output(
         suppressed_messages,
         debug_config,
     )?;
+    build.link(BTreeMap::new())?;
     Ok(build)
 }
 
@@ -192,7 +196,7 @@ pub fn combined_json(
         }
     }
 
-    let build = project.compile(
+    let mut build = project.compile(
         evm_version,
         metadata_hash_type,
         optimizer_settings,
@@ -200,6 +204,7 @@ pub fn combined_json(
         suppressed_messages,
         debug_config,
     )?;
+    build.link(BTreeMap::new())?;
 
     let combined_json = build.into_combined_json(Some(&vyper.version.default), &zkvyper_version);
 

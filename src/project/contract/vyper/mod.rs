@@ -163,9 +163,10 @@ impl Contract {
         let llvm = inkwell::context::Context::create();
         let optimizer = era_compiler_llvm_context::Optimizer::new(optimizer_settings.clone());
 
-        let mut context = era_compiler_llvm_context::EraVMContext::<
+        let mut context: era_compiler_llvm_context::EraVMContext<
+            '_,
             era_compiler_llvm_context::DummyDependency,
-        >::new(
+        > = era_compiler_llvm_context::EraVMContext::new(
             &llvm,
             llvm.create_module(contract_path),
             llvm_options,
