@@ -242,8 +242,7 @@ impl Project {
                 .as_ref()
                 .map(|contract| {
                     contract.build.factory_dependencies.contains_key(
-                        hex::encode(crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.as_slice())
-                            .as_str(),
+                        hex::encode(crate::r#const::MINIMAL_PROXY_CONTRACT.1.as_slice()).as_str(),
                     )
                 })
                 .unwrap_or_default()

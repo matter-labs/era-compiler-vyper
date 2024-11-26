@@ -163,13 +163,13 @@ impl Contract {
         let llvm = inkwell::context::Context::create();
         let optimizer = era_compiler_llvm_context::Optimizer::new(optimizer_settings.clone());
 
-        let dependency_data = DependencyData::default();
-        let mut context = era_compiler_llvm_context::EraVMContext::<DependencyData>::new(
+        let mut context = era_compiler_llvm_context::EraVMContext::<
+            era_compiler_llvm_context::DummyDependency,
+        >::new(
             &llvm,
             llvm.create_module(contract_path),
             llvm_options,
             optimizer,
-            Some(dependency_data),
             debug_config,
         );
 
@@ -230,8 +230,6 @@ impl Contract {
             .is_minimal_proxy_used();
         let mut build = context.build(
             contract_path,
-            &BTreeMap::new(),
-            &BTreeMap::new(),
             metadata_hash,
             output_selection.contains(&VyperSelection::EraVMAssembly),
             false,
@@ -239,7 +237,7 @@ impl Contract {
 
         if is_minimal_proxy_used {
             build.factory_dependencies.insert(
-                hex::encode(crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.as_slice()),
+                hex::encode(crate::r#const::MINIMAL_PROXY_CONTRACT.1.as_slice()),
                 crate::r#const::MINIMAL_PROXY_CONTRACT_NAME.to_owned(),
             );
         }
