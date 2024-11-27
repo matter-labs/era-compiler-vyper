@@ -70,7 +70,7 @@ pub const MINIMAL_PROXY_BUILTIN_INPUT_SIZE: usize = 54;
 
 lazy_static! {
     /// Vyper minimal proxy bytecode in bytes.
-    pub static ref MINIMAL_PROXY_CONTRACT: (Vec<u8>, [u8; era_compiler_common::BYTE_LENGTH_FIELD]) = {
+    pub static ref MINIMAL_PROXY_BUILD: era_compiler_llvm_context::EraVMBuild = {
         let target_machine = era_compiler_llvm_context::TargetMachine::new(era_compiler_common::Target::EraVM, &era_compiler_llvm_context::OptimizerSettings::cycles(), &[])
                 .expect("Minimal proxy target machine initialization error");
         let assembly_buffer = era_compiler_llvm_context::eravm_assemble(&target_machine, MINIMAL_PROXY_CONTRACT_NAME, MINIMAL_PROXY_CONTRACT_ASSEMBLY, None)
@@ -79,7 +79,12 @@ lazy_static! {
                 .expect("Minimal proxy building error");
         let bytecode_buffer = inkwell::memory_buffer::MemoryBuffer::create_from_memory_range(build.bytecode.as_slice(), MINIMAL_PROXY_CONTRACT_NAME, false);
         let (bytecode_buffer_linked, bytecode_hash) = era_compiler_llvm_context::eravm_link(bytecode_buffer, &BTreeMap::new(), &BTreeMap::new()).expect("Minimal proxy linking error");
-        (bytecode_buffer_linked.as_slice().to_vec(), bytecode_hash.expect("Always exists"))
+        era_compiler_llvm_context::EraVMBuild::new_with_bytecode_hash(
+            bytecode_buffer_linked.as_slice().to_vec(),
+            bytecode_hash.expect("Always exists"),
+            None,
+            None,
+        )
     };
 }
 

@@ -51,7 +51,9 @@ impl Build {
         let mut factory_dependencies = BTreeMap::new();
         factory_dependencies.insert(
             crate::r#const::MINIMAL_PROXY_CONTRACT_NAME.to_owned(),
-            crate::r#const::MINIMAL_PROXY_CONTRACT.1,
+            crate::r#const::MINIMAL_PROXY_BUILD
+                .bytecode_hash
+                .expect("Always exists"),
         );
 
         for (path, contract) in self.contracts.iter_mut() {

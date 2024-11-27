@@ -87,18 +87,11 @@ impl Contract {
     /// A shortcut constructor for minimal proxy.
     ///
     pub fn new_minimal_proxy(output_assembly: bool) -> Self {
-        Self::new_inner(
-            era_compiler_llvm_context::EraVMBuild::new_with_bytecode_hash(
-                crate::r#const::MINIMAL_PROXY_CONTRACT.0.clone(),
-                crate::r#const::MINIMAL_PROXY_CONTRACT.1,
-                None,
-                if output_assembly {
-                    Some(crate::r#const::MINIMAL_PROXY_CONTRACT_ASSEMBLY.to_owned())
-                } else {
-                    None
-                },
-            ),
-        )
+        let mut build = crate::r#const::MINIMAL_PROXY_BUILD.to_owned();
+        if output_assembly {
+            build.assembly = Some(crate::r#const::MINIMAL_PROXY_CONTRACT_ASSEMBLY.to_owned());
+        }
+        Self::new_inner(build)
     }
 
     ///

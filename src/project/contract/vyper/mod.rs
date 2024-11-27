@@ -238,7 +238,12 @@ impl Contract {
 
         if is_minimal_proxy_used {
             build.factory_dependencies.insert(
-                hex::encode(crate::r#const::MINIMAL_PROXY_CONTRACT.1.as_slice()),
+                hex::encode(
+                    crate::r#const::MINIMAL_PROXY_BUILD
+                        .bytecode_hash
+                        .expect("Always exists")
+                        .as_slice(),
+                ),
                 crate::r#const::MINIMAL_PROXY_CONTRACT_NAME.to_owned(),
             );
         }
