@@ -62,13 +62,16 @@ impl Build {
                 path.as_str(),
                 false,
             );
-            let (memory_buffer_linked, bytecode_hash) = era_compiler_llvm_context::eravm_link(
+            let (memory_buffer_linked, object_format) = era_compiler_llvm_context::eravm_link(
                 memory_buffer,
                 &linker_symbols,
                 &factory_dependencies,
             )?;
             contract.build.bytecode = memory_buffer_linked.as_slice().to_vec();
-            contract.build.bytecode_hash = bytecode_hash;
+            if let era_compiler_common::ObjectFormat::Raw = object_format {
+                let bytecode_hash = era_compiler_llvm_context::eravm_hash(&memory_buffer_linked)?;
+                contract.build.bytecode_hash = Some(bytecode_hash);
+            }
         }
 
         Ok(())

@@ -4,6 +4,8 @@
 
 ### Changed
 
+- The disassembler now only works with files with hexadecimal strings
+- The CLI library from deprecated `structopt` to `clap`
 - Updated to Rust v1.82.0
 
 ### Fixed

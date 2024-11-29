@@ -26,49 +26,48 @@ mod suppress;
 mod version;
 mod vyper;
 
-/// The solidity contract name
+/// A test input file.
 pub const TEST_VYPER_CONTRACT_NAME: &'static str = "contract.vy";
-/// The solidity contract full path
+
+/// A test input file.
 pub const TEST_VYPER_CONTRACT_PATH: &'static str = "tests/cli/contracts/vyper/contract.vy";
 
+/// A test input file.
 pub const TEST_TX_ORIGIN_CONTRACT_PATH: &'static str = "tests/cli/contracts/vyper/txorigin.vy";
 
-/// The solidity binary artifact output name
-pub const VYPER_BIN_OUTPUT_NAME: &'static str = "contract.vy.zbin";
-
-/// The solidity assembly artifact output name
-pub const VYPER_ASM_OUTPUT_NAME: &'static str = "contract.vy.zasm";
-
-/// The era assembly contract path
+/// A test input file.
 pub const TEST_ERAVM_ASSEMBLY_CONTRACT_PATH: &'static str =
     "tests/cli/contracts/eravm/contract.zasm";
 
-/// The LLVM contract path
+/// A test input file.
 pub const TEST_LLVM_CONTRACT_PATH: &'static str = "tests/cli/contracts/llvm/contract.ll";
 
-/// The standard JSON contract path
+/// A test input file.
 pub const TEST_JSON_CONTRACT_PATH: &'static str = "tests/cli/contracts/json/contract.json";
 
-/// The binary bytecode sample path
-pub const TEST_BINARY_BYTECODE_PATH: &'static str = "tests/cli/bytecodes/bytecode.zbin";
+/// A test input file.
+pub const TEST_BYTECODE_PATH: &'static str = "tests/cli/bytecodes/bytecode.zbin";
 
-/// The hexadecimal string bytecode sample path
-pub const TEST_HEXADECIMAL_BYTECODE_PATH: &'static str = "tests/cli/bytecodes/bytecode.hex";
-
-/// LLVM IR file extension
+/// LLVM IR file extension.
 pub const LLVM_IR_EXTENSION: &'static str = ".ll";
 
-/// Optimized LLVM IR file extension
+/// Optimized LLVM IR file extension.
 pub const LLVM_IR_OPTIMIZED_EXTENSION: &'static str = ".optimized.ll";
 
-/// Unoptimized LLVM IR file extension
+/// Unoptimized LLVM IR file extension.
 pub const LLVM_IR_UNOPTIMIZED_EXTENSION: &'static str = ".unoptimized.ll";
 
-/// EraVM assembly file extension
+/// EraVM assembly file extension.
 pub const ERAVM_ASSEMBLY_EXTENSION: &'static str = ".zasm";
 
-/// Binary output file extension
+/// Binary output file extension.
 pub const BIN_EXTENSION: &'static str = ".zbin";
+
+/// A test output file.
+pub const VYPER_BIN_OUTPUT_NAME: &'static str = "contract.vy.zbin";
+
+/// A test output file.
+pub const VYPER_ASM_OUTPUT_NAME: &'static str = "contract.vy.zasm";
 
 ///
 /// Execute zkvyper with the given arguments and return the result

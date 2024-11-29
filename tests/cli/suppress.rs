@@ -29,7 +29,7 @@ fn test_suppress_warnings_without_specific_option() -> anyhow::Result<()> {
 
     result
         .failure()
-        .stderr(predicate::str::contains("error: a value is required for \'--suppress-warnings <SUPPRESS_WARNINGS>\' but none was supplied"));
+        .stderr(predicate::str::contains("error: a value is required for \'--suppress-warnings <SUPPRESS_WARNINGS>...\' but none was supplied"));
 
     Ok(())
 }
