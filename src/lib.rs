@@ -39,11 +39,14 @@ pub use self::vyper::standard_json::output::Output as VyperCompilerStandardOutpu
 pub use self::vyper::version::Version as VyperVersion;
 pub use self::vyper::Compiler as VyperCompiler;
 
+use std::collections::BTreeMap;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
 use path_slash::PathExt;
+use rayon::iter::IntoParallelIterator;
+use rayon::iter::ParallelIterator;
 
 ///
 /// Runs the LLVM IR mode.
@@ -64,7 +67,7 @@ pub fn llvm_ir(
     let paths: Vec<&Path> = input_paths.iter().map(|path| path.as_path()).collect();
     let project = Project::try_from_llvm_ir_paths(paths.as_slice(), output_selection)?;
 
-    let build = project.compile(
+    let mut build = project.compile(
         None,
         metadata_hash_type,
         optimizer_settings,
@@ -72,6 +75,7 @@ pub fn llvm_ir(
         suppressed_messages,
         debug_config,
     )?;
+    build.link(BTreeMap::new())?;
     Ok(build)
 }
 
@@ -94,7 +98,7 @@ pub fn eravm_assembly(
     let project = Project::try_from_eravm_assembly_paths(paths.as_slice(), output_selection)?;
 
     let optimizer_settings = era_compiler_llvm_context::OptimizerSettings::cycles();
-    let build = project.compile(
+    let mut build = project.compile(
         None,
         metadata_hash_type,
         optimizer_settings,
@@ -102,6 +106,7 @@ pub fn eravm_assembly(
         suppressed_messages,
         debug_config,
     )?;
+    build.link(BTreeMap::new())?;
     Ok(build)
 }
 
@@ -138,7 +143,7 @@ pub fn standard_output(
         }
     }
 
-    let build = project.compile(
+    let mut build = project.compile(
         evm_version,
         metadata_hash_type,
         optimizer_settings,
@@ -146,6 +151,7 @@ pub fn standard_output(
         suppressed_messages,
         debug_config,
     )?;
+    build.link(BTreeMap::new())?;
     Ok(build)
 }
 
@@ -192,7 +198,7 @@ pub fn combined_json(
         }
     }
 
-    let build = project.compile(
+    let mut build = project.compile(
         evm_version,
         metadata_hash_type,
         optimizer_settings,
@@ -200,6 +206,7 @@ pub fn combined_json(
         suppressed_messages,
         debug_config,
     )?;
+    build.link(BTreeMap::new())?;
 
     let combined_json = build.into_combined_json(Some(&vyper.version.default), &zkvyper_version);
 
@@ -210,33 +217,35 @@ pub fn combined_json(
 /// Runs the disassembler for EraVM bytecode file and prints the output to stdout.
 ///
 pub fn disassemble_eravm(paths: Vec<PathBuf>) -> anyhow::Result<()> {
+    let bytecodes = paths
+        .into_par_iter()
+        .map(|path| {
+            let hexadecimal_string = std::fs::read_to_string(path.as_path())?;
+            let bytecode_hexadecimal = hexadecimal_string
+                .trim()
+                .strip_prefix("0x")
+                .unwrap_or(hexadecimal_string.as_str());
+            let bytecode = hex::decode(bytecode_hexadecimal)?;
+            Ok((path, bytecode))
+        })
+        .collect::<anyhow::Result<BTreeMap<PathBuf, Vec<u8>>>>()?;
+
     let target_machine = era_compiler_llvm_context::TargetMachine::new(
         era_compiler_common::Target::EraVM,
         &era_compiler_llvm_context::OptimizerSettings::cycles(),
         &[],
     )?;
 
-    let disassemblies: Vec<(PathBuf, String)> = paths
+    let disassemblies = bytecodes
         .into_iter()
-        .map(|path| {
-            let bytecode = match path.extension().and_then(|extension| extension.to_str()) {
-                Some("hex") => {
-                    let string = std::fs::read_to_string(path.as_path())?;
-                    let hexadecimal_string =
-                        string.trim().strip_prefix("0x").unwrap_or(string.as_str());
-                    hex::decode(hexadecimal_string)?
-                }
-                Some("zbin") => std::fs::read(path.as_path())?,
-                Some(extension) => anyhow::bail!(
-                    "Invalid file extension: {extension}. Supported extensions: *.hex, *.zbin"
-                ),
-                None => {
-                    anyhow::bail!("Missing file extension. Supported extensions: *.hex, *.zbin")
-                }
-            };
-
+        .map(|(path, bytecode)| {
+            let bytecode_buffer = inkwell::memory_buffer::MemoryBuffer::create_from_memory_range(
+                bytecode.as_slice(),
+                path.to_str().expect("Always valid"),
+                false,
+            );
             let disassembly =
-                era_compiler_llvm_context::eravm_disassemble(&target_machine, bytecode.as_slice())?;
+                era_compiler_llvm_context::eravm_disassemble(&target_machine, &bytecode_buffer)?;
             Ok((path, disassembly))
         })
         .collect::<anyhow::Result<Vec<(PathBuf, String)>>>()?;

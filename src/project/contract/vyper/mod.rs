@@ -163,13 +163,14 @@ impl Contract {
         let llvm = inkwell::context::Context::create();
         let optimizer = era_compiler_llvm_context::Optimizer::new(optimizer_settings.clone());
 
-        let dependency_data = DependencyData::default();
-        let mut context = era_compiler_llvm_context::EraVMContext::<DependencyData>::new(
+        let mut context: era_compiler_llvm_context::EraVMContext<
+            '_,
+            era_compiler_llvm_context::DummyDependency,
+        > = era_compiler_llvm_context::EraVMContext::new(
             &llvm,
             llvm.create_module(contract_path),
             llvm_options,
             optimizer,
-            Some(dependency_data),
             debug_config,
         );
 
@@ -224,10 +225,12 @@ impl Contract {
             )
         })?;
 
-        let is_minimal_proxy_used = context.vyper().is_minimal_proxy_used();
+        let is_minimal_proxy_used = context
+            .vyper()
+            .expect("Always exists")
+            .is_minimal_proxy_used();
         let mut build = context.build(
             contract_path,
-            &BTreeMap::new(),
             metadata_hash,
             output_selection.contains(&VyperSelection::EraVMAssembly),
             false,
@@ -235,7 +238,12 @@ impl Contract {
 
         if is_minimal_proxy_used {
             build.factory_dependencies.insert(
-                hex::encode(crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.as_slice()),
+                hex::encode(
+                    crate::r#const::MINIMAL_PROXY_BUILD
+                        .bytecode_hash
+                        .expect("Always exists")
+                        .as_slice(),
+                ),
                 crate::r#const::MINIMAL_PROXY_CONTRACT_NAME.to_owned(),
             );
         }
@@ -361,12 +369,6 @@ where
 }
 
 impl era_compiler_llvm_context::Dependency for DependencyData {
-    fn get(&self, _name: &str) -> anyhow::Result<String> {
-        Ok(hex::encode(
-            crate::r#const::MINIMAL_PROXY_CONTRACT_HASH.as_slice(),
-        ))
-    }
-
     fn resolve_path(&self, _identifier: &str) -> anyhow::Result<String> {
         anyhow::bail!("Dependency mechanism is not available in Vyper");
     }

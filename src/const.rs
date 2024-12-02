@@ -69,33 +69,28 @@ pub const MINIMAL_PROXY_CONTRACT_NAME: &str = "__VYPER_MINIMAL_PROXY_CONTRACT";
 pub const MINIMAL_PROXY_BUILTIN_INPUT_SIZE: usize = 54;
 
 lazy_static! {
-    ///
-    /// The Vyper minimal proxy bytecode in bytes.
-    ///
-    pub static ref MINIMAL_PROXY_CONTRACT_BYTECODE: Vec<u8> = {
+    /// Vyper minimal proxy bytecode in bytes.
+    pub static ref MINIMAL_PROXY_BUILD: era_compiler_llvm_context::EraVMBuild = {
         let target_machine = era_compiler_llvm_context::TargetMachine::new(era_compiler_common::Target::EraVM, &era_compiler_llvm_context::OptimizerSettings::cycles(), &[])
                 .expect("Minimal proxy target machine initialization error");
         let assembly_buffer = era_compiler_llvm_context::eravm_assemble(&target_machine, MINIMAL_PROXY_CONTRACT_NAME, MINIMAL_PROXY_CONTRACT_ASSEMBLY, None)
                 .expect("Minimal proxy assembling error");
-        let build = era_compiler_llvm_context::eravm_build(assembly_buffer, &BTreeMap::new(), None, Some(MINIMAL_PROXY_CONTRACT_ASSEMBLY.to_owned()))
+        let build = era_compiler_llvm_context::eravm_build(assembly_buffer, None, Some(MINIMAL_PROXY_CONTRACT_ASSEMBLY.to_owned()))
                 .expect("Minimal proxy building error");
-        build.bytecode
-    };
-
-    ///
-    /// The Vyper minimal proxy bytecode hash.
-    ///
-    pub static ref MINIMAL_PROXY_CONTRACT_HASH: [u8; era_compiler_common::BYTE_LENGTH_FIELD] = {
-        let bytecode_words: Vec<[u8; era_compiler_common::BYTE_LENGTH_FIELD]> = MINIMAL_PROXY_CONTRACT_BYTECODE
-            .chunks(era_compiler_common::BYTE_LENGTH_FIELD)
-            .map(|word| word.try_into().expect("Minimal proxy bytecode chunking error"))
-            .collect();
-        zkevm_opcode_defs::bytecode_to_code_hash(bytecode_words.as_slice())
-            .expect("Minimal proxy bytecode hashing error")
+        let bytecode_buffer = inkwell::memory_buffer::MemoryBuffer::create_from_memory_range(build.bytecode.as_slice(), MINIMAL_PROXY_CONTRACT_NAME, false);
+        let (bytecode_buffer_linked, object_format) = era_compiler_llvm_context::eravm_link(bytecode_buffer, &BTreeMap::new(), &BTreeMap::new()).expect("Minimal proxy linking error");
+        assert_eq!(object_format, era_compiler_common::ObjectFormat::Raw, "Minimal proxy object format error");
+        let bytecode_hash = era_compiler_llvm_context::eravm_hash(&bytecode_buffer_linked).expect("Minimal proxy hashing error");
+        era_compiler_llvm_context::EraVMBuild::new_with_bytecode_hash(
+            bytecode_buffer_linked.as_slice().to_vec(),
+            bytecode_hash,
+            None,
+            None,
+        )
     };
 }
 
-/// The minimal proxy contract assembly.
+/// Minimal proxy contract assembly.
 pub const MINIMAL_PROXY_CONTRACT_ASSEMBLY: &str = r#"
         .text
         incsp 2

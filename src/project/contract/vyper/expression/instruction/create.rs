@@ -117,7 +117,12 @@ where
         hash_input_offset,
         "create_hash_input_offset_pointer",
     )?;
-    let hash = context.get_dependency_data(crate::r#const::MINIMAL_PROXY_CONTRACT_NAME)?;
+    let hash = hex::encode(
+        crate::r#const::MINIMAL_PROXY_BUILD
+            .bytecode_hash
+            .expect("Always exists")
+            .as_slice(),
+    );
     context.build_store(
         hash_input_offset_pointer,
         context.field_const_str_hex(hash.as_str()),
