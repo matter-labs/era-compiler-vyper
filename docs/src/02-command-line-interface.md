@@ -1,0 +1,709 @@
+# Command Line Interface (CLI)
+
+The CLI of *zkvyper* is designed with resemblance to the CLI of *solc*. There are two input/output (I/O) modes in the *zkvyper* interface:
+
+- [Basic CLI](#basic-cli)
+- [Combined JSON](./04-combined-json.md)
+
+The basic CLI and combined JSON modes are more light-weight and suitable for calling from the shell. The standard JSON mode is similar to client-server interaction, thus more suitable for using from other applications, such as [Foundry](https://github.com/matter-labs/foundry-zksync).
+
+> All toolkits using *zkvyper* must be operating in standard JSON mode and follow [its specification](./03-standard-json.md).
+> It will make the toolkits more robust and future-proof, as the standard JSON mode is the most versatile and used for the majority of popular projects.
+
+This page focuses on the basic CLI mode. For more information on the other modes, see the corresponding [combined JSON](./04-combined-json.md) and [standard JSON](./03-standard-json.md) pages.
+
+
+
+## Basic CLI
+
+Basic CLI mode is the simplest way to compile a file with the source code.
+
+To compile a basic Solidity contract, make sure that [the *solc* compiler](#--solc) is present in your environment and run the example from [the *--bin* section](#--bin).
+
+The rest of this section describes the available CLI options and their usage. You may also check out `zkvyper --help` for a quick reference.
+
+
+
+### `--solc`
+
+Specifies the path to the *solc* compiler. Useful when the *solc* compiler is not available in the system path.
+
+Usage:
+
+```bash
+zkvyper './Simple.sol' --bin --solc '/path/to/solc'
+```
+
+> Examples in the subsequent sections assume that *solc* [is installed and available](./01-installation.md#installing-solc) in the system path.
+> If you prefer specifying the full path to *solc*, use the `--solc` option with the examples below.
+
+
+
+### `--bin`
+
+Enables the output of compiled bytecode. The following command compiles a Solidity file and prints the bytecode:
+
+```bash
+zkvyper './Simple.sol' --bin
+```
+
+Output:
+
+```text
+======= Simple.sol:Simple =======
+Binary:
+0000008003000039000000400030043f0000000100200190000000130000c13d...
+```
+
+It is possible to dry-run the compilation without writing any output. To do this, simply omit `--bin` and other output options:
+
+```bash
+zkvyper './Simple.sol'
+```
+
+Output:
+
+```text
+Compiler run successful. No output requested. Use flags --metadata, --asm, --bin.
+```
+
+
+
+### Input Files
+
+*zkvyper* supports multiple input files. The following command compiles two Solidity files and prints the bytecode:
+
+```bash
+zkvyper './Simple.sol' './Complex.sol' --bin
+```
+
+[Solidity import remappings](https://docs.soliditylang.org/en/latest/path-resolution.html#import-remapping) are passed in the way as input files, but they are distinguished by a `=` symbol between source and destination. The following command compiles a Solidity file with a remapping and prints the bytecode:
+
+```bash
+zkvyper './Simple.sol' 'github.com/ethereum/dapp-bin/=/usr/local/lib/dapp-bin/' --bin
+```
+
+*zkvyper* does not handle remappings itself, but only passes them through to *solc*.
+Visit [the *solc* documentation](https://docs.soliditylang.org/en/latest/using-the-compiler.html#base-path-and-import-remapping) to learn more about the processing of remappings.
+
+
+
+### `--libraries`
+
+Specifies the libraries to link with compiled contracts. The option accepts multiple string arguments. The safest way is to wrap each argument in single quotes, and separate them with a space.
+
+The specifier has the following format: `<ContractPath>:<ContractName>=<LibraryAddress>`.
+
+Usage:
+
+```bash
+zkvyper './Simple.sol' --bin --libraries 'Simple.sol:Test=0x1234567890abcdef1234567890abcdef12345678'
+```
+
+There are two ways of linking libraries:
+1. At compile time, immediately after the contract is compiled.
+2. At deploy time (a.k.a. post-compile time), right before the contract is deployed.
+
+The use case above describes linking at compile time. For linking at deploy time, see the [linker documentation](./05-linker.md).
+
+
+
+### `--base-path`, `--include-path`, `--allow-paths`
+
+These options are used to specify Solidity import resolution settings. They are not used by *zkvyper* and only passed through to *solc* like import remappings.
+
+Visit [the *solc* documentation](https://docs.soliditylang.org/en/latest/path-resolution.html) to learn more about the processing of these options.
+
+
+
+### `--asm`
+
+Enables the output of contract assembly. The assembly format depends on the [*--target*](#--target) architecture the contract is compiled for.
+
+For the EraVM assembly specification, visit the [EraVM documentation](https://docs.zksync.io/zk-stack/components/compiler/specification/binary-layout).
+
+EVM assembly is not supported yet.
+
+Usage:
+
+```bash
+zkvyper Simple.sol --asm
+```
+
+Output:
+
+```text
+======= Simple.sol:Simple =======
+EraVM assembly:
+        .text
+        .file   "Simple.sol:Simple"
+        .globl  __entry
+__entry:
+.func_begin0:
+        add     128, r0, r3
+        stm.h   64, r3
+...
+```
+
+The `--asm` option can be combined with other output options, such as `--bin`:
+
+```bash
+zkvyper './Simple.sol' --asm --bin
+```
+
+
+
+### `--metadata`
+
+Enables the output of contract metadata. The metadata is a JSON object that contains information about the contract, such as its name, source code hash, the list of dependencies, compiler versions, and so on.
+
+The *zkvyper* metadata format is compatible with the [Solidity metadata format](https://soliditylang.org/docs/develop/metadata.html). This means that the metadata output can be used with other tools that support Solidity metadata. Essentially, *solc* metadata is a part of *zkvyper* metadata, and it is included as `source_metadata` without any modifications.
+
+Usage:
+
+```bash
+zkvyper './Simple.sol' --metadata
+```
+
+Output:
+
+```text
+======= Simple.sol:Simple =======
+Metadata:
+{"llvm_options":[],"optimizer_settings":{"is_debug_logging_enabled":false,"is_fallback_to_size_enabled":false,"is_verify_each_enabled":false,"level_back_end":"Aggressive","level_middle_end":"Aggressive","level_middle_end_size":"Zero"},"solc_version":"x.y.z","solc_zkvm_edition":null,"source_metadata":{...},"zk_version":"x.y.z"}
+```
+
+
+
+### `--output-dir`
+
+Specifies the output directory for build artifacts. Can only be used with [basic CLI](#basic-cli) and [combined JSON](./04-combined-json.md) modes.
+
+Usage in basic CLI mode:
+
+```bash
+zkvyper './Simple.sol' --bin --asm --metadata --output-dir './build/'
+ls './build/Simple.sol'
+```
+
+Output:
+
+```text
+Compiler run successful. Artifact(s) can be found in directory "build".
+...
+Test.zasm       Test.zbin       Test_meta.json
+```
+
+Usage in combined JSON mode:
+
+```bash
+zkvyper './Simple.sol' --combined-json 'bin,asm,metadata' --output-dir './build/'
+ls './build/'
+```
+
+Output:
+
+```text
+Compiler run successful. Artifact(s) can be found in directory "build".
+...
+combined.json
+```
+
+
+
+### `--overwrite`
+
+Overwrites the output files if they already exist in the output directory. By default, *zkvyper* does not overwrite existing files.
+
+Can only be used in combination with the [`--output-dir`](#--output-dir) option.
+
+Usage:
+
+```bash
+zkvyper './Simple.sol' --combined-json 'bin,asm,metadata' --output-dir './build/' --overwrite
+```
+
+If the `--overwrite` option is not specified and the output files already exist, *zkvyper* will print an error message and exit:
+
+```text
+Error: Refusing to overwrite an existing file "build/combined.json" (use --overwrite to force).
+```
+
+
+
+### `--version`
+
+Prints the version of *zkvyper* and the hash of the LLVM commit it was built with.
+
+Usage:
+
+```bash
+zkvyper --version
+```
+
+
+
+### `--help`
+
+Prints the help message.
+
+Usage:
+
+```bash
+zkvyper --help
+```
+
+
+
+## Other I/O Modes
+
+
+
+### `--standard-json`
+
+For the standard JSON mode usage, see the [Standard JSON](./03-standard-json.md) page.
+
+
+
+### `--combined-json`
+
+For the combined JSON mode usage, see the [Combined JSON](./04-combined-json.md) page.
+
+
+
+## Compilation Settings
+
+
+
+### `--optimization / -O`
+
+Sets the optimization level of the LLVM optimizer. Available values are:
+
+| Level | Meaning                      | Hints                                            |
+|:-----:|:----------------------------:|:------------------------------------------------:|
+| 0     | No optimization              | Best compilation speed: for active development
+| 1     | Performance: basic           | For optimization research
+| 2     | Performance: default         | For optimization research
+| 3     | Performance: aggressive      | Default value. Best performance: for production
+| s     | Size: default                | For optimization research
+| z     | Size: aggressive             | Best size: for contracts with size constraints
+
+For most cases, it is fine to use the default value of `3`. You should only use the level `z` if you are ready to deliberately sacrifice performance and optimize for size.
+
+> Large contracts may hit the EraVM or EVM bytecode size limit. In this case, it is recommended to use the [`--fallback-Oz`](#--fallback-oz) option rather than set the `z` level.
+
+
+
+### `--fallback-Oz`
+
+Sets the optimization level to `z` for contracts that failed to compile due to overrunning the bytecode size constraints.
+
+Under the hood, this option automatically triggers recompilation of contracts with level `z`. Contracts that were successfully compiled with [the original `--optimization` setting](#--optimization---o) are not recompiled.
+
+> It is recommended to have this option always enabled to prevent compilation failures due to bytecode size constraints. There are no known downsides to using this option.
+
+
+
+### `--enable-eravm-extensions`
+
+Enables the EraVM extensions.
+
+If this flag is set, calls to addresses `0xFFFF` and below are substituted by special EraVM instructions.
+
+In the Yul mode, the `verbatim_*` instruction family becomes available.
+
+The full list of EraVM extensions will be documented soon.
+
+Usage:
+
+```bash
+zkvyper './Simple.sol' --bin --enable-eravm-extensions
+```
+
+
+
+### `--llvm-options`
+
+Specifies additional options for the LLVM framework. The argument must be a single quoted string following a `=` separator.
+
+Usage:
+
+```bash
+zkvyper './Simple.sol' --bin --llvm-options='-eravm-jump-table-density-threshold=10'
+```
+
+> The `--llvm-options` option is experimental and must only be used by experienced users. All supported options will be documented in the future.
+
+
+
+### `--codegen`
+
+Specifies the *solc* codegen. The following values are allowed:
+
+| Value | Description                  | Hints                              |
+|:-----:|:----------------------------:|:----------------------------------:|
+| evmla | EVM legacy assembly          | *solc* default for EVM/L1          |
+| yul   | Yul a.k.a. IR                | *zkvyper* default for ZKsync        |
+
+> *solc* uses the `evmla` codegen by default. However, *zkvyper* uses the `yul` codegen by default for historical reasons.
+> Codegens are not equivalent and may lead to different behavior in production.
+> Make sure that this option is set to `evmla` if you want your contracts to behave as they would on L1.
+> For codegen differences, visit the [solc IR breaking changes page](https://docs.soliditylang.org/en/latest/ir-breaking-changes.html).
+> *zkvyper* is going to switch to the `evmla` codegen by default in the future in order to have more parity with L1.
+
+Usage:
+
+```bash
+zkvyper './Simple.sol' --bin --codegen 'evmla'
+```
+
+
+
+### `--evm-version`
+
+Specifies the EVM version *solc* will produce artifacts for. Only artifacts such as Yul and EVM assembly are known to be affected by this option. For instance, if the EVM version is set to *cancun*, then Yul and EVM assembly may contain `MCOPY` instructions.
+
+> EVM version only affects IR artifacts produced by *solc* and does not affect EraVM bytecode produced by *zkvyper*.
+
+The default value is chosen by *solc*. For instance, *solc* v0.8.24 and older use *shanghai* by default, whereas newer ones use *cancun*.
+
+The following values are allowed, however have in mind that newer EVM versions are only supported by newer versions of *solc*:
+- homestead
+- tangerineWhistle
+- spuriousDragon
+- byzantium
+- constantinople
+- petersburg
+- istanbul
+- berlin
+- london
+- paris
+- shanghai
+- cancun
+- prague
+
+Usage:
+
+```bash
+zkvyper './Simple.sol' --bin --evm-version 'cancun'
+```
+
+For more information on how *solc* handles EVM versions, see its [EVM version documentation](https://docs.soliditylang.org/en/latest/using-the-compiler.html#setting-the-evm-version-to-target).
+
+
+
+### `--metadata-hash`
+
+Specifies the hash function used for contract metadata.
+
+The following values are allowed:
+
+|     Value    |  Size  | Padding | Reference |
+|:------------:|:------:|:-------:|:---------:|
+| none         |  0 B   | 0-32 B  | 
+| keccak256    | 32 B   | 0-32 B  | [SHA-3 Wikipedia Page](https://en.wikipedia.org/wiki/SHA-3)
+| ipfs         | 44 B   | 20-52 B | [IPFS Documentation](https://docs.ipfs.tech/)
+
+The default value is `keccak256`.
+
+> EraVM requires its bytecode size to be an odd number of 32-byte words. If the size after appending the hash does not satisfy this requirement, the hash is *prepended* with zeros according to the *Padding* column in the table above.
+
+Usage:
+
+```bash
+zkvyper './Simple.sol' --bin --metadata-hash 'ipfs'
+```
+
+
+
+### `--metadata-literal`
+
+Tells *solc* to store referenced sources as literal data in the metadata output.
+
+> This option only affects the contract metadata output produced by *solc*, and does not affect artifacts produced by *zkvyper*.
+
+Usage:
+
+```bash
+zkvyper './Simple.sol' --bin --metadata-literal
+```
+
+
+
+### `--suppress-errors`
+
+Tells the compiler to suppress specified errors. The option accepts multiple string arguments, so make sure they are properly separated by whitespace.
+
+Only one error can be suppressed with this option: [`sendtransfer`](https://docs.zksync.io/build/developer-reference/best-practices#use-call-over-send-or-transfer).
+
+Usage:
+
+```bash
+zkvyper './Simple.sol' --bin --suppress-errors 'sendtransfer'
+```
+
+
+
+### `--suppress-warnings`
+
+Tells the compiler to suppress specified warnings. The option accepts multiple string arguments, so make sure they are properly separated by whitespace.
+
+Only one warning can be suppressed with this option: [`txorigin`](https://docs.zksync.io/build/tooling/foundry/migration-guide/testing#origin-address).
+
+Usage:
+
+```bash
+zkvyper './Simple.sol' --bin --suppress-warnings 'txorigin'
+```
+
+
+
+## Multi-Language Support
+
+*zkvyper* supports input in multiple programming languages:
+
+- [Solidity](https://soliditylang.org/)
+- [Yul](https://docs.soliditylang.org/en/latest/yul.html)
+- [LLVM IR](https://llvm.org/docs/LangRef.html)
+- [EraVM assembly](https://docs.zksync.io/zk-stack/components/compiler/specification/binary-layout)
+
+The following sections outline how to use *zkvyper* with these languages.
+
+
+
+### `--yul`
+
+Enables the Yul mode. In this mode, input is expected to be in the Yul language. The output works the same way as with Solidity input.
+
+Usage:
+
+```bash
+zkvyper --yul './Simple.yul' --bin
+```
+
+Output:
+
+```text
+======= Simple.yul =======
+Binary:
+0000000100200190000000060000c13d0000002a01000039000000000010043f...
+```
+
+*zkvyper* is able to compile Yul without *solc*. However, using *solc* is still recommended as it provides additional validation, diagnostics and better error messages:
+
+```bash
+zkvyper --yul './Simple.yul' --bin --solc '/path/to/solc'
+```
+
+*zkvyper* features its own dialect of Yul with extensions for EraVM. If such extensions (TODO) are used, it is not possible to use *solc* for validation.
+
+
+
+### `--llvm-ir`
+
+Enables the LLVM IR mode. In this mode, input is expected to be in the LLVM IR language. The output works the same way as with Solidity input.
+
+Unlike *solc*, *zkvyper* is an LLVM-based compiler toolchain, so it uses LLVM IR as an intermediate representation. It is not recommended to write LLVM IR manually, but it can be useful for debugging and optimization purposes. LLVM IR is more low-level than Yul in the ZKsync compiler toolchain IR hierarchy, so *solc* is not used for compilation.
+
+Usage:
+
+```bash
+zkvyper --llvm-ir './Simple.ll' --bin
+```
+
+Output:
+
+```text
+======= Simple.ll =======
+Binary:
+000000000002004b000000070000613d0000002001000039000000000010043f...
+```
+
+
+
+### `--eravm-assembly`
+
+Enables the EraVM Assembly mode. In this mode, input is expected to be in the EraVM assembly language. The output works the same way as with Solidity input.
+
+EraVM assembly is a representation the closest to EraVM bytecode. It is not recommended to write EraVM assembly manually, but it can be even more useful for debugging and optimization purposes than LLVM IR.
+
+For the EraVM assembly specification, visit the [EraVM documentation](https://docs.zksync.io/zk-stack/components/compiler/specification/binary-layout).
+
+Usage:
+
+```bash
+zkvyper --eravm-assembly './Simple.zasm' --bin
+```
+
+Output:
+
+```text
+======= Simple.zasm =======
+Binary:
+000000000120008c000000070000613d00000020010000390000000000100435...
+```
+
+
+
+## Multi-Target Support
+
+*zkvyper* is an LLVM-based compiler toolchain, so it is easily extensible to support multiple target architectures. The following targets are supported:
+
+- `eravm` — [EraVM](https://docs.zksync.io/zk-stack/components/zksync-evm) (default).
+- `evm` — [EVM](https://ethereum.org/en/developers/docs/evm/) (under development and only available for testing).
+
+### `--target`
+
+Specifies the target architecture for the compiled contract.
+
+<div class="warning">
+The <code>--target</code> option is experimental and must be passed as a CLI argument in all modes including combined JSON and standard JSON.
+</div>
+
+Usage:
+
+```bash
+zkvyper Simple.sol --bin --target evm
+```
+
+Output:
+
+```text
+======= Simple.sol:Simple =======
+Binary:
+0000008003000039000000400030043f0000000100200190000000130000c13d...
+```
+
+
+
+## Integrated Tooling
+
+*zkvyper* includes several tools provided by the LLVM framework out of the box, such as disassembler and linker. The following sections describe the usage of these tools.
+
+> The mode-altering CLI options are mutually exclusive. This means that only one of the options below can be enabled at a time:
+> - `--standard-json`
+> - `--combined-json`
+> - `--yul`
+> - `--llvm-ir`
+> - `--eravm-assembly`
+> - `--disassemble`
+> - `--link`
+
+
+
+### `--disassemble`
+
+Enables the disassembler mode.
+
+*zkvyper* includes an LLVM-based disassembler that can be used to disassemble compiled bytecode.
+
+The disassembler input must be files with a hexadecimal string. The disassembler output is a human-readable representation of the bytecode, also known as EraVM assembly.
+
+Usage:
+
+```bash
+cat './input.zbin'
+```
+
+Output:
+
+```text
+0x0000008003000039000000400030043f0000000100200190000000140000c13d00000000020...
+```
+
+```bash
+zkvyper --disassemble './input.zbin'
+```
+
+Output:
+
+```text
+File `input.zbin` disassembly:
+
+       0: 00 00 00 80 03 00 00 39       add     128, r0, r3
+       8: 00 00 00 40 00 30 04 3f       stm.h   64, r3
+      10: 00 00 00 01 00 20 01 90       and!    1, r2, r0
+      18: 00 00 00 14 00 00 c1 3d       jump.ne 20
+      20: 00 00 00 00 02 01 00 19       add     r1, r0, r2
+      28: 00 00 00 0b 00 20 01 98       and!    code[11], r2, r0
+      30: 00 00 00 23 00 00 61 3d       jump.eq 35
+      38: 00 00 00 00 01 01 04 3b       ldp     r1, r1
+```
+
+
+
+### `--link`
+
+Enables the linker mode.
+
+For the linker usage, visit [the linker documentation](./05-linker.md).
+
+
+
+## Debugging
+
+
+
+### `--debug-output-dir`
+
+Specifies the directory to store intermediate build artifacts. The artifacts can be useful for debugging and research.
+
+The directory is created if it does not exist. If artifacts are already present in the directory, they are overwritten.
+
+The intermediate build artifacts can be:
+
+| Name            | Codegen         | File extension   |
+|:---------------:|:---------------:|:----------------:|
+| EVM assembly    | evmla           | *evmla*          |
+| EthIR           | evmla           | *ethir*          |  
+| Yul             | yul             | *yul*            |
+| LLVM IR         | evmla, yul      | *ll*             |
+| EraVM assembly  | evmla, yul      | *zasm*           |
+
+Usage:
+
+```bash
+zkvyper './Simple.sol' --bin --debug-output-dir './debug/'
+ls './debug/'
+```
+
+Output:
+
+```text
+Compiler run successful. No output requested. Use flags --metadata, --asm, --bin.
+...
+Simple.sol.C.runtime.optimized.ll
+Simple.sol.C.runtime.unoptimized.ll
+Simple.sol.C.yul
+Simple.sol.C.zasm
+Simple.sol.Test.runtime.optimized.ll
+Simple.sol.Test.runtime.unoptimized.ll
+Simple.sol.Test.yul
+Simple.sol.Test.zasm
+```
+
+The output file name is constructed as follows: `<ContractPath>.<ContractName>.<Modifiers>.<Extension>`.
+
+
+
+### `--llvm-verify-each`
+
+Enables the verification of the LLVM IR after each optimization pass. This option is useful for debugging and research purposes.
+
+Usage:
+
+```bash
+zkvyper './Simple.sol' --bin --llvm-verify-each
+```
+
+
+
+### `--llvm-debug-logging`
+
+Enables the debug logging of the LLVM IR optimization passes. This option is useful for debugging and research purposes.
+
+Usage:
+
+```bash
+zkvyper './Simple.sol' --bin --llvm-debug-logging
+```
