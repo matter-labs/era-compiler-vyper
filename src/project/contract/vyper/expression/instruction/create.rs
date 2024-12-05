@@ -68,6 +68,10 @@ fn create_minimal_proxy_to<'ctx, D>(
 where
     D: era_compiler_llvm_context::Dependency,
 {
+    if let Some(vyper_data) = context.vyper_mut() {
+        vyper_data.set_is_minimal_proxy_used();
+    }
+
     let success_block = context.append_basic_block("create_success_block");
     let failure_block = context.append_basic_block("create_failure_block");
     let join_block = context.append_basic_block("create_join_block");
