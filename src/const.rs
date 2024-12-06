@@ -93,18 +93,15 @@ lazy_static! {
 /// Minimal proxy contract assembly.
 pub const MINIMAL_PROXY_CONTRACT_ASSEMBLY: &str = r#"
         .text
-        incsp 2
-        .file   "MinimalProxy"
+        .file   "MinimalProxy.sol:MinimalProxy"
         .globl  __entry
 __entry:
 .func_begin0:
-        incsp 1
-        add     r1, r0, r3
-        shr.s   96, r3, r3
-        and     code[@CPI0_0], r3, r8
-        addp    r1, r8, stack[@ptr_return_data]
-        and     31, r3, r4
-        and     code[@CPI0_1], r3, r3
+        incsp   1
+        shr.s   96, r1, r5
+        and     31, r5, r4
+        and     code[@CPI0_0], r5, r3
+        and     code[@CPI0_1], r5, r8
         and!    1, r2, r0
         jump.ne @.BB0_1
         add     128, r0, r2
@@ -140,45 +137,54 @@ __entry:
         stm.ah  4, r1
         stm.ah  36, r0
         ergs    r1
-        sub.s!  code[@CPI0_0], r1, r0
-        add.ge  code[@CPI0_0], r0, r1
+        sub.s!  code[@CPI0_1], r1, r0
+        add.ge  code[@CPI0_1], r0, r1
         shl.s   192, r1, r1
         or      code[@CPI0_6], r1, r1
         add     32773, r0, r2
         call    r0, @__staticcall, @DEFAULT_UNWIND
         and!    1, r2, r0
-        jump.eq @.BB0_29
+        jump.eq @.BB0_23
         ldp     r1, r2
-        ergs    r1
-        sub.s!  4, r2, r0
-        jump.ne @.BB0_21
-        addp    stack[@ptr_return_data], r0, r3
-        add     stack[@returndatasize], r0, r1
-        and!    code[@CPI0_7], r1, r2
-        and     31, r1, r4
-        jump.eq @.BB0_19
-        addp    r3, r0, r5
-        add     r0, r0, r6
+        add     stack-[1], r0, r1
+        shl.s   96, r1, r1
+        ergs    r3
+        sub.s!  code[@CPI0_1], r3, r0
+        add.ge  code[@CPI0_1], r0, r3
+        shl.s   192, r3, r3
+        or      r3, r1, r1
+        call    r0, @__delegatecall, @DEFAULT_UNWIND
+        shr.s   96, r1, r5
+        and     31, r5, r4
+        and!    code[@CPI0_0], r5, r3
+        jump.eq @.BB0_18
+        addp    r1, r0, r6
+        add     r0, r0, r7
+.BB0_17:
+        ldpi    r6, r8, r6
+        stmi.h  r7, r8, r7
+        sub!    r7, r3, r0
+        jump.ne @.BB0_17
 .BB0_18:
-        ldpi    r5, r7, r5
-        stmi.h  r6, r7, r6
-        sub!    r6, r2, r0
-        jump.ne @.BB0_18
-.BB0_19:
+        and     code[@CPI0_1], r5, r5
         sub!    r4, r0, r0
-        jump.eq @.BB0_27
-        addp    r3, r2, r3
+        jump.eq @.BB0_20
+        addp    r1, r3, r1
         shl.s   3, r4, r4
-        ldm.h   r2, r5
-        shl     r5, r4, r5
-        shr     r5, r4, r5
-        ldp     r3, r3
+        ldm.h   r3, r6
+        shl     r6, r4, r6
+        shr     r6, r4, r6
+        ldp     r1, r1
         sub     256, r4, r4
-        shr     r3, r4, r3
-        shl     r3, r4, r3
-        or      r3, r5, r3
-        stm.h   r2, r3
-        jump    @.BB0_27
+        shr     r1, r4, r1
+        shl     r1, r4, r1
+        or      r1, r6, r1
+        stm.h   r3, r1
+.BB0_20:
+        shl.s   96, r5, r1
+        and!    1, r2, r0
+        jump.eq @.BB0_24
+        retl    @DEFAULT_FAR_RETURN
 .BB0_1:
         add     31, r8, r2
         and     code[@CPI0_2], r2, r2
@@ -210,60 +216,17 @@ __entry:
         stm.h   r2, r1
 .BB0_6:
         sub.s!  31, r8, r0
-        jump.le @.BB0_28
+        jump.le @.BB0_22
         ldm.h   160, r1
         sub.s!  code[@CPI0_3], r1, r0
         jump.le @.BB0_8
-.BB0_28:
+.BB0_22:
         add     r0, r0, r1
-        revl    r1, @DEFAULT_FAR_REVERT
-.BB0_29:
-        rev
-.BB0_21:
-        add     stack-[1], r0, r3
-        shl.s   96, r3, r3
-        sub.s!  code[@CPI0_0], r1, r0
-        add.ge  code[@CPI0_0], r0, r1
-        shl.s   192, r1, r1
-        or      r1, r3, r1
-        call    r0, @__delegatecall, @DEFAULT_UNWIND
-        addp    r1, r0, stack[@ptr_return_data]
-        add     r1, r0, r3
-        shr.s   96, r3, r3
-        and     31, r3, r5
-        and     code[@CPI0_0], r3, stack[@returndatasize]
-        and!    code[@CPI0_1], r3, r4
-        jump.eq @.BB0_24
-        addp    r1, r0, r6
-        add     r0, r0, r7
+        revl    @DEFAULT_FAR_REVERT
 .BB0_23:
-        ldpi    r6, r8, r6
-        stmi.h  r7, r8, r7
-        sub!    r7, r4, r0
-        jump.ne @.BB0_23
+        rev
 .BB0_24:
-        sub!    r5, r0, r0
-        jump.eq @.BB0_26
-        addp    r1, r4, r1
-        shl.s   3, r5, r5
-        ldm.h   r4, r6
-        shl     r6, r5, r6
-        shr     r6, r5, r6
-        ldp     r1, r1
-        sub     256, r5, r5
-        shr     r1, r5, r1
-        shl     r1, r5, r1
-        or      r1, r6, r1
-        stm.h   r4, r1
-.BB0_26:
-        and     code[@CPI0_0], r3, r1
-        and!    1, r2, r0
-        jump.eq @.BB0_30
-.BB0_27:
-        sub.s!  code[@CPI0_0], r1, r0
-        add.ge  code[@CPI0_0], r0, r1
-        shl.s   96, r1, r1
-        retl    r1, @DEFAULT_FAR_RETURN
+        revl    @DEFAULT_FAR_REVERT
 .BB0_8:
         stm.h   128, r1
         stm.ah  320, r0
@@ -273,10 +236,7 @@ __entry:
         add     1, r0, r1
         stm.ah  288, r1
         add     code[@CPI0_4], r0, r1
-        retl    r1, @DEFAULT_FAR_RETURN
-.BB0_30:
-        shl.s   96, r1, r1
-        revl    r1, @DEFAULT_FAR_REVERT
+        retl    @DEFAULT_FAR_RETURN
 .func_end0:
 
 __cxa_throw:
@@ -287,7 +247,7 @@ __cxa_throw:
 __staticcall:
 .func_begin2:
 .tmp0:
-        callf.st r1, r2, @.BB2_2
+        callf.st        r1, r2, @.BB2_2
 .tmp1:
         add     1, r0, r2
         ret
@@ -310,21 +270,11 @@ __delegatecall:
         ret
 .func_end3:
 
-        .data
-        .p2align        5, 0x0
-returndatasize:
-        .cell   0
-
-        .p2align        5, 0x0
-ptr_return_data:
-        .cell   0
-
-        .note.GNU-stack
         .rodata
 CPI0_0:
-        .cell   4294967295
-CPI0_1:
         .cell   4294967264
+CPI0_1:
+        .cell   4294967295
 CPI0_2:
         .cell   8589934560
 CPI0_3:
@@ -335,14 +285,11 @@ CPI0_5:
         .cell   22182216476136578060272566318850604970565072242024486780356928325126096266030
 CPI0_6:
         .cell   904625751086426111047927909714404454142933107862120802609382293630030446592
-CPI0_7:
-        .cell   -32
         .text
-
 DEFAULT_UNWIND:
         pncl    @DEFAULT_UNWIND
 DEFAULT_FAR_RETURN:
-        retl    r1, @DEFAULT_FAR_RETURN
+        retl    @DEFAULT_FAR_RETURN
 DEFAULT_FAR_REVERT:
-        revl    r1, @DEFAULT_FAR_REVERT
+        revl    @DEFAULT_FAR_REVERT
 "#;
