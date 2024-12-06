@@ -343,9 +343,9 @@ dependencies = [
 
 [[package]]
 name = "clap_lex"
-version = "0.7.3"
+version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "afb84c814227b90d6895e01398aee0d8033c00e7466aca416fb6a8e0eb19d8a7"
+checksum = "f46ad14479a25103f283c0f10005961cf086d8dc42205bb44c46ac563475dca6"
 
 [[package]]
 name = "colorchoice"
@@ -621,7 +621,7 @@ dependencies = [
 [[package]]
 name = "era-compiler-llvm-context"
 version = "1.5.0"
-source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=az-add-zkvyper-docs#a9379addf52ec57ab225c18b79fa1ba546f66289"
+source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=main#d4f348effd94e6fba0983a1378346f264a47864e"
 dependencies = [
  "anyhow",
  "era-compiler-common",
