@@ -27,7 +27,7 @@ pub struct Arguments {
     #[arg(short, long)]
     pub output_dir: Option<PathBuf>,
 
-    /// Overwrite existing files (used together with -o).
+    /// Overwrite existing files (used together `--output-dir`).
     #[structopt(long)]
     pub overwrite: bool,
 
@@ -46,10 +46,6 @@ pub struct Arguments {
     #[arg(long)]
     pub llvm_options: Option<String>,
 
-    /// Disable the `vyper` LLL IR optimizer.
-    #[arg(long)]
-    pub disable_vyper_optimizer: bool,
-
     /// Specify the path to the `vyper` executable. By default, the one in `${PATH}` is used.
     /// In LLVM IR and EraVM assembly modes, `vyper` executable is unused.
     #[arg(long)]
@@ -59,6 +55,10 @@ pub struct Arguments {
     /// See https://github.com/matter-labs/era-compiler-common/blob/main/era-compiler-common/src/evm_version.rs for reference.
     #[arg(long)]
     pub evm_version: Option<era_compiler_common::EVMVersion>,
+
+    /// Disable the `vyper` LLL IR optimizer.
+    #[arg(long)]
+    pub disable_vyper_optimizer: bool,
 
     /// Enables decimals in the underlying `vyper` compiler.
     /// Only available in `vyper` v0.4.0 and later.
@@ -106,7 +106,7 @@ pub struct Arguments {
     pub debug_output_dir: Option<PathBuf>,
 
     /// Suppress specified warnings.
-    /// Available arguments: `ecrecover`, `extcodesize`, `txorigin`.
+    /// Available arguments: `txorigin`.
     #[arg(long, num_args = 1..)]
     pub suppress_warnings: Option<Vec<String>>,
 
@@ -154,17 +154,17 @@ impl Arguments {
         }
 
         let modes_count = [
+            self.format.is_some(),
             self.llvm_ir,
             self.eravm_assembly,
             self.disassemble,
-            self.format.is_some(),
         ]
         .iter()
         .filter(|&&x| x)
         .count();
         if modes_count > 1 {
             anyhow::bail!(
-                "Error: Only one modes is allowed at the same time: Vyper, LLVM IR, EraVM assembly, disassembler."
+                "Error: Only one mode is allowed at the same time: format (`-f`), LLVM IR, EraVM assembly, disassembler."
             );
         }
 

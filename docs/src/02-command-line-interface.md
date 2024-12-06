@@ -42,42 +42,38 @@ zkvyper './Simple.vy' --vyper '/path/to/vyper'
 *zkvyper* supports multiple input files. The following command compiles two Vyper files and prints the bytecode:
 
 ```shell
-zkvyper './Simple.vy' './Complex.vy' --bin
+zkvyper './Simple.vy' './Complex.vy'
 ```
 
 
 
 ### `--output-dir`
 
-Specifies the output directory for build artifacts. Can only be used with [basic CLI](#basic-cli) and [combined JSON](./04-combined-json.md) modes.
+Specifies the output directory for build artifacts. Can only be used in [basic CLI](#basic-cli) and [combined JSON](./03-combined-json.md) modes.
 
 Usage in basic CLI mode:
 
 ```shell
-zkvyper './Simple.vy' --asm --metadata --output-dir './build/'
-ls './build/Simple.vy'
-```
-
-Output:
-
-```text
-Compiler run successful. Artifact(s) can be found in directory "build".
-...
-Test.zasm       Test.zbin       Test_meta.json
-```
-
-Usage in combined JSON mode:
-
-```shell
-zkvyper './Simple.vy' --combined-json 'bin,asm,metadata' --output-dir './build/'
+zkvyper './Simple.vy' --output-dir './build/'
 ls './build/'
 ```
 
 Output:
 
 ```text
-Compiler run successful. Artifact(s) can be found in directory "build".
-...
+default.vy.zbin
+```
+
+Usage in combined JSON mode:
+
+```shell
+zkvyper './Simple.vy' -f 'combined_json' --output-dir './build/'
+ls './build/'
+```
+
+Output:
+
+```text
 combined.json
 ```
 
@@ -92,13 +88,13 @@ Can only be used in combination with the [`--output-dir`](#--output-dir) option.
 Usage:
 
 ```shell
-zkvyper './Simple.vy' --combined-json 'bin,asm,metadata' --output-dir './build/' --overwrite
+zkvyper './Simple.vy' -f 'combined_json' --output-dir './build/' --overwrite
 ```
 
 If the `--overwrite` option is not specified and the output files already exist, *zkvyper* will print an error message and exit:
 
 ```text
-Error: Refusing to overwrite an existing file "build/combined.json" (use --overwrite to force).
+Refusing to overwrite an existing file "./build/combined.json" (use --overwrite to force).
 ```
 
 
@@ -127,7 +123,9 @@ zkvyper --help
 
 
 
-## Compilation Settings
+## *zkvyper* Compilation Settings
+
+The options in this section are only configuring the *zkvyper* compiler and do not affect the *vyper* compiler.
 
 
 
@@ -174,35 +172,6 @@ zkvyper './Simple.vy' --llvm-options='-eravm-jump-table-density-threshold=10'
 
 
 
-### `--evm-version`
-
-Specifies the EVM version *vyper* will produce artifacts for. Only LLL IR is known to be affected by this option. For instance, if the EVM version is set to *cancun*, the LLL IR may contain `MCOPY` instructions.
-
-> EVM version only affects IR artifacts produced by *vyper* and does not affect EraVM bytecode produced by *zkvyper*.
-
-The following values are allowed, however have in mind that newer EVM versions are only supported by newer versions of *vyper*:
-- homestead
-- tangerineWhistle
-- spuriousDragon
-- byzantium
-- constantinople
-- petersburg
-- istanbul
-- berlin
-- london
-- paris
-- shanghai
-- cancun
-- prague
-
-Usage:
-
-```shell
-zkvyper './Simple.vy' --evm-version 'cancun'
-```
-
-
-
 ### `--metadata-hash`
 
 Specifies the hash function used for contract metadata.
@@ -241,6 +210,73 @@ zkvyper './Simple.vy' --suppress-warnings 'txorigin'
 
 
 
+## *vyper* Compilation Settings
+
+The options in this section are only configuring *vyper*, so they are passed directly to its child process, and do not affect the *zkvyper* compiler.
+
+
+
+### `--evm-version`
+
+Specifies the EVM version *vyper* will produce artifacts for. Only LLL IR is known to be affected by this option. For instance, if the EVM version is set to *cancun*, the LLL IR may contain `mcopy` instructions.
+
+> EVM version only affects IR artifacts produced by *vyper* and does not affect EraVM bytecode produced by *zkvyper*.
+
+The following values are allowed by *zkvyper*:
+- homestead
+- tangerineWhistle
+- spuriousDragon
+- byzantium
+- constantinople
+- petersburg
+- istanbul
+- berlin
+- london
+- paris
+- shanghai
+- cancun
+- prague
+
+> However, have in mind that many of them are not supported by *vyper*, or only supported by its newer versions.
+> For instance, the `--help` message of *vyper* v0.4.0 only declares the following EVM versions as supported: *london*, *paris*, *shanghai*, *cancun*.
+> For the full list of supported EVM versions, refer to [the official *vyper* documentation](https://docs.vyperlang.org/en/stable/).
+
+Usage:
+
+```shell
+zkvyper './Simple.vy' --evm-version 'cancun'
+```
+
+
+
+### `--disable-vyper-optimizer`
+
+Disables the optimizer of the *vyper* compiler.
+
+The optimizer is enabled by default for *vyper* v0.3.x. For *vyper* v0.4.x it is disabled and cannot be enabled, as the optimized LLL IR is not compatible with *zkvyper*.
+
+> *zkvyper* relies on the LLVM optimizer, so the *vyper* optimizer is not affecting the size or performance of the final bytecode significantly.
+
+Usage:
+
+```shell
+zkvyper './Simple.vy' --disable-vyper-optimizer
+```
+
+
+
+### `--enable-decimals`
+
+Enables [decimals](https://docs.vyperlang.org/en/stable/types.html#decimals) in *vyper* v0.4.0.
+
+Usage:
+
+```shell
+zkvyper './Simple.vy' --enable-decimals
+```
+
+
+
 ## Multi-Language Support
 
 *zkvyper* supports input in multiple programming languages:
@@ -250,6 +286,12 @@ zkvyper './Simple.vy' --suppress-warnings 'txorigin'
 - [EraVM assembly](https://docs.zksync.io/zk-stack/components/compiler/specification/binary-layout)
 
 The following sections outline how to use *zkvyper* with these languages.
+
+> The mode-altering CLI options are mutually exclusive. This means that only one of the options below can be enabled at a time:
+> - `-f`
+> - `--llvm-ir`
+> - `--eravm-assembly`
+> - `--disassemble`
 
 
 
@@ -262,15 +304,14 @@ Unlike *vyper*, *zkvyper* is an LLVM-based compiler toolchain, so it uses LLVM I
 Usage:
 
 ```shell
-zkvyper --llvm-ir './Simple.ll' --bin
+zkvyper --llvm-ir './Simple.ll'
 ```
 
 Output:
 
 ```text
-======= Simple.ll =======
-Binary:
-000000000002004b000000070000613d0000002001000039000000000010043f...
+Contract `<absolute-path>/Simple.ll`:
+0x000000000002004b000000070000613d000000200100003900000000001004...
 ```
 
 
@@ -286,15 +327,14 @@ For the EraVM assembly specification, visit the [EraVM documentation](https://do
 Usage:
 
 ```shell
-zkvyper --eravm-assembly './Simple.zasm' --bin
+zkvyper --eravm-assembly './Simple.zasm'
 ```
 
 Output:
 
 ```text
-======= Simple.zasm =======
-Binary:
-000000000120008c000000070000613d00000020010000390000000000100435...
+Contract `<absolute-path>/Simple.zasm`:
+0x000000000120008c000000070000613d00000020010000390000000000100435000000000001043500000005010000410000000c0001042e0000002a01000039000000000010043500000004010000410000000c0001042e0000000b000004320000000c0001042e0000000d00010430000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000004000000000000000000000000043bbf1d8e1b7b1d452f006fe83028ba3b7853f9ea8a4635f4c584fe1dc6429b5
 ```
 
 
@@ -302,12 +342,6 @@ Binary:
 ## Integrated Tooling
 
 *zkvyper* includes several tools provided by the LLVM framework out of the box, such as disassembler and linker. The following sections describe the usage of these tools.
-
-> The mode-altering CLI options are mutually exclusive. This means that only one of the options below can be enabled at a time:
-> - `-f`
-> - `--llvm-ir`
-> - `--eravm-assembly`
-> - `--disassemble`
 
 
 
@@ -380,19 +414,13 @@ ls './debug/'
 Output:
 
 ```text
-Compiler run successful. No output requested. Use flags --metadata, --asm, --bin.
-...
-Simple.vy.C.runtime.optimized.ll
-Simple.vy.C.runtime.unoptimized.ll
-Simple.vy.C.yul
-Simple.vy.C.zasm
-Simple.vy.Test.runtime.optimized.ll
-Simple.vy.Test.runtime.unoptimized.ll
-Simple.vy.Test.yul
-Simple.vy.Test.zasm
+<absolute-path-with-underscores>_Simple.vy.lll
+<absolute-path-with-underscores>_Simple.vy.runtime.optimized.ll
+<absolute-path-with-underscores>_Simple.vy.runtime.unoptimized.ll
+<absolute-path-with-underscores>_Simple.vy.zasm
 ```
 
-The output file name is constructed as follows: `<ContractPath>.<ContractName>.<Modifiers>.<Extension>`.
+The output file name is constructed as follows: `<AbsoluteContractPathWithUnderscores>_<ContractName>.<Modifiers>.<Extension>`.
 
 
 

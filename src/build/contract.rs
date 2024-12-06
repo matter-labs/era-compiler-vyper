@@ -221,6 +221,9 @@ impl Contract {
                 anyhow::anyhow!("File {:?} writing error: {}", binary_file_path, error)
             })?;
 
+        if selection.is_empty() {
+            return Ok(());
+        }
         let mut extra_output_file_path = output_directory.to_owned();
         extra_output_file_path.push(file_name.as_ref());
         if extra_output_file_path.exists() && !overwrite {
