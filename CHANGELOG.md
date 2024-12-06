@@ -14,6 +14,7 @@
 
 ### Fixed
 
+- Calls to precompile `0x04` are not replaced with `memcopy` anymore
 - Cleared return data after calling `CREATE`/`CREATE2`
 
 ## [1.5.7] - 2024-10-31
