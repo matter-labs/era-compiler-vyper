@@ -172,12 +172,15 @@ pub fn combined_json(
 ) -> anyhow::Result<VyperCompilerCombinedJson> {
     let zkvyper_version = semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid");
 
-    let output_selection = vec![
+    let output_selection: Vec<VyperSelection> = vec![
+        VyperSelection::IRJson,
+        VyperSelection::AST,
         VyperSelection::ABI,
         VyperSelection::MethodIdentifiers,
-        VyperSelection::StorageLayout,
+        VyperSelection::Layout,
         VyperSelection::UserDocumentation,
         VyperSelection::DeveloperDocumentation,
+        VyperSelection::EraVMAssembly,
         VyperSelection::ProjectMetadata,
     ];
 

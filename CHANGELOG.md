@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Missing fields to combined JSON output: LLL IR JSON, AST, EraVM assembly
+
 ### Changed
 
 - The disassembler now only works with files with hexadecimal strings

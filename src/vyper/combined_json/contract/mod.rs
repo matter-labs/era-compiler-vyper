@@ -18,6 +18,12 @@ pub struct Contract {
     /// The same as above. Kept for legacy reasons.
     pub bytecode_runtime: String,
 
+    /// The `vyper` LLL IR JSON output.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ir_json: Option<serde_json::Value>,
+    /// The `vyper` AST output.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ast: Option<serde_json::Value>,
     /// The `vyper` method identifiers output.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub method_identifiers: Option<BTreeMap<String, String>>,
@@ -37,12 +43,12 @@ pub struct Contract {
     /// The EraVM text assembly.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub assembly: Option<String>,
-    /// The compilation warnings.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub warnings: Option<Vec<Warning>>,
     /// The factory dependencies.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub factory_deps: Option<BTreeMap<String, String>>,
+    /// The compilation warnings.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub warnings: Option<Vec<Warning>>,
 }
 
 impl Contract {
