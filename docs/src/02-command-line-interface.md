@@ -47,6 +47,77 @@ zkvyper './Simple.vy' './Complex.vy'
 
 
 
+### `--format` / `-f`
+
+This option can be used for two purposes:
+1. Switch to [combined JSON mode](./03-combined-json.md).
+2. Select the desired output in [basic CLI mode](#basic-cli).
+
+In basic CLI mode, the following selectors are available:
+
+|       Selector       |  Source   |                                 Description                                                    |
+|:--------------------:|:---------:|:----------------------------------------------------------------------------------------------:|
+| combined_json        | both      | Switches to [combined JSON mode](./03-combined-json.md). Cannot be used with other selectors.
+| ir_json              | vyper     | Vyper LLL IR that is used by *zkvyper* to produce LLVM IR.
+| ast                  | vyper     | Abstract Syntax Tree (AST) of the Vyper source code.
+| abi                  | vyper     | Application Binary Interface (ABI) of the Vyper contract.
+| method_identifiers   | vyper     | Hashes of function signature of the Vyper contract.
+| layout               | vyper     | Storage and code layouts of the Vyper contract.
+| userdoc              | vyper     | User documentation of the Vyper contract.
+| devdoc               | vyper     | Developer documentation of the Vyper contract.
+| eravm_assembly       | zkvyper   | EraVM assembly of the Vyper contract.
+| project_metadata     | zkvyper   | Project metadata of the Vyper contract.
+
+> Some data above is produced by *vyper*, whereas the rest is produced by *zkvyper*, as designated in the *Source* column.
+
+Usage:
+
+```shell
+zkvyper './Simple.vy' --format 'ir_json,ast,abi,method_identifiers,layout,userdoc,devdoc,eravm_assembly,project_metadata'
+```
+
+Output:
+
+```text
+Contract `/Users/hedgarmac/src/era-compiler-tester//tests/vyper/simple/default.vy`:
+0x0000000100200190000000110000c13d0000000a001001980000001d0000613d...(truncated)
+{"seq":[(truncated)]}
+{"contract_name":"/Users/hedgarmac/src/era-compiler-tester/tests/vyper/simple/default.vy","ast":{(truncated)}}
+[{"inputs":[],"name":"first","outputs":[{"name":"","type":"uint8"}],"stateMutability":"pure","type":"function"},{"inputs":[],"name":"second","outputs":[{"name":"","type":"uint256"}],"stateMutability":"pure","type":"function"}]
+{"first()":"0x3df4ddf4","second()":"0x5a8ac02d"}
+{}
+{}
+{}
+Contract `/Users/hedgarmac/src/era-compiler-tester//tests/vyper/simple/default.vy` assembly:
+        .text
+        .file   "default.vy"
+        .globl  __entry
+__entry:
+.func_begin0:
+        and!    1, r2, r0
+        jump.ne @.BB0_9
+        and!    code[@CPI0_1], r1, r0
+        jump.eq @.BB0_10
+... (truncated)
+
+Project metadata:
+{"evm_version":"cancun","llvm_options":[],"optimizer_settings":"M3B3","source_code_hash":[147,242,126,144,(truncated),22,153,132,218],"source_version":"0.4.0","zk_version":"1.5.8"}
+```
+
+The output order above is fixed and cannot be changed by the order of the selectors in the `--format` argument:
+1. Bytecode
+2. LLL IR JSON
+3. AST
+4. ABI
+5. Method identifiers
+6. Layout
+7. User documentation
+8. Developer documentation
+9. EraVM assembly
+10. Project metadata
+
+
+
 ### `--output-dir`
 
 Specifies the output directory for build artifacts. Can only be used in [basic CLI](#basic-cli) and [combined JSON](./03-combined-json.md) modes.
@@ -67,7 +138,7 @@ default.vy.zbin
 Usage in combined JSON mode:
 
 ```shell
-zkvyper './Simple.vy' -f 'combined_json' --output-dir './build/'
+zkvyper './Simple.vy' --format 'combined_json' --output-dir './build/'
 ls './build/'
 ```
 
@@ -88,7 +159,7 @@ Can only be used in combination with the [`--output-dir`](#--output-dir) option.
 Usage:
 
 ```shell
-zkvyper './Simple.vy' -f 'combined_json' --output-dir './build/' --overwrite
+zkvyper './Simple.vy' --format 'combined_json' --output-dir './build/' --overwrite
 ```
 
 If the `--overwrite` option is not specified and the output files already exist, *zkvyper* will print an error message and exit:
@@ -123,9 +194,25 @@ zkvyper --help
 
 
 
+## Other I/O Modes
+
+To switch to combined JSON mode, use [the `--format` option](#--format---f) with the `combined_json` argument:
+
+```shell
+zkvyper './Simple.vy' --format 'combined_json'
+```
+
+The mode-altering CLI options are mutually exclusive. This means that only one of the options below can be enabled at a time:
+- `--format` / `-f`
+- `--llvm-ir`
+- `--eravm-assembly`
+- `--disassemble`
+
+
+
 ## *zkvyper* Compilation Settings
 
-The options in this section are only configuring the *zkvyper* compiler and do not affect the *vyper* compiler.
+The options in this section are only configuring the *zkvyper* compiler and do not affect the underlying *vyper* compiler.
 
 
 
@@ -158,23 +245,14 @@ Under the hood, this option automatically triggers recompilation of contracts wi
 
 
 
-### `--llvm-options`
-
-Specifies additional options for the LLVM framework. The argument must be a single quoted string following a `=` separator.
-
-Usage:
-
-```shell
-zkvyper './Simple.vy' --llvm-options='-eravm-jump-table-density-threshold=10'
-```
-
-> The `--llvm-options` option is experimental and must only be used by experienced users. All supported options will be documented in the future.
-
-
-
 ### `--metadata-hash`
 
-Specifies the hash function used for contract metadata.
+Specifies the hash function used for project metadata.
+
+<div class="warning">
+For security reasons, the source code of all input Vyper contracts are hashed together, so a change in one contract will affect the metadata hash appended to the bytecode of all contracts, even if there are no dependency relations between them.
+It may be changed in the future, so each contract will be hashed separately just like *vyper* does.
+</div>
 
 The following values are allowed:
 
@@ -207,6 +285,20 @@ Usage:
 ```shell
 zkvyper './Simple.vy' --suppress-warnings 'txorigin'
 ```
+
+
+
+### `--llvm-options`
+
+Specifies additional options for the LLVM framework. The argument must be a single quoted string following a `=` separator.
+
+Usage:
+
+```shell
+zkvyper './Simple.vy' --llvm-options='-eravm-jump-table-density-threshold=10'
+```
+
+> The `--llvm-options` option is experimental and must only be used by experienced users. All supported options will be documented in the future.
 
 
 
@@ -286,12 +378,6 @@ zkvyper './Simple.vy' --enable-decimals
 - [EraVM assembly](https://docs.zksync.io/zk-stack/components/compiler/specification/binary-layout)
 
 The following sections outline how to use *zkvyper* with these languages.
-
-> The mode-altering CLI options are mutually exclusive. This means that only one of the options below can be enabled at a time:
-> - `-f`
-> - `--llvm-ir`
-> - `--eravm-assembly`
-> - `--disassemble`
 
 
 

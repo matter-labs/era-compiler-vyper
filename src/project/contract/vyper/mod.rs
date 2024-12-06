@@ -108,7 +108,7 @@ impl Contract {
                 VyperSelection::MethodIdentifiers => {
                     method_identifiers = Some(era_compiler_common::deserialize_from_str(line)?);
                 }
-                VyperSelection::StorageLayout => {
+                VyperSelection::Layout => {
                     layout = Some(era_compiler_common::deserialize_from_str(line)?);
                 }
                 VyperSelection::UserDocumentation => {
@@ -194,7 +194,7 @@ impl Contract {
         } else {
             None
         };
-        let layout = if output_selection.contains(&VyperSelection::StorageLayout) {
+        let layout = if output_selection.contains(&VyperSelection::Layout) {
             self.layout.take()
         } else {
             None
@@ -232,7 +232,8 @@ impl Contract {
         let mut build = context.build(
             contract_path,
             metadata_hash,
-            output_selection.contains(&VyperSelection::EraVMAssembly),
+            output_selection.contains(&VyperSelection::EraVMAssembly)
+                || output_selection.contains(&VyperSelection::CombinedJson),
             false,
         )?;
 
@@ -252,8 +253,8 @@ impl Contract {
             build,
             ir,
             ast,
-            method_identifiers,
             abi,
+            method_identifiers,
             layout,
             userdoc,
             devdoc,

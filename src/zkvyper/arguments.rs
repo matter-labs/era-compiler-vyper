@@ -52,7 +52,6 @@ pub struct Arguments {
     pub vyper: Option<String>,
 
     /// The EVM version to generate IR for.
-    /// See https://github.com/matter-labs/era-compiler-common/blob/main/era-compiler-common/src/evm_version.rs for reference.
     #[arg(long)]
     pub evm_version: Option<era_compiler_common::EVMVersion>,
 
@@ -66,8 +65,8 @@ pub struct Arguments {
     pub enable_decimals: bool,
 
     /// Set the output format selection.
-    /// Available options: combined_json | ir_json | metadata | ast | abi | method_identifiers | layout | userdoc | devdoc | eravm_assembly
-    #[arg(short)]
+    /// Available options: combined_json | ir_json | ast | abi | method_identifiers | layout | userdoc | devdoc | eravm_assembly | project_metadata
+    #[arg(short, long)]
     pub format: Option<String>,
 
     /// Set the number of threads, which execute the tests concurrently.
@@ -164,7 +163,7 @@ impl Arguments {
         .count();
         if modes_count > 1 {
             anyhow::bail!(
-                "Error: Only one mode is allowed at the same time: format (`-f`), LLVM IR, EraVM assembly, disassembler."
+                "Error: Only one mode is allowed at the same time: format, LLVM IR, EraVM assembly, disassembler."
             );
         }
 

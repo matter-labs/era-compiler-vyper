@@ -19,8 +19,8 @@ pub enum Selection {
     ABI,
     /// The method identifiers.
     MethodIdentifiers,
-    /// The storage layout.
-    StorageLayout,
+    /// The layout.
+    Layout,
     /// The user documentation.
     UserDocumentation,
     /// The developer documentation.
@@ -55,7 +55,7 @@ impl FromStr for Selection {
             "ast" => Self::AST,
             "abi" => Self::ABI,
             "method_identifiers" => Self::MethodIdentifiers,
-            "layout" => Self::StorageLayout,
+            "layout" => Self::Layout,
             "userdoc" => Self::UserDocumentation,
             "devdoc" => Self::DeveloperDocumentation,
             "eravm_assembly" => Self::EraVMAssembly,
@@ -73,7 +73,7 @@ impl std::fmt::Display for Selection {
             Self::AST => write!(f, "ast"),
             Self::ABI => write!(f, "abi"),
             Self::MethodIdentifiers => write!(f, "method_identifiers"),
-            Self::StorageLayout => write!(f, "layout"),
+            Self::Layout => write!(f, "layout"),
             Self::UserDocumentation => write!(f, "userdoc"),
             Self::DeveloperDocumentation => write!(f, "devdoc"),
             Self::EraVMAssembly => write!(f, "eravm_assembly"),

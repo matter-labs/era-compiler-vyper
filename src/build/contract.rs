@@ -21,13 +21,13 @@ pub struct Contract {
     /// The LLVM module build.
     pub build: era_compiler_llvm_context::EraVMBuild,
     /// The LLL IR parsed from JSON.
-    pub ir: Option<IR>,
+    pub ir_json: Option<IR>,
     /// The contract AST.
     pub ast: Option<AST>,
-    /// The `vyper` method identifiers output.
-    pub method_identifiers: Option<BTreeMap<String, String>>,
     /// The `vyper` ABI output.
     pub abi: Option<serde_json::Value>,
+    /// The `vyper` method identifiers output.
+    pub method_identifiers: Option<BTreeMap<String, String>>,
     /// The `vyper` layout output.
     pub layout: Option<serde_json::Value>,
     /// The `vyper` userdoc output.
@@ -44,10 +44,10 @@ impl Contract {
     ///
     pub fn new(
         build: era_compiler_llvm_context::EraVMBuild,
-        ir: Option<IR>,
+        ir_json: Option<IR>,
         ast: Option<AST>,
-        method_identifiers: Option<BTreeMap<String, String>>,
         abi: Option<serde_json::Value>,
+        method_identifiers: Option<BTreeMap<String, String>>,
         layout: Option<serde_json::Value>,
         userdoc: Option<serde_json::Value>,
         devdoc: Option<serde_json::Value>,
@@ -55,10 +55,10 @@ impl Contract {
     ) -> Self {
         Self {
             build,
-            ir,
+            ir_json,
             ast,
-            method_identifiers,
             abi,
+            method_identifiers,
             layout,
             userdoc,
             devdoc,
@@ -72,10 +72,10 @@ impl Contract {
     pub fn new_inner(build: era_compiler_llvm_context::EraVMBuild) -> Self {
         Self::new(
             build,
-            None,
-            None,
-            Some(BTreeMap::new()),
+            Some(IR::default()),
+            Some(AST::default()),
             Some(serde_json::json!([])),
+            Some(BTreeMap::new()),
             Some(serde_json::json!({})),
             Some(serde_json::json!({})),
             Some(serde_json::json!({})),
@@ -114,7 +114,7 @@ impl Contract {
                 VyperSelection::IRJson => {
                     serde_json::to_writer(
                         std::io::stdout(),
-                        self.ir.as_ref().expect("Always exists"),
+                        self.ir_json.as_ref().expect("Always exists"),
                     )?;
                     writeln!(std::io::stdout())?;
                 }
@@ -139,7 +139,7 @@ impl Contract {
                     )?;
                     writeln!(std::io::stdout())?;
                 }
-                VyperSelection::StorageLayout => {
+                VyperSelection::Layout => {
                     serde_json::to_writer(
                         std::io::stdout(),
                         self.layout.as_ref().expect("Always exists"),
@@ -240,7 +240,7 @@ impl Contract {
                 VyperSelection::IRJson => {
                     serde_json::to_writer(
                         &extra_output_file,
-                        self.ir.as_ref().expect("Always exists"),
+                        self.ir_json.as_ref().expect("Always exists"),
                     )?;
                     writeln!(&extra_output_file)?;
                 }
@@ -265,7 +265,7 @@ impl Contract {
                     )?;
                     writeln!(&extra_output_file)?;
                 }
-                VyperSelection::StorageLayout => {
+                VyperSelection::Layout => {
                     serde_json::to_writer(
                         &extra_output_file,
                         self.layout.as_ref().expect("Always exists"),
@@ -343,15 +343,21 @@ impl Contract {
             bytecode: bytecode.clone(),
             bytecode_runtime: bytecode,
 
-            method_identifiers: self.method_identifiers,
+            ir_json: self
+                .ir_json
+                .map(|ir_json| serde_json::to_value(ir_json).expect("Always valid")),
+            ast: self
+                .ast
+                .map(|ast| serde_json::to_value(ast).expect("Always valid")),
             abi: self.abi,
+            method_identifiers: self.method_identifiers,
             layout: self.layout,
             userdoc: self.userdoc,
             devdoc: self.devdoc,
 
             assembly: self.build.assembly,
-            warnings: Some(self.warnings),
             factory_deps: Some(self.build.factory_dependencies),
+            warnings: Some(self.warnings),
         }
     }
 }
