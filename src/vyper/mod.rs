@@ -191,6 +191,7 @@ impl Compiler {
         selection: &[Selection],
         evm_version: Option<era_compiler_common::EVMVersion>,
         enable_decimals: bool,
+        search_paths: Option<Vec<String>>,
         optimize: bool,
     ) -> anyhow::Result<Project> {
         paths.sort();
@@ -216,6 +217,10 @@ impl Compiler {
         }
         if enable_decimals && self.version.default >= Self::FIRST_VERSION_ENABLE_DECIMALS_SUPPORT {
             command.arg("--enable-decimals");
+        }
+        for search_path in search_paths.unwrap_or_default() {
+            command.arg("-p");
+            command.arg(search_path);
         }
         command.arg("-f");
         command.arg(

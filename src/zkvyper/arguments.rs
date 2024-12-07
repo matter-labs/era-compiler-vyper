@@ -64,8 +64,12 @@ pub struct Arguments {
     #[arg(long)]
     pub enable_decimals: bool,
 
+    /// Adds more paths to the list of `vyper` search paths.
+    #[arg(long, num_args = 1..)]
+    pub search_paths: Option<Vec<String>>,
+
     /// Set the output format selection.
-    /// Available options: combined_json | ir_json | ast | abi | method_identifiers | layout | userdoc | devdoc | eravm_assembly | project_metadata
+    /// Available options: combined_json | ir_json, ast, abi, method_identifiers, layout, userdoc, devdoc, eravm_assembly, project_metadata
     #[arg(short, long)]
     pub format: Option<String>,
 

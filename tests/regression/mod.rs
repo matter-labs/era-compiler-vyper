@@ -64,8 +64,15 @@ pub fn build_vyper_combined_json(
 
     let input_paths = input_paths.into_iter().map(PathBuf::from).collect();
 
-    let project: Project =
-        vyper.batch(&vyper.version.default, input_paths, &[], None, true, true)?;
+    let project: Project = vyper.batch(
+        &vyper.version.default,
+        input_paths,
+        &[],
+        None,
+        true,
+        None,
+        true,
+    )?;
 
     let mut build = project.compile(
         None,
