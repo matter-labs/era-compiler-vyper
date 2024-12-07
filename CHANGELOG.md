@@ -5,6 +5,7 @@
 ### Added
 
 - Missing fields to combined JSON output: LLL IR JSON, AST, EraVM assembly
+- The `--search-paths` option that is propagated to `vyper` as series of `-p` flags
 
 ### Changed
 
