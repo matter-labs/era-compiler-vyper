@@ -119,6 +119,7 @@ pub fn standard_output(
     output_selection: &[VyperSelection],
     evm_version: Option<era_compiler_common::EVMVersion>,
     enable_decimals: bool,
+    search_paths: Option<Vec<String>>,
     metadata_hash_type: era_compiler_common::HashType,
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
@@ -132,6 +133,7 @@ pub fn standard_output(
         output_selection,
         evm_version,
         enable_decimals,
+        search_paths,
         vyper_optimizer_enabled,
     )?;
 
@@ -163,6 +165,7 @@ pub fn combined_json(
     vyper: &VyperCompiler,
     evm_version: Option<era_compiler_common::EVMVersion>,
     enable_decimals: bool,
+    search_paths: Option<Vec<String>>,
     metadata_hash_type: era_compiler_common::HashType,
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
@@ -190,6 +193,7 @@ pub fn combined_json(
         output_selection.as_slice(),
         evm_version,
         enable_decimals,
+        search_paths,
         vyper_optimizer_enabled,
     )?;
 
