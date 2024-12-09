@@ -369,6 +369,18 @@ zkvyper './Simple.vy' --enable-decimals
 
 
 
+### `--search-paths`
+
+Passes additional [search paths](https://docs.vyperlang.org/en/stable/structure-of-a-contract.html#searching-for-imports) to *vyper*.
+
+Usage:
+
+```shell
+zkvyper './Simple.vy' --search-paths '/path/to/libraries-1/' '/path/to/libraries-2/'
+```
+
+
+
 ## Multi-Language Support
 
 *zkvyper* supports input in multiple programming languages:
