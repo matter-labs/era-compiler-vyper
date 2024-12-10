@@ -9,201 +9,44 @@ developers to write smart contracts in popular languages such as C++ and Rust.
 
 This repository contains the ZKsync Vyper compiler.
 
-## System Requirements
+## Installation
 
-Supported platforms:
-- **Linux: x86_64, ARM64**
-   * Users are encouraged to adopt GNU libc builds, which offer the same compatibility and are substantially faster.
-   * [musl](https://musl.libc.org)-based builds are deprecated, but still supported to preserve tooling compatibility. 
-- **MacOS 11+: x86_64, ARM64 (Apple silicon)**
-- **Windows: x86_64**
-   * Only Windows 10 has been tested so far, but other versions should be OK as well.
+To install the *zkvyper* compiler, follow the [installation guide](./docs/src/01-installation.md).
 
-We recommend at least 4 GB of RAM available for the build process.
-
-## Delivery Methods
-
-1. **Install via npm**:
-   * Use [ZKsync CLI](https://docs.zksync.io/build/tooling/zksync-cli/) to obtain a compiler package and prepare a project environment. After the installation you can modify a hardhat configuration file in the project and specify `zkvyper` version there. Use `npx hardhat compile` or `yarn hardhat compile` to compile. [@matterlabs/hardhat-zksync-vyper](https://docs.zksync.io/build/tooling/hardhat/getting-started) package will be used from npm repo.
-2. **Download prebuilt binaries**:
-   * Download [v0.3.3, v0.3.9, or v0.3.10 of the Vyper compiler](https://github.com/vyperlang/vyper/releases) and [zkvyper](https://github.com/matter-labs/zkvyper-bin) binaries directly from GitHub. Use the CLI or Hardhat to compile contracts.
-3. **Build binaries from sources**:
-   * Build binaries using the guide below. Use the CLI or Hardhat to compile contracts.
-
-## Building
-
-<details>
-<summary>1. Install the system prerequisites.</summary>
-
-   * Linux (Debian):
-
-      Install the following packages:
-      ```shell
-      apt install cmake ninja-build curl git libssl-dev pkg-config clang lld
-      ```
-
-      > Additionally install `musl-tools` if you are building for the `x86_64-unknown-linux-musl` or `aarch64-unknown-linux-musl` targets.
-   * Linux (Arch):
-
-      Install the following packages:
-      ```shell
-      pacman -Syu which cmake ninja curl git pkg-config clang lld
-      ```
-   * MacOS:
-
-      * Install the [HomeBrew](https://brew.sh) package manager.
-      * Install the following packages:
-
-         ```shell
-         brew install cmake ninja coreutils
-         ```
-
-      * Install your choice of a recent LLVM/[Clang](https://clang.llvm.org) compiler, e.g. via [Xcode](https://developer.apple.com/xcode/), [Apple’s Command Line Tools](https://developer.apple.com/library/archive/technotes/tn2339/_index.html), or your preferred package manager.
-</details>
-
-<details>
-<summary>2. Install Rust.</summary>
-
-   * Follow the latest [official instructions](https://www.rust-lang.org/tools/install):
-      ```shell
-      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-      . ${HOME}/.cargo/env
-      ```
-
-      > Currently we are not pinned to any specific version of Rust, so just install the latest stable build for your   platform.
-
-   * If you would like to use `musl` binaries on Linux, install the target for your platform:
-
-      For `x86_64`:
-      ```shell
-      rustup target add x86_64-unknown-linux-musl
-      ```
-
-      For `arm64(aarch64)`:
-      ```shell
-      rustup target add aarch64-unknown-linux-musl
-      ```
-</details>
-
-<details>
-<summary>3. Download `vyper` compiler.</summary>
-
-   Download [v0.3.3, v0.3.9, or v0.3.10 of the Vyper compiler](https://github.com/vyperlang/vyper/releases).
-
-   > If it is not named exactly `vyper` in your `$PATH`, see the `--vyper` option below.
-
-</details>
-
-<details>
-<summary>4. Clone and checkout repository.</summary>
-
-   Use the following commands to clone and checkout the ZKsync Vyper compiler repository:
-   ```shell
-   git clone https://github.com/matter-labs/era-compiler-vyper.git
-   cd era-compiler-vyper
-   git checkout <ref>
-   ```
-
-   > Replace `<ref>` with the tag, branch, or commit you want to build or skip this step to use default branch of the repository.
-
-</details>
-
-<details>
-<summary>5. Install the ZKsync LLVM framework builder.</summary>
-
-   * Install the builder using `cargo`:
-      ```shell
-      cargo install compiler-llvm-builder
-      ```
-
-      > The builder is not the ZKsync LLVM framework itself, but a tool that clones its repository and runs a sequence of build commands. By default it is installed in `~/.cargo/bin/`, which is recommended to be added to your `$PATH`.
-
-</details>
-
-<details>
-<summary>6. Build the ZKsync LLVM framework.</summary>
-
-   * Clone and build the ZKsync LLVM framework using the `zksync-llvm` tool:
-      ```shell
-      zksync-llvm clone
-      zksync-llvm build
-      ```
-
-      The build artifacts will end up in the `./target-llvm/target-final/` directory.
-      You may set the `LLVM_SYS_170_PREFIX` shell variable to the absolute path to that directory to use this build as a compiler dependency.
-      If built with the `--enable-tests` option, test tools will be in the `./target-llvm/build-final/` directory, along   with copies of the build artifacts. For all supported build options, run `zksync-llvm build --help`.
-
-      > If you need a specific branch of ZKsync LLVM framework, change it in the `LLVM.lock` file at the root of the repository.
-
-   * If you are building on Linux for distribution  targeting `x86_64-unknown-linux-musl` or `aarch64-unknown-linux-musl`, use the following commands:
-      ```shell
-      zksync-llvm clone --target-env musl
-      zksync-llvm build --target-env musl
-      ```
-
-   > You could use `--use-ccache` option to speed up the build process if you have [ccache](https://ccache.dev) installed. For more information and available build options, run `zksync-llvm build --help`.
-
-</details>
-
-<details>
-<summary>7. Build the Vyper compiler executable.</summary>
-
-
-```shell
-cargo build --release
-```
-
-   * On Linux with musl:
-
-      For `x86_64`:
-      ```shell
-      cargo build --release --target x86_64-unknown-linux-musl
-      ```
-
-      For `ARM64 (aarch64)`:
-      ```shell
-      cargo build --release --target aarch64-unknown-linux-musl
-      ```
-
-      > The resulting binary will be in the `./target/release/zkvyper` directory. For `*-musl` targets, the binary will be in the `./target/x86_64-unknown-linux-musl/release/zkvyper` or `./target/aarch64-unknown-linux-musl/release/zkvyper` directory.
-
-</details>
+For local development, [build zkvyper from sources](./docs/src/01-installation.md#building-from-source).
 
 ## Usage
 
-Check `./target/*/zkvyper --help` for compiler usage.
+For the detailed usage guide, see the [comprehensive documentation](./docs/src/02-command-line-interface.md).
 
-A supported version of the Vyper compiler must be available in `$PATH`, or its path must be passed explicitly with the `--vyper` option.
+## Testing
 
-Supported versions:
-- 0.3.3
-- 0.3.9
-- 0.3.10
+To run the unit and CLI tests, execute the following command from the repository root:
 
-For big projects it is more convenient to use the compiler via the Hardhat plugin. For single-file contracts, or small
-projects, the CLI suffices.
+```shell
+cargo test
+```
 
-## Unit testing
+## Documentation
 
-For running unit tests, `zkvyper` itself must also be available in `$PATH`, because it calls itself recursively to allow
-compiling each contract in a separate process. To successfully run unit tests:
+Documentation is using [mdBook](https://github.com/rust-lang/mdBook) utility and its sources available in the `docs/` directory.
+To build the documentation, follow the [instructions](./docs/README.md).
 
-1. Run `cargo build --release`.
-2. Move the binary from `./target/release/zkvyper` to a directory from `$PATH`, or add the target directory itself to `$PATH`.
-3. Run `cargo test`.
-
-## CLI testing
-
-For running command line interface tests, `zkvyper` itself and `vyper` must also be available in `$PATH`, because it calls itself recursively to allow compiling each contract in a separate processes. To successfully run CLI tests:
-
-1. Go to `cli-tests`.
-2. Make `npm i`.
-3. Add `vyper` and `zkvyper` to `$PATH`.
-4. Run `npm test`.
+The deployed versioned builds can be found [here](https://matter-labs.github.io/era-compiler-vyper/latest/).
 
 ## Troubleshooting
 
-- Unset any LLVM-related environment variables you may have set, especially `LLVM_SYS_<version>_PREFIX` (see e.g. [https://crates.io/crates/llvm-sys](https://crates.io/crates/llvm-sys) and [https://llvm.org/docs/GettingStarted.html#local-llvm-configuration](https://llvm.org/docs/GettingStarted.html#local-llvm-configuration)). To make sure: `set | grep LLVM`
+If you have multiple LLVM builds in your system, ensure that you choose the correct one to build the compiler.
+The environment variable `LLVM_SYS_170_PREFIX` sets the path to the directory with LLVM build artifacts, which typically ends with `target-llvm/build-final`.
+For example:
+
+```shell
+export LLVM_SYS_170_PREFIX=~/repositories/era-llvm/target-llvm/build-final 
+```
+
+If you suspect that the compiler is not using the correct LLVM build, check by running `set | grep LLVM`, and reset all LLVM-related environment variables.
+
+For reference, see [llvm-sys](https://crates.io/crates/llvm-sys) and [Local LLVM Configuration Guide](https://llvm.org/docs/GettingStarted.html#local-llvm-configuration).
 
 ## License
 
@@ -216,6 +59,7 @@ at your option.
 
 ## Resources
 
+- [zkvyper documentation](https://matter-labs.github.io/era-compiler-vyper/latest/)
 - [ZKsync Era compiler toolchain documentation](https://docs.zksync.io/zk-stack/components/compiler/toolchain)
 - [Vyper v0.3.3 documentation](https://vyper.readthedocs.io/en/v0.3.3/)
 - [Vyper v0.3.9 documentation](https://vyper.readthedocs.io/en/v0.3.9/)
