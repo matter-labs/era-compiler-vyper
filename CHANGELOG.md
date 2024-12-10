@@ -1,11 +1,12 @@
 # The `zkvyper` changelog
 
-## [Unreleased]
+## [1.5.8] - 2024-12-10
 
 ### Added
 
 - Missing fields to combined JSON output: LLL IR JSON, AST, EraVM assembly
 - The `--search-paths` option that is propagated to `vyper` as series of `-p` flags
+- Documentation for the `zkvyper` installation and CLI endpoints
 
 ### Changed
 
