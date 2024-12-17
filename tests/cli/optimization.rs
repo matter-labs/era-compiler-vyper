@@ -19,3 +19,22 @@ fn default(level: char) -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn eravm_assembly_mode() -> anyhow::Result<()> {
+    common::setup()?;
+
+    let args = &[
+        "--optimization",
+        "3",
+        "--eravm-assembly",
+        common::TEST_GREETER_CONTRACT_PATH,
+    ];
+
+    let result = common::execute_zkvyper(args)?;
+    result.failure().stderr(predicate::str::contains(
+        "LLVM optimizations are not supported in EraVM assembly mode.",
+    ));
+
+    Ok(())
+}

@@ -37,3 +37,21 @@ fn unsupported_selector() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn combined_json_with_other_option() -> anyhow::Result<()> {
+    let _ = common::setup();
+
+    let args = &[
+        common::TEST_GREETER_CONTRACT_PATH,
+        "-f",
+        "combined_json,ast",
+    ];
+
+    let result = common::execute_zkvyper(args)?;
+    result.failure().stderr(predicate::str::contains(
+        "`combined_json` cannot be requested together with other output",
+    ));
+
+    Ok(())
+}

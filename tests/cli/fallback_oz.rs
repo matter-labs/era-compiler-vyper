@@ -13,3 +13,21 @@ fn default() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn eravm_assembly_mode() -> anyhow::Result<()> {
+    common::setup()?;
+
+    let args = &[
+        "--fallback-Oz",
+        "--eravm-assembly",
+        common::TEST_GREETER_CONTRACT_PATH,
+    ];
+
+    let result = common::execute_zkvyper(args)?;
+    result.failure().stderr(predicate::str::contains(
+        "Falling back to -Oz is not supported in EraVM assembly mode.",
+    ));
+
+    Ok(())
+}
