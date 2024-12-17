@@ -78,8 +78,8 @@ fn main_inner() -> anyhow::Result<()> {
         None => None,
     };
 
-    let suppressed_messages = match arguments.suppress_warnings {
-        Some(warnings) => era_compiler_vyper::MessageType::try_from_strings(warnings.as_slice())?,
+    let suppressed_warnings = match arguments.suppress_warnings {
+        Some(warnings) => era_compiler_vyper::WarningType::try_from_strings(warnings.as_slice())?,
         None => vec![],
     };
 
@@ -133,7 +133,7 @@ fn main_inner() -> anyhow::Result<()> {
             metadata_hash_type,
             optimizer_settings,
             llvm_options,
-            suppressed_messages,
+            suppressed_warnings,
             debug_config,
         )
     } else if arguments.eravm_assembly {
@@ -142,12 +142,11 @@ fn main_inner() -> anyhow::Result<()> {
             output_selection.as_slice(),
             metadata_hash_type,
             llvm_options,
-            suppressed_messages,
+            suppressed_warnings,
             debug_config,
         )
     } else if arguments.disassemble {
-        era_compiler_vyper::disassemble_eravm(arguments.input_paths)?;
-        return Ok(());
+        return era_compiler_vyper::disassemble_eravm(arguments.input_paths);
     } else {
         let vyper = era_compiler_vyper::VyperCompiler::new(
             arguments
@@ -167,7 +166,7 @@ fn main_inner() -> anyhow::Result<()> {
                 vyper_optimizer_enabled,
                 optimizer_settings,
                 llvm_options,
-                suppressed_messages,
+                suppressed_warnings,
                 debug_config,
             )?;
 
@@ -193,7 +192,7 @@ fn main_inner() -> anyhow::Result<()> {
             vyper_optimizer_enabled,
             optimizer_settings,
             llvm_options,
-            suppressed_messages,
+            suppressed_warnings,
             debug_config,
         )
     }?;

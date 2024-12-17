@@ -12,9 +12,9 @@ use era_compiler_llvm_context::EraVMWriteLLVM;
 use era_compiler_llvm_context::IContext;
 
 use crate::build::contract::Contract as ContractBuild;
-use crate::message_type::MessageType;
 use crate::project::dependency_data::DependencyData;
 use crate::vyper::selection::Selection as VyperSelection;
+use crate::warning_type::WarningType;
 
 use self::ast::AST;
 use self::expression::Expression;
@@ -153,12 +153,12 @@ impl Contract {
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
         output_selection: Vec<VyperSelection>,
-        suppressed_messages: Vec<MessageType>,
+        suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
         let warnings = self
             .ast
-            .get_messages(&self.ast.ast, suppressed_messages.as_slice());
+            .get_warnings(&self.ast.ast, suppressed_warnings.as_slice());
 
         let llvm = inkwell::context::Context::create();
         let optimizer = era_compiler_llvm_context::Optimizer::new(optimizer_settings.clone());

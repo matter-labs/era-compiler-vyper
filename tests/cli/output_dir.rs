@@ -1,10 +1,12 @@
-use crate::common;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
+use crate::common;
+
 #[test]
-fn default_run_with_output_dir() -> anyhow::Result<()> {
+fn default() -> anyhow::Result<()> {
     let _ = common::setup();
+
     let tmp_dir_zk_vyper = TempDir::new().expect("Failed to create temp dir");
     let tmp_dir_path_zk_vyper = tmp_dir_zk_vyper.path().to_str().unwrap();
 
@@ -36,8 +38,39 @@ fn default_run_with_output_dir() -> anyhow::Result<()> {
 }
 
 #[test]
-fn default_run_with_output_dir_and_assembly() -> anyhow::Result<()> {
+fn combined_json() -> anyhow::Result<()> {
     let _ = common::setup();
+
+    let tmp_dir_zk_vyper = TempDir::new().expect("Failed to create temp dir");
+    let tmp_dir_path_zk_vyper = tmp_dir_zk_vyper.path().to_str().unwrap();
+
+    let args = &[
+        common::TEST_GREETER_CONTRACT_PATH,
+        "-f",
+        "combined_json",
+        "-o",
+        tmp_dir_path_zk_vyper,
+    ];
+
+    let result = common::execute_zkvyper(args)?;
+    result.success();
+
+    assert!(
+        std::fs::exists(format!(
+            "{tmp_dir_path_zk_vyper}/combined.{}",
+            era_compiler_common::EXTENSION_JSON,
+        ))
+        .expect("Always valid"),
+        "Combined JSON file not found"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn with_eravm_assembly() -> anyhow::Result<()> {
+    let _ = common::setup();
+
     let tmp_dir_zk_vyper = TempDir::new().expect("Failed to create temp dir");
     let tmp_dir_path_zk_vyper = tmp_dir_zk_vyper.path().to_str().unwrap();
 
@@ -49,6 +82,7 @@ fn default_run_with_output_dir_and_assembly() -> anyhow::Result<()> {
         "-f",
         "eravm_assembly",
     ];
+
     let result = common::execute_zkvyper(args)?;
     result
         .success()
@@ -73,28 +107,6 @@ fn default_run_with_output_dir_and_assembly() -> anyhow::Result<()> {
             common::VYPER_ASM_OUTPUT_NAME
         ))?
     );
-
-    Ok(())
-}
-
-#[test]
-fn default_run_with_dual_output_dir_options() -> anyhow::Result<()> {
-    let _ = common::setup();
-    let tmp_dir_zk_vyper = TempDir::new().expect("Failed to create temp dir");
-    let tmp_dir_path_zk_vyper = tmp_dir_zk_vyper.path().to_str().unwrap();
-
-    // Check if dual output dir options results in an error
-    let args = &[
-        common::TEST_GREETER_CONTRACT_PATH,
-        "-o",
-        tmp_dir_path_zk_vyper,
-        "-o",
-        tmp_dir_path_zk_vyper,
-    ];
-    let result = common::execute_zkvyper(args)?;
-    result.failure().stderr(predicate::str::contains(
-        "error: the argument '--output-dir <OUTPUT_DIR>' cannot be used multiple times",
-    ));
 
     Ok(())
 }

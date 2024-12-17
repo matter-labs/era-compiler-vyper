@@ -1,56 +1,21 @@
-use crate::common;
 use predicates::prelude::*;
+use test_case::test_case;
 
-/// List of optimization arguments
-const OPTIMIZATION_ARGS: [&str; 6] = ["0", "1", "2", "3", "s", "z"];
+use crate::common;
 
-#[test]
-fn test_optimization_valid_flags() -> anyhow::Result<()> {
+#[test_case('0')]
+#[test_case('1')]
+#[test_case('2')]
+#[test_case('3')]
+#[test_case('s')]
+#[test_case('z')]
+fn default(level: char) -> anyhow::Result<()> {
     let _ = common::setup();
 
-    for arg in OPTIMIZATION_ARGS.iter() {
-        let args = &[common::TEST_GREETER_CONTRACT_PATH, &format!("-O{arg}")];
-        let result = common::execute_zkvyper(args)?;
+    let args = &[common::TEST_GREETER_CONTRACT_PATH, &format!("-O{level}")];
 
-        result.success().stdout(predicate::str::contains("0x"));
-    }
-
-    Ok(())
-}
-
-#[test]
-fn test_optimization_missing_contract() -> anyhow::Result<()> {
-    let _ = common::setup();
-
-    for arg in OPTIMIZATION_ARGS.iter() {
-        let opt_param = format!("-O{arg}");
-        let args = &[opt_param.as_str()];
-        let result = common::execute_zkvyper(args)?;
-
-        result
-            .failure()
-            .stderr(predicate::str::contains("No input files provided"));
-    }
-
-    Ok(())
-}
-
-#[test]
-fn test_optimization_duplicate_flags() -> anyhow::Result<()> {
-    let _ = common::setup();
-
-    for arg in OPTIMIZATION_ARGS.iter() {
-        let args = &[
-            common::TEST_GREETER_CONTRACT_PATH,
-            &format!("-O{arg}"),
-            &format!("-O{arg}"),
-        ];
-        let result = common::execute_zkvyper(args)?;
-
-        result.failure().stderr(predicate::str::contains(
-            "error: the argument '--optimization <OPTIMIZATION>' cannot be used multiple times",
-        ));
-    }
+    let result = common::execute_zkvyper(args)?;
+    result.success().stdout(predicate::str::contains("0x"));
 
     Ok(())
 }

@@ -22,9 +22,9 @@ pub enum Selection {
 
 impl Selection {
     ///
-    /// Generates the default output selection pattern.
+    /// Returns the default required output selection pattern.
     ///
-    pub fn generate_default() -> BTreeMap<String, Vec<Selection>> {
+    pub fn new_required() -> BTreeMap<String, Vec<Selection>> {
         let mut map = BTreeMap::new();
         map.insert(
             "*".to_owned(),

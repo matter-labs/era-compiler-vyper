@@ -1,9 +1,11 @@
-use crate::common;
 use predicates::prelude::*;
 
+use crate::common;
+
 #[test]
-fn run_with_search_paths() -> anyhow::Result<()> {
+fn default() -> anyhow::Result<()> {
     let _ = common::setup();
+
     let args = &[
         common::TEST_GREETER_CONTRACT_PATH,
         "--search-paths",
@@ -11,7 +13,6 @@ fn run_with_search_paths() -> anyhow::Result<()> {
         "tests/unit",
     ];
 
-    // Execute zkvyper command
     let result = common::execute_zkvyper(args)?;
     result.success().stdout(predicate::str::contains("0x"));
 

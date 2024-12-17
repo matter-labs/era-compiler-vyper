@@ -9,14 +9,13 @@
 
 pub mod build;
 pub mod r#const;
-pub mod message_type;
 pub mod process;
 pub mod project;
 pub mod vyper;
+pub mod warning_type;
 
 pub use self::build::contract::Contract as ContractBuild;
 pub use self::build::Build;
-pub use self::message_type::MessageType;
 pub use self::process::input::Input as ProcessInput;
 pub use self::process::output::Output as ProcessOutput;
 pub use self::process::run as run_recursive;
@@ -38,6 +37,7 @@ pub use self::vyper::standard_json::output::error::Error as VyperCompilerStandar
 pub use self::vyper::standard_json::output::Output as VyperCompilerStandardOutputJson;
 pub use self::vyper::version::Version as VyperVersion;
 pub use self::vyper::Compiler as VyperCompiler;
+pub use self::warning_type::WarningType;
 
 use std::collections::BTreeMap;
 use std::io::Write;
@@ -57,7 +57,7 @@ pub fn llvm_ir(
     metadata_hash_type: era_compiler_common::HashType,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
-    suppressed_messages: Vec<MessageType>,
+    suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
     if input_paths.is_empty() {
@@ -72,7 +72,7 @@ pub fn llvm_ir(
         metadata_hash_type,
         optimizer_settings,
         llvm_options,
-        suppressed_messages,
+        suppressed_warnings,
         debug_config,
     )?;
     build.link(BTreeMap::new())?;
@@ -87,7 +87,7 @@ pub fn eravm_assembly(
     output_selection: &[VyperSelection],
     metadata_hash_type: era_compiler_common::HashType,
     llvm_options: Vec<String>,
-    suppressed_messages: Vec<MessageType>,
+    suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
     if input_paths.is_empty() {
@@ -103,7 +103,7 @@ pub fn eravm_assembly(
         metadata_hash_type,
         optimizer_settings,
         llvm_options,
-        suppressed_messages,
+        suppressed_warnings,
         debug_config,
     )?;
     build.link(BTreeMap::new())?;
@@ -124,7 +124,7 @@ pub fn standard_output(
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
-    suppressed_messages: Vec<MessageType>,
+    suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
     let project = vyper.batch(
@@ -150,7 +150,7 @@ pub fn standard_output(
         metadata_hash_type,
         optimizer_settings,
         llvm_options,
-        suppressed_messages,
+        suppressed_warnings,
         debug_config,
     )?;
     build.link(BTreeMap::new())?;
@@ -170,7 +170,7 @@ pub fn combined_json(
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
-    suppressed_messages: Vec<MessageType>,
+    suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<VyperCompilerCombinedJson> {
     let zkvyper_version = semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid");
@@ -210,7 +210,7 @@ pub fn combined_json(
         metadata_hash_type,
         optimizer_settings,
         llvm_options,
-        suppressed_messages,
+        suppressed_warnings,
         debug_config,
     )?;
     build.link(BTreeMap::new())?;

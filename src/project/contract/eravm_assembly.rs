@@ -3,8 +3,8 @@
 //!
 
 use crate::build::contract::Contract as ContractBuild;
-use crate::message_type::MessageType;
 use crate::vyper::selection::Selection as VyperSelection;
+use crate::warning_type::WarningType;
 
 ///
 /// The EraVM assembly contract.
@@ -38,7 +38,7 @@ impl Contract {
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
         _output_selection: Vec<VyperSelection>,
-        _suppressed_messages: Vec<MessageType>,
+        _suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
         let target_machine = era_compiler_llvm_context::TargetMachine::new(

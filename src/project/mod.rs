@@ -14,7 +14,6 @@ use rayon::iter::ParallelIterator;
 
 use crate::build::contract::Contract as ContractBuild;
 use crate::build::Build;
-use crate::message_type::MessageType;
 use crate::process::input::Input as ProcessInput;
 use crate::process::output::Output as ProcessOutput;
 use crate::project::contract::vyper::ast::AST as VyperAST;
@@ -22,6 +21,7 @@ use crate::project::contract::vyper::Contract as VyperContract;
 use crate::project::contract::Contract as ProjectContract;
 use crate::vyper::selection::Selection as VyperSelection;
 use crate::vyper::standard_json::output::Output as VyperStandardJsonOutput;
+use crate::warning_type::WarningType;
 
 use self::contract::eravm_assembly::Contract as EraVMAssemblyContract;
 use self::contract::llvm_ir::Contract as LLVMIRContract;
@@ -188,7 +188,7 @@ impl Project {
         metadata_hash_type: era_compiler_common::HashType,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
-        suppressed_messages: Vec<MessageType>,
+        suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<Build> {
         let metadata = ContractMetadata::new(
@@ -225,7 +225,7 @@ impl Project {
                         self.output_selection.clone(),
                         optimizer_settings.clone(),
                         llvm_options.clone(),
-                        suppressed_messages.clone(),
+                        suppressed_warnings.clone(),
                         debug_config.clone(),
                     ),
                 );

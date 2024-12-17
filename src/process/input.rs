@@ -6,9 +6,9 @@
 
 use std::borrow::Cow;
 
-use crate::message_type::MessageType;
 use crate::project::contract::Contract;
 use crate::vyper::selection::Selection as VyperSelection;
+use crate::warning_type::WarningType;
 
 ///
 /// The input data.
@@ -27,8 +27,8 @@ pub struct Input<'a> {
     pub optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     /// The extra LLVM arguments.
     pub llvm_options: Vec<String>,
-    /// The suppressed messages.
-    pub suppressed_messages: Vec<MessageType>,
+    /// The suppressed warnings.
+    pub suppressed_warnings: Vec<WarningType>,
     /// The debug output config.
     pub debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 }
@@ -44,7 +44,7 @@ impl<'a> Input<'a> {
         output_selection: Vec<VyperSelection>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
-        suppressed_messages: Vec<MessageType>,
+        suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> Self {
         Self {
@@ -54,7 +54,7 @@ impl<'a> Input<'a> {
             output_selection,
             optimizer_settings,
             llvm_options,
-            suppressed_messages,
+            suppressed_warnings,
             debug_config,
         }
     }

@@ -2,8 +2,8 @@
 //! The Vyper contract AST.
 //!
 
-use crate::message_type::MessageType;
 use crate::vyper::combined_json::contract::warning::Warning as CombinedJsonContractWarning;
+use crate::warning_type::WarningType;
 
 ///
 /// The Vyper contract AST.
@@ -67,35 +67,35 @@ You may disable this warning with `--suppress-warnings txorigin`.
     }
 
     ///
-    /// Returns the list of messages for some specific parts of the AST.
+    /// Returns the list of warnings for some specific parts of the AST.
     ///
-    pub fn get_messages(
+    pub fn get_warnings(
         &self,
         ast: &serde_json::Value,
-        suppressed_messages: &[MessageType],
+        suppressed_warnings: &[WarningType],
     ) -> Vec<CombinedJsonContractWarning> {
-        let mut messages = Vec::new();
-        if !suppressed_messages.contains(&MessageType::TxOrigin) {
+        let mut warnings = Vec::new();
+        if !suppressed_warnings.contains(&WarningType::TxOrigin) {
             if let Some(message) = self.check_tx_origin(ast) {
-                messages.push(message);
+                warnings.push(message);
             }
         }
 
         match ast {
             serde_json::Value::Array(array) => {
                 for element in array.iter() {
-                    messages.extend(self.get_messages(element, suppressed_messages));
+                    warnings.extend(self.get_warnings(element, suppressed_warnings));
                 }
             }
             serde_json::Value::Object(object) => {
                 for (_key, value) in object.iter() {
-                    messages.extend(self.get_messages(value, suppressed_messages));
+                    warnings.extend(self.get_warnings(value, suppressed_warnings));
                 }
             }
             _ => {}
         }
 
-        messages
+        warnings
     }
 
     ///

@@ -1,11 +1,13 @@
-use crate::common;
-use predicates::prelude::*;
 use std::fs;
+
 use tempfile::TempDir;
 
+use crate::common;
+
 #[test]
-fn run_contract_with_debug_output_dir() -> anyhow::Result<()> {
+fn default() -> anyhow::Result<()> {
     let _ = common::setup();
+
     let tmp_dir_zkvyper = TempDir::new()?;
     let args = &[
         common::TEST_GREETER_CONTRACT_PATH,
@@ -13,7 +15,6 @@ fn run_contract_with_debug_output_dir() -> anyhow::Result<()> {
         tmp_dir_zkvyper.path().to_str().unwrap(),
     ];
 
-    // Execute zkvyper command
     let result = common::execute_zkvyper(args)?;
     result
         .success()
@@ -38,59 +39,6 @@ fn run_contract_with_debug_output_dir() -> anyhow::Result<()> {
     assert!(filenames.iter().all(|filename| expected_substrings
         .iter()
         .any(|substring| filename.contains(substring))));
-
-    Ok(())
-}
-
-#[test]
-fn run_without_contract_with_debug_output_dir() -> anyhow::Result<()> {
-    let _ = common::setup();
-    let tmp_dir_zkvyper = TempDir::new()?;
-    let args = &[
-        "--debug-output-dir",
-        tmp_dir_zkvyper.path().to_str().unwrap(),
-    ];
-
-    // Execute zkvyper command
-    let result = common::execute_zkvyper(args)?;
-    result
-        .failure()
-        .stderr(predicate::str::contains("No input files provided"));
-
-    Ok(())
-}
-
-#[test]
-fn run_with_debug_output_dir_no_folder_arg() -> anyhow::Result<()> {
-    let _ = common::setup();
-    let args = &[common::TEST_GREETER_CONTRACT_PATH, "--debug-output-dir"];
-
-    // Execute zkvyper command
-    let result = common::execute_zkvyper(args)?;
-    result
-        .failure()
-        .stderr(predicate::str::contains("error: a value is required for '--debug-output-dir <DEBUG_OUTPUT_DIR>' but none was supplied"));
-
-    Ok(())
-}
-
-#[test]
-fn run_with_duplicate_debug_output_dir_option() -> anyhow::Result<()> {
-    let _ = common::setup();
-    let tmp_dir_zkvyper = TempDir::new()?;
-    let args = &[
-        common::TEST_GREETER_CONTRACT_PATH,
-        "--debug-output-dir",
-        tmp_dir_zkvyper.path().to_str().unwrap(),
-        "--debug-output-dir",
-        tmp_dir_zkvyper.path().to_str().unwrap(),
-    ];
-
-    // Execute zkvyper command
-    let result = common::execute_zkvyper(args)?;
-    result
-        .failure()
-        .stderr(predicate::str::contains("cannot be used multiple times"));
 
     Ok(())
 }

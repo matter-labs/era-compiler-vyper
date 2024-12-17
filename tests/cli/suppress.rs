@@ -1,35 +1,26 @@
-use crate::common;
 use predicates::prelude::*;
+use test_case::test_case;
 
-#[test]
-fn test_suppress_warnings_with_specific_option() -> anyhow::Result<()> {
+use era_compiler_vyper::WarningType;
+
+use crate::common;
+
+#[test_case(WarningType::TxOrigin)]
+fn default(warning_type: WarningType) -> anyhow::Result<()> {
     let _ = common::setup();
 
+    let warning_type = warning_type.to_string();
     let args = &[
         common::TEST_TX_ORIGIN_CONTRACT_PATH,
         "--suppress-warnings",
-        "txorigin",
+        warning_type.as_str(),
     ];
-    let result = common::execute_zkvyper(args)?;
 
+    let result = common::execute_zkvyper(args)?;
     result
         .success()
         .stdout(predicate::str::contains("0x"))
         .stderr(predicate::str::contains("Warning").not());
-
-    Ok(())
-}
-
-#[test]
-fn test_suppress_warnings_without_specific_option() -> anyhow::Result<()> {
-    let _ = common::setup();
-
-    let args = &[common::TEST_TX_ORIGIN_CONTRACT_PATH, "--suppress-warnings"];
-    let result = common::execute_zkvyper(args)?;
-
-    result
-        .failure()
-        .stderr(predicate::str::contains("error: a value is required for \'--suppress-warnings <SUPPRESS_WARNINGS>...\' but none was supplied"));
 
     Ok(())
 }

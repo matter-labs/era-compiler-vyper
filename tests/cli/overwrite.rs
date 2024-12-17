@@ -1,9 +1,10 @@
-use crate::common;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
+use crate::common;
+
 #[test]
-fn default_run_with_overwrite_output_dir() -> anyhow::Result<()> {
+fn default() -> anyhow::Result<()> {
     let _ = common::setup();
 
     let tmp_dir = TempDir::new().expect("Failed to create temp dir");

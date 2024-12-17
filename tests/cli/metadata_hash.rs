@@ -1,60 +1,30 @@
-use crate::common;
 use predicates::prelude::*;
+use test_case::test_case;
 
-#[test]
-fn run_with_metadata_hash_by_default() -> anyhow::Result<()> {
+use era_compiler_common::HashType;
+
+use crate::common;
+
+#[test_case(HashType::None)]
+#[test_case(HashType::Keccak256)]
+#[test_case(HashType::Ipfs)]
+fn default(hash_type: HashType) -> anyhow::Result<()> {
     let _ = common::setup();
-    let args = &[common::TEST_GREETER_CONTRACT_PATH, "--metadata-hash=none"];
 
-    // Execute zkvyper command
-    let result = common::execute_zkvyper(args)?;
-    result.success().stdout(predicate::str::contains("0x"));
+    let hash_type = match hash_type {
+        HashType::None => "none",
+        HashType::Keccak256 => "keccak256",
+        HashType::Ipfs => "ipfs",
+    };
 
-    Ok(())
-}
-
-#[test]
-fn run_with_incomplete_metadata_hash_option() -> anyhow::Result<()> {
-    let _ = common::setup();
-    let args = &[common::TEST_GREETER_CONTRACT_PATH, "--metadata-hash"];
-
-    // Execute zkvyper command
-    let result = common::execute_zkvyper(args)?;
-    result.failure().stderr(predicate::str::contains(
-        "error: a value is required for '--metadata-hash <METADATA_HASH>' but none was supplied",
-    ));
-
-    Ok(())
-}
-
-#[test]
-fn run_only_with_metadata_hash_option() -> anyhow::Result<()> {
-    let _ = common::setup();
-    let args = &["--metadata-hash=none"];
-
-    // Execute zkvyper command
-    let result = common::execute_zkvyper(args)?;
-    result
-        .failure()
-        .stderr(predicate::str::contains("No input files provided"));
-
-    Ok(())
-}
-
-#[test]
-fn run_with_duplicate_metadata_hash_option() -> anyhow::Result<()> {
-    let _ = common::setup();
     let args = &[
         common::TEST_GREETER_CONTRACT_PATH,
-        "--metadata-hash=none",
         "--metadata-hash",
+        hash_type,
     ];
 
-    // Execute zkvyper command
     let result = common::execute_zkvyper(args)?;
-    result.failure().stderr(predicate::str::contains(
-        "error: a value is required for '--metadata-hash <METADATA_HASH>' but none was supplied",
-    ));
+    result.success().stdout(predicate::str::contains("0x"));
 
     Ok(())
 }

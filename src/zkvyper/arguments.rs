@@ -136,7 +136,7 @@ impl Arguments {
     pub fn validate(&self) -> anyhow::Result<()> {
         if self.recursive_process {
             if std::env::args().count() > 2 {
-                anyhow::bail!("Error: No other options are allowed in recursive mode.");
+                anyhow::bail!("No other options are allowed in recursive mode.");
             } else {
                 return Ok(());
             }
@@ -144,16 +144,14 @@ impl Arguments {
 
         if self.version {
             if std::env::args().count() > 2 {
-                anyhow::bail!(
-                    "Error: No other options are allowed while getting the compiler version."
-                );
+                anyhow::bail!("No other options are allowed while getting the compiler version.");
             } else {
                 return Ok(());
             }
         }
 
         if self.input_paths.is_empty() {
-            anyhow::bail!("Error: No input files provided.");
+            anyhow::bail!("No input files provided.");
         }
 
         let modes_count = [
@@ -167,37 +165,31 @@ impl Arguments {
         .count();
         if modes_count > 1 {
             anyhow::bail!(
-                "Error: Only one mode is allowed at the same time: format, LLVM IR, EraVM assembly, disassembler."
+                "Only one mode is allowed at the same time: format, LLVM IR, EraVM assembly, disassembler."
             );
         }
 
         if self.disassemble && std::env::args().count() > self.input_paths.len() + 2 {
-            anyhow::bail!("Error: No other options are allowed in disassembler mode.");
+            anyhow::bail!("No other options are allowed in disassembler mode.");
         }
 
         if self.llvm_ir || self.eravm_assembly {
             if self.vyper.is_some() {
-                anyhow::bail!("Error: `vyper` is not used in LLVM IR and EraVM assembly modes.");
+                anyhow::bail!("`vyper` is not used in LLVM IR and EraVM assembly modes.");
             }
 
             if self.evm_version.is_some() {
-                anyhow::bail!(
-                    "Error: EVM version is not used in LLVM IR and EraVM assembly modes."
-                );
+                anyhow::bail!("EVM version is not used in LLVM IR and EraVM assembly modes.");
             }
         }
 
         if self.eravm_assembly {
             if self.optimization.is_some() {
-                anyhow::bail!(
-                    "Error: LLVM optimizations are not supported in EraVM assembly mode."
-                );
+                anyhow::bail!("LLVM optimizations are not supported in EraVM assembly mode.");
             }
 
             if self.fallback_to_optimizing_for_size {
-                anyhow::bail!(
-                    "Error: Falling back to -Oz is not supported in EraVM assembly mode."
-                );
+                anyhow::bail!("Falling back to -Oz is not supported in EraVM assembly mode.");
             }
         }
 

@@ -113,7 +113,7 @@ pub fn execute_vyper(args: &[&str]) -> anyhow::Result<assert_cmd::assert::Assert
 /// Builds a test Vyper project via standard JSON.
 ///
 pub fn build_vyper_standard_json(
-    source_code: &str,
+    sources: BTreeMap<String, String>,
     version: &semver::Version,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
 ) -> anyhow::Result<Build> {
@@ -121,12 +121,10 @@ pub fn build_vyper_standard_json(
     let vyper = crate::common::get_vyper_compiler(version)?;
     era_compiler_llvm_context::initialize_target(era_compiler_common::Target::EraVM);
 
-    let mut sources = BTreeMap::new();
-    sources.insert("test.vy".to_string(), source_code.to_string());
     let input = VyperStandardJsonInput::try_from_sources(
-        sources.clone(),
+        sources,
         None,
-        VyperStandardJsonInputSettingsSelection::generate_default(),
+        VyperStandardJsonInputSettingsSelection::new_required(),
         VyperStandardJsonInputSettingsOptimize::None,
         vyper.version.default >= VyperCompiler::FIRST_VERSION_ENABLE_DECIMALS_SUPPORT,
         true,
@@ -157,6 +155,7 @@ pub fn build_vyper_combined_json(
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
 ) -> anyhow::Result<Build> {
     crate::common::setup()?;
+
     let vyper = crate::common::get_vyper_compiler(version)?;
     era_compiler_llvm_context::initialize_target(era_compiler_common::Target::EraVM);
 
@@ -201,6 +200,20 @@ pub fn check_warning(path: &str, version: &semver::Version, warning: &str) -> an
         }
     }
     Ok(false)
+}
+
+///
+/// Reads source code files from the disk.
+///
+pub fn read_sources(paths: &[&str]) -> BTreeMap<String, String> {
+    paths
+        .into_iter()
+        .map(|path| {
+            let result = std::fs::read_to_string(path).map_err(|error| anyhow::anyhow!(error));
+            result.map(|result| ((*path).to_owned(), result))
+        })
+        .collect::<anyhow::Result<BTreeMap<String, String>>>()
+        .expect("Source reading failure")
 }
 
 ///

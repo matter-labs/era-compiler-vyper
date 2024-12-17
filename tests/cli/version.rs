@@ -1,13 +1,14 @@
-use crate::common;
 use predicates::prelude::*;
 
+use crate::common;
+
 #[test]
-fn test_version() -> anyhow::Result<()> {
+fn default() -> anyhow::Result<()> {
     let _ = common::setup();
 
     let args = &["--version"];
-    let result = common::execute_zkvyper(args)?;
 
+    let result = common::execute_zkvyper(args)?;
     result
         .success()
         .stdout(predicate::str::contains("Vyper compiler for ZKsync"));
@@ -16,14 +17,14 @@ fn test_version() -> anyhow::Result<()> {
 }
 
 #[test]
-fn test_version_with_extra_args() -> anyhow::Result<()> {
+fn excess_args() -> anyhow::Result<()> {
     let _ = common::setup();
 
     let args = &["--version", common::TEST_GREETER_CONTRACT_PATH];
-    let result = common::execute_zkvyper(args)?;
 
+    let result = common::execute_zkvyper(args)?;
     result.failure().stderr(predicate::str::contains(
-        "Error: No other options are allowed while getting the compiler version.",
+        "No other options are allowed while getting the compiler version.",
     ));
 
     Ok(())

@@ -152,11 +152,11 @@ impl Compiler {
         for (full_path, source) in input.sources.into_iter() {
             let last_slash_position = full_path.rfind('/');
             let last_dot_position = full_path.rfind('.');
-            let contract_name = &full_path[last_slash_position.unwrap_or_default()
+            let contract_name = &full_path[last_slash_position.unwrap_or_default() + 1
                 ..last_dot_position.unwrap_or(full_path.len())];
 
             Self::check_unsupported(source.content.as_str())
-                .map_err(|error| anyhow::anyhow!("Contract `{}`: {}", full_path, error))?;
+                .map_err(|error| anyhow::anyhow!("Contract `{full_path}`: {error}"))?;
 
             output
                 .contracts
@@ -166,13 +166,12 @@ impl Compiler {
                 })?
                 .get_mut(full_path.as_str())
                 .ok_or_else(|| {
-                    anyhow::anyhow!("File `{}` not found in the standard JSON output", full_path)
+                    anyhow::anyhow!("File `{full_path}` not found in the standard JSON output")
                 })?
                 .get_mut(contract_name)
                 .ok_or_else(|| {
                     anyhow::anyhow!(
-                        "Contract `{}` not found in the standard JSON output",
-                        contract_name
+                        "Contract `{contract_name}` not found in the standard JSON output"
                     )
                 })?
                 .source_code = Some(source.content);
@@ -257,14 +256,14 @@ impl Compiler {
             .map(|(path, group)| {
                 let path_str = path.to_string_lossy().to_string();
                 let source_code = match std::fs::read_to_string(path).map_err(|error| {
-                    anyhow::anyhow!("Source code file `{}` reading error: {}", path_str, error)
+                    anyhow::anyhow!("Source code file `{path_str}` reading error: {error}")
                 }) {
                     Ok(source_code) => source_code,
                     Err(error) => return (path_str, Err(error)),
                 };
 
                 if let Err(error) = Self::check_unsupported(source_code.as_str()) {
-                    let error = anyhow::anyhow!("Contract `{}`: {}", path_str, error);
+                    let error = anyhow::anyhow!("Contract `{path_str}`: {error}");
                     return (path_str, Err(error));
                 }
 
@@ -275,7 +274,7 @@ impl Compiler {
                     group.to_vec(),
                 )
                 .map_err(|error| {
-                    anyhow::anyhow!("Contract `{}` JSON output parsing: {}", path_str, error)
+                    anyhow::anyhow!("Contract `{path_str}` JSON output parsing: {error}")
                 });
 
                 (path_str, contract_result)
@@ -301,8 +300,7 @@ impl Compiler {
         for function in [crate::r#const::FORBIDDEN_FUNCTION_NAME_CREATE_COPY_OF] {
             if source_code.contains(function) {
                 return Err(anyhow::anyhow!(
-                    "Built-in function `{}` is not supported",
-                    function
+                    "Built-in function `{function}` is not supported"
                 ));
             }
         }
@@ -326,7 +324,7 @@ impl Compiler {
         command.arg("--version");
         let output = command
             .output()
-            .map_err(|error| anyhow::anyhow!("{} subprocess error: {:?}", executable, error))?;
+            .map_err(|error| anyhow::anyhow!("{executable} subprocess error: {error:?}"))?;
         if !output.status.success() {
             anyhow::bail!(
                 "{} error: {}",
@@ -340,9 +338,9 @@ impl Compiler {
         let default: semver::Version = long
             .split('+')
             .next()
-            .ok_or_else(|| anyhow::anyhow!("{} version parsing: metadata dropping", executable))?
+            .ok_or_else(|| anyhow::anyhow!("{executable} version parsing: metadata dropping"))?
             .parse()
-            .map_err(|error| anyhow::anyhow!("{} version parsing: {}", executable, error))?;
+            .map_err(|error| anyhow::anyhow!("{executable} version parsing: {error}"))?;
 
         let version = Version::new(long, default);
         if !Self::SUPPORTED_VERSIONS.contains(&version.default) {
