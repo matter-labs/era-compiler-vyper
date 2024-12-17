@@ -1,14 +1,14 @@
-use crate::{cli, common};
+use crate::common;
 use predicates::prelude::*;
 
 #[test]
 fn run_with_vyper() -> anyhow::Result<()> {
     let _ = common::setup();
     let vyper = common::get_vyper_compiler(&semver::Version::new(0, 4, 0))?.executable;
-    let args = &[cli::TEST_VYPER_CONTRACT_PATH, "--vyper", &vyper];
+    let args = &[common::TEST_GREETER_CONTRACT_PATH, "--vyper", &vyper];
 
     // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
+    let result = common::execute_zkvyper(args)?;
     result.success().stdout(predicate::str::contains("0x"));
 
     Ok(())
@@ -17,10 +17,10 @@ fn run_with_vyper() -> anyhow::Result<()> {
 #[test]
 fn run_with_vyper_empty_arg() -> anyhow::Result<()> {
     let _ = common::setup();
-    let args = &[cli::TEST_VYPER_CONTRACT_PATH, "--vyper"];
+    let args = &[common::TEST_GREETER_CONTRACT_PATH, "--vyper"];
 
     // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
+    let result = common::execute_zkvyper(args)?;
     result.failure().stderr(predicate::str::contains(
         "error: a value is required for '--vyper <VYPER>' but none was supplied",
     ));
@@ -31,10 +31,10 @@ fn run_with_vyper_empty_arg() -> anyhow::Result<()> {
 #[test]
 fn run_with_vyper_wrong_arg() -> anyhow::Result<()> {
     let _ = common::setup();
-    let args = &[cli::TEST_VYPER_CONTRACT_PATH, "--vyper", ".."];
+    let args = &[common::TEST_GREETER_CONTRACT_PATH, "--vyper", ".."];
 
     // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
+    let result = common::execute_zkvyper(args)?;
     result
         .failure()
         .stderr(predicate::str::contains("error").or(predicate::str::contains("not found")));

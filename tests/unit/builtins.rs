@@ -2,6 +2,8 @@
 //! The Vyper compiler unit tests for built-in functions.
 //!
 
+use crate::common;
+
 #[test]
 #[should_panic(expected = "Built-in function `create_copy_of` is not supported")]
 fn create_copy_of_0_3_10() {
@@ -14,8 +16,8 @@ fn create_copy_of_0_4_0() {
 }
 
 fn create_copy_of(version: semver::Version) {
-    let _ = super::build_vyper_combined_json(
-        vec!["tests/regression/contracts/create_copy_of.vy"],
+    let _ = common::build_vyper_combined_json(
+        vec![common::TEST_CREATE_COPY_OF_CONTRACT_PATH],
         &version,
         era_compiler_llvm_context::OptimizerSettings::none(),
     )

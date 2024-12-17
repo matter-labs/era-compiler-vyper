@@ -7,6 +7,8 @@
 //! - EXTCODECOPY without using Vyper built-in functions forbidden on the AST level
 //!
 
+use crate::common;
+
 #[cfg(not(target_arch = "aarch64"))]
 #[test]
 #[should_panic(expected = "The `SELFDESTRUCT` instruction is not supported")]
@@ -30,8 +32,8 @@ fn selfdestruct_0_4_0() {
 }
 
 fn selfdestruct(version: semver::Version) {
-    super::build_vyper_combined_json(
-        vec!["tests/regression/contracts/selfdestruct.vy"],
+    common::build_vyper_combined_json(
+        vec![common::TEST_SELFDESTRUCT_CONTRACT_PATH],
         &version,
         era_compiler_llvm_context::OptimizerSettings::none(),
     )

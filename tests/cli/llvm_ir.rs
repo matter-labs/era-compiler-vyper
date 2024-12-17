@@ -1,13 +1,13 @@
-use crate::{cli, common};
+use crate::common;
 use predicates::prelude::*;
 
 #[test]
 fn run_with_llvm_ir() -> anyhow::Result<()> {
     let _ = common::setup();
-    let args = &[cli::TEST_LLVM_CONTRACT_PATH, "--llvm-ir"];
+    let args = &[common::TEST_LLVM_CONTRACT_PATH, "--llvm-ir"];
 
     // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
+    let result = common::execute_zkvyper(args)?;
     result.success().stdout(predicate::str::contains("0x"));
 
     Ok(())
@@ -19,7 +19,7 @@ fn run_only_with_llvm_ir() -> anyhow::Result<()> {
     let args = &["--llvm-ir"];
 
     // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
+    let result = common::execute_zkvyper(args)?;
     result
         .failure()
         .stderr(predicate::str::contains("No input files provided"));
@@ -30,10 +30,10 @@ fn run_only_with_llvm_ir() -> anyhow::Result<()> {
 #[test]
 fn run_with_duplicate_llvm_ir() -> anyhow::Result<()> {
     let _ = common::setup();
-    let args = &[cli::TEST_LLVM_CONTRACT_PATH, "--llvm-ir", "--llvm-ir"];
+    let args = &[common::TEST_LLVM_CONTRACT_PATH, "--llvm-ir", "--llvm-ir"];
 
     // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
+    let result = common::execute_zkvyper(args)?;
     result.failure().stderr(predicate::str::contains(
         "error: the argument '--llvm-ir' cannot be used multiple times",
     ));
@@ -44,10 +44,10 @@ fn run_with_duplicate_llvm_ir() -> anyhow::Result<()> {
 #[test]
 fn run_with_incompatible_contract_and_llvm_ir() -> anyhow::Result<()> {
     let _ = common::setup();
-    let args = &[cli::TEST_VYPER_CONTRACT_PATH, "--llvm-ir"];
+    let args = &[common::TEST_GREETER_CONTRACT_PATH, "--llvm-ir"];
 
     // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
+    let result = common::execute_zkvyper(args)?;
     result
         .failure()
         .stderr(predicate::str::contains("expected top-level entity"));

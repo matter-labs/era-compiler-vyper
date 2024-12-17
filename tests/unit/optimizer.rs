@@ -2,6 +2,8 @@
 //! The Vyper compiler unit tests for the optimizer.
 //!
 
+use crate::common;
+
 #[cfg(not(target_arch = "aarch64"))]
 #[test]
 fn default_standard_json_0_3_3() {
@@ -77,19 +79,19 @@ def toggleCompleted(_index: uint256):
 "#;
 
 fn default_standard_json(version: semver::Version) {
-    let build_unoptimized = super::build_vyper_standard_json(
+    let build_unoptimized = common::build_vyper_standard_json(
         SOURCE_CODE,
         &version,
         era_compiler_llvm_context::OptimizerSettings::none(),
     )
     .expect("Build failure");
-    let build_optimized_for_cycles = super::build_vyper_standard_json(
+    let build_optimized_for_cycles = common::build_vyper_standard_json(
         SOURCE_CODE,
         &version,
         era_compiler_llvm_context::OptimizerSettings::cycles(),
     )
     .expect("Build failure");
-    let build_optimized_for_size = super::build_vyper_standard_json(
+    let build_optimized_for_size = common::build_vyper_standard_json(
         SOURCE_CODE,
         &version,
         era_compiler_llvm_context::OptimizerSettings::size(),
@@ -133,22 +135,20 @@ fn default_standard_json(version: semver::Version) {
 }
 
 fn default_combined_json(version: semver::Version) {
-    let path = "tests/regression/contracts/optimizer.vy";
-
-    let build_unoptimized = super::build_vyper_combined_json(
-        vec![path],
+    let build_unoptimized = common::build_vyper_combined_json(
+        vec![common::TEST_OPTIMIZER_CONTRACT_PATH],
         &version,
         era_compiler_llvm_context::OptimizerSettings::none(),
     )
     .expect("Build failure");
-    let build_optimized_for_cycles = super::build_vyper_combined_json(
-        vec![path],
+    let build_optimized_for_cycles = common::build_vyper_combined_json(
+        vec![common::TEST_OPTIMIZER_CONTRACT_PATH],
         &version,
         era_compiler_llvm_context::OptimizerSettings::cycles(),
     )
     .expect("Build failure");
-    let build_optimized_for_size = super::build_vyper_combined_json(
-        vec![path],
+    let build_optimized_for_size = common::build_vyper_combined_json(
+        vec![common::TEST_OPTIMIZER_CONTRACT_PATH],
         &version,
         era_compiler_llvm_context::OptimizerSettings::size(),
     )
@@ -156,36 +156,32 @@ fn default_combined_json(version: semver::Version) {
 
     let size_when_unoptimized = build_unoptimized
         .contracts
-        .get(path)
-        .unwrap_or_else(|| panic!("Missing contract `{path}`"))
+        .get(common::TEST_OPTIMIZER_CONTRACT_PATH)
+        .expect("Missing contract")
         .build
         .bytecode
         .len();
     let size_when_optimized_for_cycles = build_optimized_for_cycles
         .contracts
-        .get(path)
-        .unwrap_or_else(|| panic!("Missing contract `{path}`"))
+        .get(common::TEST_OPTIMIZER_CONTRACT_PATH)
+        .expect("Missing contract")
         .build
         .bytecode
         .len();
     let size_when_optimized_for_size = build_optimized_for_size
         .contracts
-        .get(path)
-        .unwrap_or_else(|| panic!("Missing contract `{path}`"))
+        .get(common::TEST_OPTIMIZER_CONTRACT_PATH)
+        .expect("Missing contract")
         .build
         .bytecode
         .len();
 
     assert!(
         size_when_optimized_for_cycles < size_when_unoptimized,
-        "Expected the cycles-optimized bytecode to be smaller than the unoptimized. Optimized: {}B, Unoptimized: {}B",
-        size_when_optimized_for_cycles,
-        size_when_unoptimized,
+        "Expected the cycles-optimized bytecode to be smaller than the unoptimized. Optimized: {size_when_optimized_for_cycles}B, Unoptimized: {size_when_unoptimized}B",
     );
     assert!(
         size_when_optimized_for_size < size_when_unoptimized,
-        "Expected the size-optimized bytecode to be smaller than the unoptimized. Optimized: {}B, Unoptimized: {}B",
-        size_when_optimized_for_size,
-        size_when_unoptimized,
+        "Expected the size-optimized bytecode to be smaller than the unoptimized. Optimized: {size_when_optimized_for_size}B, Unoptimized: {size_when_unoptimized}B",
     );
 }

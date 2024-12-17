@@ -1,4 +1,4 @@
-use crate::{cli, common};
+use crate::common;
 use predicates::prelude::*;
 
 #[test]
@@ -6,7 +6,7 @@ fn test_version() -> anyhow::Result<()> {
     let _ = common::setup();
 
     let args = &["--version"];
-    let result = cli::execute_zkvyper(args)?;
+    let result = common::execute_zkvyper(args)?;
 
     result
         .success()
@@ -19,8 +19,8 @@ fn test_version() -> anyhow::Result<()> {
 fn test_version_with_extra_args() -> anyhow::Result<()> {
     let _ = common::setup();
 
-    let args = &["--version", cli::TEST_VYPER_CONTRACT_PATH];
-    let result = cli::execute_zkvyper(args)?;
+    let args = &["--version", common::TEST_GREETER_CONTRACT_PATH];
+    let result = common::execute_zkvyper(args)?;
 
     result.failure().stderr(predicate::str::contains(
         "Error: No other options are allowed while getting the compiler version.",

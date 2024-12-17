@@ -1,4 +1,4 @@
-use crate::{cli, common};
+use crate::common;
 use predicates::prelude::*;
 
 #[test]
@@ -6,11 +6,11 @@ fn test_suppress_warnings_with_specific_option() -> anyhow::Result<()> {
     let _ = common::setup();
 
     let args = &[
-        cli::TEST_TX_ORIGIN_CONTRACT_PATH,
+        common::TEST_TX_ORIGIN_CONTRACT_PATH,
         "--suppress-warnings",
         "txorigin",
     ];
-    let result = cli::execute_zkvyper(args)?;
+    let result = common::execute_zkvyper(args)?;
 
     result
         .success()
@@ -24,8 +24,8 @@ fn test_suppress_warnings_with_specific_option() -> anyhow::Result<()> {
 fn test_suppress_warnings_without_specific_option() -> anyhow::Result<()> {
     let _ = common::setup();
 
-    let args = &[cli::TEST_TX_ORIGIN_CONTRACT_PATH, "--suppress-warnings"];
-    let result = cli::execute_zkvyper(args)?;
+    let args = &[common::TEST_TX_ORIGIN_CONTRACT_PATH, "--suppress-warnings"];
+    let result = common::execute_zkvyper(args)?;
 
     result
         .failure()

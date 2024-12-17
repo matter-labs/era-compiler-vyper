@@ -1,4 +1,4 @@
-use crate::{cli, common};
+use crate::common;
 use predicates::prelude::*;
 
 /// List of optimization arguments
@@ -9,8 +9,8 @@ fn test_optimization_valid_flags() -> anyhow::Result<()> {
     let _ = common::setup();
 
     for arg in OPTIMIZATION_ARGS.iter() {
-        let args = &[cli::TEST_VYPER_CONTRACT_PATH, &format!("-O{arg}")];
-        let result = cli::execute_zkvyper(args)?;
+        let args = &[common::TEST_GREETER_CONTRACT_PATH, &format!("-O{arg}")];
+        let result = common::execute_zkvyper(args)?;
 
         result.success().stdout(predicate::str::contains("0x"));
     }
@@ -25,7 +25,7 @@ fn test_optimization_missing_contract() -> anyhow::Result<()> {
     for arg in OPTIMIZATION_ARGS.iter() {
         let opt_param = format!("-O{arg}");
         let args = &[opt_param.as_str()];
-        let result = cli::execute_zkvyper(args)?;
+        let result = common::execute_zkvyper(args)?;
 
         result
             .failure()
@@ -41,11 +41,11 @@ fn test_optimization_duplicate_flags() -> anyhow::Result<()> {
 
     for arg in OPTIMIZATION_ARGS.iter() {
         let args = &[
-            cli::TEST_VYPER_CONTRACT_PATH,
+            common::TEST_GREETER_CONTRACT_PATH,
             &format!("-O{arg}"),
             &format!("-O{arg}"),
         ];
-        let result = cli::execute_zkvyper(args)?;
+        let result = common::execute_zkvyper(args)?;
 
         result.failure().stderr(predicate::str::contains(
             "error: the argument '--optimization <OPTIMIZATION>' cannot be used multiple times",

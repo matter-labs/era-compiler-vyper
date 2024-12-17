@@ -2,6 +2,8 @@
 //! The Vyper compiler unit tests for warnings.
 //!
 
+use crate::common;
+
 #[cfg(not(target_arch = "aarch64"))]
 #[test]
 fn tx_origin_0_3_3() {
@@ -21,8 +23,8 @@ fn tx_origin_0_4_0() {
 }
 
 fn tx_origin(version: semver::Version) {
-    assert!(super::check_warning(
-        "tests/regression/contracts/tx_origin.vy",
+    assert!(common::check_warning(
+        common::TEST_TX_ORIGIN_CONTRACT_PATH,
         &version,
         "You are checking for 'tx.origin', which may lead to unexpected behavior."
     )

@@ -1,4 +1,4 @@
-use crate::{cli, common};
+use crate::common;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
@@ -8,7 +8,7 @@ fn run_zkvyper_without_any_options() -> anyhow::Result<()> {
     let args = &[];
 
     // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
+    let result = common::execute_zkvyper(args)?;
     let zkvyper_status = result
         .failure()
         .stderr(predicate::str::contains("Error: No input files provided."))
@@ -20,7 +20,7 @@ fn run_zkvyper_without_any_options() -> anyhow::Result<()> {
     // Compare with vyper
     // Use `ge` predicate to check if zkvyper exit code is greater than or equal to vyper exit code
     // because vyper exit code is 2, but zkvyper exit code is 1
-    cli::execute_vyper(args)?.code(predicate::ge(zkvyper_status));
+    common::execute_vyper(args)?.code(predicate::ge(zkvyper_status));
 
     Ok(())
 }
@@ -31,7 +31,7 @@ fn default_run_without_input_files() -> anyhow::Result<()> {
     let args = &["-f", "ast"];
 
     // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
+    let result = common::execute_zkvyper(args)?;
     let zkvyper_status = result
         .failure()
         .stderr(predicate::str::contains("No input files provided"))
@@ -43,7 +43,7 @@ fn default_run_without_input_files() -> anyhow::Result<()> {
     // Compare with vyper
     // Use `ge` predicate to check if zkvyper exit code is greater than or equal to vyper exit code
     // because vyper exit code is 2, but zkvyper exit code is 1
-    let vyper_result = cli::execute_vyper(args)?;
+    let vyper_result = common::execute_vyper(args)?;
     vyper_result.code(predicate::ge(zkvyper_status));
 
     Ok(())
@@ -52,10 +52,10 @@ fn default_run_without_input_files() -> anyhow::Result<()> {
 #[test]
 fn default_run_with_a_contract_only() -> anyhow::Result<()> {
     let _ = common::setup();
-    let args = &[cli::TEST_VYPER_CONTRACT_PATH];
+    let args = &[common::TEST_GREETER_CONTRACT_PATH];
 
     // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
+    let result = common::execute_zkvyper(args)?;
     let zkvyper_status = result
         .success()
         .stdout(predicate::str::contains("0x"))
@@ -65,7 +65,7 @@ fn default_run_with_a_contract_only() -> anyhow::Result<()> {
         .expect("No exit code.");
 
     // Compare with vyper
-    let vyper_result = cli::execute_vyper(args)?;
+    let vyper_result = common::execute_vyper(args)?;
     vyper_result.code(zkvyper_status);
 
     Ok(())
@@ -75,10 +75,10 @@ fn default_run_with_a_contract_only() -> anyhow::Result<()> {
 fn default_run_command_from_help() -> anyhow::Result<()> {
     let _ = common::setup();
     let output_dir = TempDir::new()?;
-    let bin_output_file = output_dir.path().join(cli::VYPER_BIN_OUTPUT_NAME);
+    let bin_output_file = output_dir.path().join(common::VYPER_BIN_OUTPUT_NAME);
 
     let zkvyper_args = &[
-        cli::TEST_VYPER_CONTRACT_PATH,
+        common::TEST_GREETER_CONTRACT_PATH,
         "-o",
         output_dir.path().to_str().unwrap(),
         "-f",
@@ -86,7 +86,7 @@ fn default_run_command_from_help() -> anyhow::Result<()> {
     ];
 
     // Execute zkvyper command
-    let result = cli::execute_zkvyper(zkvyper_args)?;
+    let result = common::execute_zkvyper(zkvyper_args)?;
     let zkvyper_status = result
         .success()
         .get_output()
@@ -99,15 +99,15 @@ fn default_run_command_from_help() -> anyhow::Result<()> {
 
     // Ensure output file is created and is not empty
     assert!(bin_output_file.exists());
-    assert!(!cli::is_file_empty(&bin_output_file.to_str().unwrap())?);
+    assert!(!common::is_file_empty(&bin_output_file.to_str().unwrap())?);
 
     // Compare with vyper
     let vyper_args = &[
-        cli::TEST_VYPER_CONTRACT_PATH,
+        common::TEST_GREETER_CONTRACT_PATH,
         "-o",
         bin_output_file.to_str().unwrap(),
     ];
-    let vyper_result = cli::execute_vyper(vyper_args)?;
+    let vyper_result = common::execute_vyper(vyper_args)?;
     vyper_result.code(zkvyper_status);
 
     Ok(())
