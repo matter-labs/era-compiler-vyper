@@ -1,24 +1,25 @@
 use predicates::prelude::*;
 use test_case::test_case;
 
-use era_compiler_vyper::VyperSelection;
+use era_compiler_vyper::VyperSelector;
 
 use crate::common;
 
-#[test_case("combined_json")]
-#[test_case("ir_json")]
-#[test_case("ast")]
-#[test_case("abi")]
-#[test_case("method_identifiers")]
-#[test_case("layout")]
-#[test_case("userdoc")]
-#[test_case("devdoc")]
-#[test_case("eravm_assembly")]
-#[test_case("project_metadata")]
-fn default(format: &str) -> anyhow::Result<()> {
+#[test_case(VyperSelector::CombinedJson)]
+#[test_case(VyperSelector::IRJson)]
+#[test_case(VyperSelector::AST)]
+#[test_case(VyperSelector::ABI)]
+#[test_case(VyperSelector::MethodIdentifiers)]
+#[test_case(VyperSelector::Layout)]
+#[test_case(VyperSelector::UserDocumentation)]
+#[test_case(VyperSelector::DeveloperDocumentation)]
+#[test_case(VyperSelector::EraVMAssembly)]
+#[test_case(VyperSelector::ProjectMetadata)]
+fn default(selector: VyperSelector) -> anyhow::Result<()> {
     let _ = common::setup();
 
-    let args = &[common::TEST_GREETER_CONTRACT_PATH, "-f", format];
+    let selector = selector.to_string();
+    let args = &[common::TEST_GREETER_CONTRACT_PATH, "-f", selector.as_str()];
 
     let result = common::execute_zkvyper(args)?;
     result.success();
@@ -31,15 +32,15 @@ fn all() -> anyhow::Result<()> {
     let _ = common::setup();
 
     let format = [
-        VyperSelection::IRJson,
-        VyperSelection::AST,
-        VyperSelection::ABI,
-        VyperSelection::MethodIdentifiers,
-        VyperSelection::Layout,
-        VyperSelection::UserDocumentation,
-        VyperSelection::DeveloperDocumentation,
-        VyperSelection::EraVMAssembly,
-        VyperSelection::ProjectMetadata,
+        VyperSelector::IRJson,
+        VyperSelector::AST,
+        VyperSelector::ABI,
+        VyperSelector::MethodIdentifiers,
+        VyperSelector::Layout,
+        VyperSelector::UserDocumentation,
+        VyperSelector::DeveloperDocumentation,
+        VyperSelector::EraVMAssembly,
+        VyperSelector::ProjectMetadata,
     ]
     .into_iter()
     .map(|selection| selection.to_string())
@@ -72,11 +73,13 @@ fn unsupported_selector() -> anyhow::Result<()> {
 fn combined_json_with_other_option() -> anyhow::Result<()> {
     let _ = common::setup();
 
-    let args = &[
-        common::TEST_GREETER_CONTRACT_PATH,
-        "-f",
-        "combined_json,ast",
-    ];
+    let format = [VyperSelector::CombinedJson, VyperSelector::AST]
+        .into_iter()
+        .map(|selection| selection.to_string())
+        .collect::<Vec<String>>()
+        .join(",");
+
+    let args = &[common::TEST_GREETER_CONTRACT_PATH, "-f", format.as_str()];
 
     let result = common::execute_zkvyper(args)?;
     result.failure().stderr(predicate::str::contains(

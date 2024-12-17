@@ -13,7 +13,7 @@ use era_compiler_llvm_context::IContext;
 
 use crate::build::contract::Contract as ContractBuild;
 use crate::project::dependency_data::DependencyData;
-use crate::vyper::selection::Selection as VyperSelection;
+use crate::vyper::selector::Selector as VyperSelector;
 use crate::warning_type::WarningType;
 
 use self::ast::AST;
@@ -83,7 +83,7 @@ impl Contract {
     pub fn try_from_lines(
         version: semver::Version,
         source_code: String,
-        selection: &[VyperSelection],
+        selection: &[VyperSelector],
         lines: Vec<&str>,
     ) -> anyhow::Result<Self> {
         let mut ir = None;
@@ -96,35 +96,35 @@ impl Contract {
 
         for (line, selection) in lines.into_iter().zip(selection) {
             match selection {
-                VyperSelection::IRJson => {
+                VyperSelector::IRJson => {
                     ir = Some(era_compiler_common::deserialize_from_str(line)?);
                 }
-                VyperSelection::AST => {
+                VyperSelector::AST => {
                     ast = Some(era_compiler_common::deserialize_from_str(line)?);
                 }
-                VyperSelection::ABI => {
+                VyperSelector::ABI => {
                     abi = Some(era_compiler_common::deserialize_from_str(line)?);
                 }
-                VyperSelection::MethodIdentifiers => {
+                VyperSelector::MethodIdentifiers => {
                     method_identifiers = Some(era_compiler_common::deserialize_from_str(line)?);
                 }
-                VyperSelection::Layout => {
+                VyperSelector::Layout => {
                     layout = Some(era_compiler_common::deserialize_from_str(line)?);
                 }
-                VyperSelection::UserDocumentation => {
+                VyperSelector::UserDocumentation => {
                     userdoc = Some(era_compiler_common::deserialize_from_str(line)?);
                 }
-                VyperSelection::DeveloperDocumentation => {
+                VyperSelector::DeveloperDocumentation => {
                     devdoc = Some(era_compiler_common::deserialize_from_str(line)?);
                 }
 
-                VyperSelection::CombinedJson => {
+                VyperSelector::CombinedJson => {
                     panic!("Combined JSON cannot be requested with other types of output");
                 }
-                VyperSelection::EraVMAssembly => {
+                VyperSelector::EraVMAssembly => {
                     panic!("EraVM assembly cannot be requested from `vyper` executable");
                 }
-                VyperSelection::ProjectMetadata => {
+                VyperSelector::ProjectMetadata => {
                     panic!("Project metadata cannot be requested from `vyper` executable");
                 }
             }
@@ -152,7 +152,7 @@ impl Contract {
         metadata_hash: Option<era_compiler_common::Hash>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
-        output_selection: Vec<VyperSelection>,
+        output_selection: Vec<VyperSelector>,
         suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
@@ -174,37 +174,37 @@ impl Contract {
             debug_config,
         );
 
-        let ir = if output_selection.contains(&VyperSelection::IRJson) {
+        let ir = if output_selection.contains(&VyperSelector::IRJson) {
             Some(self.ir.clone())
         } else {
             None
         };
-        let ast = if output_selection.contains(&VyperSelection::AST) {
+        let ast = if output_selection.contains(&VyperSelector::AST) {
             Some(self.ast.clone())
         } else {
             None
         };
-        let abi = if output_selection.contains(&VyperSelection::ABI) {
+        let abi = if output_selection.contains(&VyperSelector::ABI) {
             Some(self.abi.clone())
         } else {
             None
         };
-        let method_identifiers = if output_selection.contains(&VyperSelection::MethodIdentifiers) {
+        let method_identifiers = if output_selection.contains(&VyperSelector::MethodIdentifiers) {
             Some(self.method_identifiers.clone())
         } else {
             None
         };
-        let layout = if output_selection.contains(&VyperSelection::Layout) {
+        let layout = if output_selection.contains(&VyperSelector::Layout) {
             self.layout.take()
         } else {
             None
         };
-        let userdoc = if output_selection.contains(&VyperSelection::UserDocumentation) {
+        let userdoc = if output_selection.contains(&VyperSelector::UserDocumentation) {
             self.userdoc.take()
         } else {
             None
         };
-        let devdoc = if output_selection.contains(&VyperSelection::DeveloperDocumentation) {
+        let devdoc = if output_selection.contains(&VyperSelector::DeveloperDocumentation) {
             self.devdoc.take()
         } else {
             None
@@ -232,8 +232,8 @@ impl Contract {
         let mut build = context.build(
             contract_path,
             metadata_hash,
-            output_selection.contains(&VyperSelection::EraVMAssembly)
-                || output_selection.contains(&VyperSelection::CombinedJson),
+            output_selection.contains(&VyperSelector::EraVMAssembly)
+                || output_selection.contains(&VyperSelector::CombinedJson),
             false,
         )?;
 

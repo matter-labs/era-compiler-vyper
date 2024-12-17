@@ -86,12 +86,12 @@ fn main_inner() -> anyhow::Result<()> {
     let output_selection = match arguments.format.as_ref() {
         Some(format) => format
             .split(',')
-            .map(era_compiler_vyper::VyperSelection::from_str)
-            .collect::<anyhow::Result<Vec<era_compiler_vyper::VyperSelection>>>()?,
+            .map(era_compiler_vyper::VyperSelector::from_str)
+            .collect::<anyhow::Result<Vec<era_compiler_vyper::VyperSelector>>>()?,
         None => vec![],
     };
     let is_combined_json =
-        output_selection.contains(&era_compiler_vyper::VyperSelection::CombinedJson);
+        output_selection.contains(&era_compiler_vyper::VyperSelector::CombinedJson);
     if is_combined_json && output_selection.len() > 1 {
         anyhow::bail!(
             "`combined_json` cannot be requested together with other output: `{:?}`",

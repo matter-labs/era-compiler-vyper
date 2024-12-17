@@ -1,5 +1,7 @@
 use predicates::prelude::*;
 
+use era_compiler_vyper::VyperSelector;
+
 use crate::common;
 
 #[test]
@@ -27,7 +29,25 @@ fn default() -> anyhow::Result<()> {
 fn with_proxy() -> anyhow::Result<()> {
     let _ = common::setup();
 
-    let args = &[common::TEST_CREATE_MINIMAL_PROXY_TO_CONTRACT_PATH];
+    let format = [
+        VyperSelector::IRJson,
+        VyperSelector::AST,
+        VyperSelector::ABI,
+        VyperSelector::MethodIdentifiers,
+        VyperSelector::Layout,
+        VyperSelector::UserDocumentation,
+        VyperSelector::DeveloperDocumentation,
+    ]
+    .into_iter()
+    .map(|selection| selection.to_string())
+    .collect::<Vec<String>>()
+    .join(",");
+
+    let args = &[
+        common::TEST_CREATE_MINIMAL_PROXY_TO_CONTRACT_PATH,
+        "-f",
+        format.as_str(),
+    ];
 
     let result = common::execute_zkvyper(args)?;
     let zkvyper_status = result
@@ -40,6 +60,38 @@ fn with_proxy() -> anyhow::Result<()> {
 
     let vyper_result = common::execute_vyper(args)?;
     vyper_result.code(zkvyper_status);
+
+    Ok(())
+}
+
+#[test]
+fn with_proxy_zkvyper() -> anyhow::Result<()> {
+    let _ = common::setup();
+
+    let format = [
+        VyperSelector::IRJson,
+        VyperSelector::AST,
+        VyperSelector::ABI,
+        VyperSelector::MethodIdentifiers,
+        VyperSelector::Layout,
+        VyperSelector::UserDocumentation,
+        VyperSelector::DeveloperDocumentation,
+        VyperSelector::EraVMAssembly,
+        VyperSelector::ProjectMetadata,
+    ]
+    .into_iter()
+    .map(|selection| selection.to_string())
+    .collect::<Vec<String>>()
+    .join(",");
+
+    let args = &[
+        common::TEST_CREATE_MINIMAL_PROXY_TO_CONTRACT_PATH,
+        "-f",
+        format.as_str(),
+    ];
+
+    let result = common::execute_zkvyper(args)?;
+    result.success().stdout(predicate::str::contains("0x"));
 
     Ok(())
 }

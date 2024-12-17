@@ -3,7 +3,7 @@
 //!
 
 pub mod combined_json;
-pub mod selection;
+pub mod selector;
 pub mod standard_json;
 pub mod version;
 
@@ -21,7 +21,7 @@ use crate::project::contract::vyper::Contract as VyperContract;
 use crate::project::contract::Contract;
 use crate::project::Project;
 
-use self::selection::Selection;
+use self::selector::Selector;
 use self::standard_json::input::settings::optimize::Optimize as StandardJsonInputSettingsOptimize;
 use self::standard_json::input::Input as StandardJsonInput;
 use self::standard_json::output::Output as StandardJsonOutput;
@@ -187,7 +187,7 @@ impl Compiler {
         &self,
         version: &semver::Version,
         mut paths: Vec<PathBuf>,
-        selection: &[Selection],
+        selection: &[Selector],
         evm_version: Option<era_compiler_common::EVMVersion>,
         enable_decimals: bool,
         search_paths: Option<Vec<String>>,
@@ -199,14 +199,14 @@ impl Compiler {
         vyper_selection.retain(|flag| flag.is_requested_from_vyper());
         vyper_selection.extend(
             [
-                Selection::IRJson,
-                Selection::AST,
-                Selection::ABI,
-                Selection::MethodIdentifiers,
+                Selector::IRJson,
+                Selector::AST,
+                Selector::ABI,
+                Selector::MethodIdentifiers,
             ]
             .iter()
             .filter(|flag| !vyper_selection.contains(flag))
-            .collect::<Vec<&Selection>>(),
+            .collect::<Vec<&Selector>>(),
         );
 
         let mut command = std::process::Command::new(self.executable.as_str());

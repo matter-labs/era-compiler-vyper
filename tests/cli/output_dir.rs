@@ -1,7 +1,7 @@
 use predicates::prelude::*;
 use tempfile::TempDir;
 
-use era_compiler_vyper::VyperSelection;
+use era_compiler_vyper::VyperSelector;
 
 use crate::common;
 
@@ -19,13 +19,7 @@ fn default() -> anyhow::Result<()> {
         tmp_dir_path_zk_vyper,
     ];
     let result = common::execute_zkvyper(args)?;
-    result
-        .success()
-        .stderr(predicate::str::contains("Refusing to overwrite").not())
-        .get_output()
-        .status
-        .code()
-        .expect("No exit code.");
+    result.success();
 
     // Verify output directory and file creation
     assert_eq!(
@@ -35,6 +29,25 @@ fn default() -> anyhow::Result<()> {
             common::VYPER_BIN_OUTPUT_NAME
         ))?
     );
+
+    Ok(())
+}
+
+#[test]
+fn with_warnings() -> anyhow::Result<()> {
+    let _ = common::setup();
+
+    let tmp_dir_zk_vyper = TempDir::new().expect("Failed to create temp dir");
+    let tmp_dir_path_zk_vyper = tmp_dir_zk_vyper.path().to_str().unwrap();
+
+    // Check if output is empty and exit code
+    let args = &[
+        common::TEST_TX_ORIGIN_CONTRACT_PATH,
+        "-o",
+        tmp_dir_path_zk_vyper,
+    ];
+    let result = common::execute_zkvyper(args)?;
+    result.success().stderr(predicate::str::contains("Warning"));
 
     Ok(())
 }
@@ -121,15 +134,15 @@ fn all_output() -> anyhow::Result<()> {
     let tmp_dir_path_zk_vyper = tmp_dir_zk_vyper.path().to_str().unwrap();
 
     let format = [
-        VyperSelection::IRJson,
-        VyperSelection::AST,
-        VyperSelection::ABI,
-        VyperSelection::MethodIdentifiers,
-        VyperSelection::Layout,
-        VyperSelection::UserDocumentation,
-        VyperSelection::DeveloperDocumentation,
-        VyperSelection::EraVMAssembly,
-        VyperSelection::ProjectMetadata,
+        VyperSelector::IRJson,
+        VyperSelector::AST,
+        VyperSelector::ABI,
+        VyperSelector::MethodIdentifiers,
+        VyperSelector::Layout,
+        VyperSelector::UserDocumentation,
+        VyperSelector::DeveloperDocumentation,
+        VyperSelector::EraVMAssembly,
+        VyperSelector::ProjectMetadata,
     ]
     .into_iter()
     .map(|selection| selection.to_string())

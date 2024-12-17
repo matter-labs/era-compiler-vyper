@@ -8,7 +8,7 @@ pub mod metadata;
 pub mod vyper;
 
 use crate::build::contract::Contract as ContractBuild;
-use crate::vyper::selection::Selection as VyperSelection;
+use crate::vyper::selector::Selector as VyperSelector;
 use crate::warning_type::WarningType;
 
 use self::eravm_assembly::Contract as EraVMAssemblyContract;
@@ -56,7 +56,7 @@ impl Contract {
         metadata_hash: Option<era_compiler_common::Hash>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
-        output_selection: Vec<VyperSelection>,
+        output_selection: Vec<VyperSelector>,
         suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {

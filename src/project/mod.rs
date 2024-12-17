@@ -19,7 +19,7 @@ use crate::process::output::Output as ProcessOutput;
 use crate::project::contract::vyper::ast::AST as VyperAST;
 use crate::project::contract::vyper::Contract as VyperContract;
 use crate::project::contract::Contract as ProjectContract;
-use crate::vyper::selection::Selection as VyperSelection;
+use crate::vyper::selector::Selector as VyperSelector;
 use crate::vyper::standard_json::output::Output as VyperStandardJsonOutput;
 use crate::warning_type::WarningType;
 
@@ -38,7 +38,7 @@ pub struct Project {
     /// The contract data,
     pub contracts: BTreeMap<String, Contract>,
     /// The selection output.
-    pub output_selection: Vec<VyperSelection>,
+    pub output_selection: Vec<VyperSelector>,
     /// The project source code hash.
     pub project_hash: era_compiler_common::Hash,
 }
@@ -50,7 +50,7 @@ impl Project {
     pub fn new(
         version: semver::Version,
         contracts: BTreeMap<String, Contract>,
-        output_selection: Vec<VyperSelection>,
+        output_selection: Vec<VyperSelector>,
     ) -> Self {
         let source_codes = contracts
             .values()
@@ -122,7 +122,7 @@ impl Project {
     ///
     pub fn try_from_llvm_ir_paths(
         paths: &[&Path],
-        output_selection: &[VyperSelection],
+        output_selection: &[VyperSelector],
     ) -> anyhow::Result<Self> {
         let contracts = paths
             .iter()
@@ -152,7 +152,7 @@ impl Project {
     ///
     pub fn try_from_eravm_assembly_paths(
         paths: &[&Path],
-        output_selection: &[VyperSelection],
+        output_selection: &[VyperSelector],
     ) -> anyhow::Result<Self> {
         let contracts = paths
             .iter()
@@ -258,7 +258,7 @@ impl Project {
                 crate::r#const::MINIMAL_PROXY_CONTRACT_NAME.to_owned(),
                 ContractBuild::new_minimal_proxy(
                     self.output_selection
-                        .contains(&VyperSelection::EraVMAssembly),
+                        .contains(&VyperSelector::EraVMAssembly),
                 ),
             );
         }

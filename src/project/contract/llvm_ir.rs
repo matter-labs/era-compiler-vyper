@@ -3,7 +3,7 @@
 //!
 
 use crate::build::contract::Contract as ContractBuild;
-use crate::vyper::selection::Selection as VyperSelection;
+use crate::vyper::selector::Selector as VyperSelector;
 use crate::warning_type::WarningType;
 
 ///
@@ -37,7 +37,7 @@ impl Contract {
         metadata_hash: Option<era_compiler_common::Hash>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
-        output_selection: Vec<VyperSelection>,
+        output_selection: Vec<VyperSelector>,
         _suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
@@ -65,7 +65,7 @@ impl Contract {
         let build = context.build(
             contract_path,
             metadata_hash,
-            output_selection.contains(&VyperSelection::EraVMAssembly),
+            output_selection.contains(&VyperSelector::EraVMAssembly),
             false,
         )?;
 
