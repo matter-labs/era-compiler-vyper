@@ -20,7 +20,7 @@ mod output_dir;
 mod overwrite;
 mod recursive_process;
 mod search_paths;
-mod suppress;
+mod suppress_warnings;
 mod threads;
 mod version;
 mod vyper;

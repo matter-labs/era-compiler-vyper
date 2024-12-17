@@ -60,10 +60,6 @@ pub fn llvm_ir(
     suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
-    if input_paths.is_empty() {
-        writeln!(std::io::stderr(), "No input sources provided").expect("Stderr writing error");
-    }
-
     let paths: Vec<&Path> = input_paths.iter().map(|path| path.as_path()).collect();
     let project = Project::try_from_llvm_ir_paths(paths.as_slice(), output_selection)?;
 
@@ -90,10 +86,6 @@ pub fn eravm_assembly(
     suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
-    if input_paths.is_empty() {
-        writeln!(std::io::stderr(), "No input sources provided").expect("Stderr writing error");
-    }
-
     let paths: Vec<&Path> = input_paths.iter().map(|path| path.as_path()).collect();
     let project = Project::try_from_eravm_assembly_paths(paths.as_slice(), output_selection)?;
 

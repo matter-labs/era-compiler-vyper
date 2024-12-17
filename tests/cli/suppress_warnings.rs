@@ -24,3 +24,21 @@ fn default(warning_type: WarningType) -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn invalid_type() -> anyhow::Result<()> {
+    let _ = common::setup();
+
+    let args = &[
+        common::TEST_TX_ORIGIN_CONTRACT_PATH,
+        "--suppress-warnings",
+        "unknown",
+    ];
+
+    let result = common::execute_zkvyper(args)?;
+    result
+        .failure()
+        .stderr(predicate::str::contains("invalid warning type: unknown"));
+
+    Ok(())
+}

@@ -212,14 +212,11 @@ impl Contract {
                 "Refusing to overwrite an existing file {binary_file_path:?} (use --overwrite to force).",
             );
         }
-        File::create(&binary_file_path)
-            .map_err(|error| {
-                anyhow::anyhow!("File {:?} creating error: {}", binary_file_path, error)
-            })?
-            .write_all(format!("0x{}", hex::encode(self.build.bytecode.as_slice())).as_bytes())
-            .map_err(|error| {
-                anyhow::anyhow!("File {:?} writing error: {}", binary_file_path, error)
-            })?;
+        std::fs::write(
+            &binary_file_path,
+            format!("0x{}", hex::encode(self.build.bytecode.as_slice())).as_bytes(),
+        )
+        .map_err(|error| anyhow::anyhow!("File {binary_file_path:?} writing error: {error}"))?;
 
         if selection.is_empty() {
             return Ok(());
