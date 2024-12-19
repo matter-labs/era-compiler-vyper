@@ -1,61 +1,16 @@
-use crate::{cli, common};
 use predicates::prelude::*;
-use tempfile::TempDir;
+
+use era_compiler_vyper::VyperSelector;
+
+use crate::common;
 
 #[test]
-fn run_zkvyper_without_any_options() -> anyhow::Result<()> {
+fn default() -> anyhow::Result<()> {
     let _ = common::setup();
-    let args = &[];
 
-    // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
-    let zkvyper_status = result
-        .failure()
-        .stderr(predicate::str::contains("Error: No input files provided."))
-        .get_output()
-        .status
-        .code()
-        .expect("No exit code.");
+    let args = &[common::TEST_GREETER_CONTRACT_PATH];
 
-    // Compare with vyper
-    // Use `ge` predicate to check if zkvyper exit code is greater than or equal to vyper exit code
-    // because vyper exit code is 2, but zkvyper exit code is 1
-    cli::execute_vyper(args)?.code(predicate::ge(zkvyper_status));
-
-    Ok(())
-}
-
-#[test]
-fn default_run_without_input_files() -> anyhow::Result<()> {
-    let _ = common::setup();
-    let args = &["-f", "ast"];
-
-    // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
-    let zkvyper_status = result
-        .failure()
-        .stderr(predicate::str::contains("No input files provided"))
-        .get_output()
-        .status
-        .code()
-        .expect("No exit code.");
-
-    // Compare with vyper
-    // Use `ge` predicate to check if zkvyper exit code is greater than or equal to vyper exit code
-    // because vyper exit code is 2, but zkvyper exit code is 1
-    let vyper_result = cli::execute_vyper(args)?;
-    vyper_result.code(predicate::ge(zkvyper_status));
-
-    Ok(())
-}
-
-#[test]
-fn default_run_with_a_contract_only() -> anyhow::Result<()> {
-    let _ = common::setup();
-    let args = &[cli::TEST_VYPER_CONTRACT_PATH];
-
-    // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
+    let result = common::execute_zkvyper(args)?;
     let zkvyper_status = result
         .success()
         .stdout(predicate::str::contains("0x"))
@@ -64,51 +19,135 @@ fn default_run_with_a_contract_only() -> anyhow::Result<()> {
         .code()
         .expect("No exit code.");
 
-    // Compare with vyper
-    let vyper_result = cli::execute_vyper(args)?;
+    let vyper_result = common::execute_vyper(args)?;
     vyper_result.code(zkvyper_status);
 
     Ok(())
 }
 
 #[test]
-fn default_run_command_from_help() -> anyhow::Result<()> {
+fn with_proxy() -> anyhow::Result<()> {
     let _ = common::setup();
-    let output_dir = TempDir::new()?;
-    let bin_output_file = output_dir.path().join(cli::VYPER_BIN_OUTPUT_NAME);
 
-    let zkvyper_args = &[
-        cli::TEST_VYPER_CONTRACT_PATH,
-        "-o",
-        output_dir.path().to_str().unwrap(),
+    let format = [
+        VyperSelector::IRJson,
+        VyperSelector::AST,
+        VyperSelector::ABI,
+        VyperSelector::MethodIdentifiers,
+        VyperSelector::Layout,
+        VyperSelector::UserDocumentation,
+        VyperSelector::DeveloperDocumentation,
+    ]
+    .into_iter()
+    .map(|selection| selection.to_string())
+    .collect::<Vec<String>>()
+    .join(",");
+
+    let args = &[
+        common::TEST_CREATE_MINIMAL_PROXY_TO_CONTRACT_PATH,
         "-f",
-        "eravm_assembly",
+        format.as_str(),
     ];
 
-    // Execute zkvyper command
-    let result = cli::execute_zkvyper(zkvyper_args)?;
+    let result = common::execute_zkvyper(args)?;
     let zkvyper_status = result
         .success()
+        .stdout(predicate::str::contains("0x"))
         .get_output()
         .status
         .code()
         .expect("No exit code.");
 
-    // Ensure output directory is created
-    assert!(output_dir.path().exists());
-
-    // Ensure output file is created and is not empty
-    assert!(bin_output_file.exists());
-    assert!(!cli::is_file_empty(&bin_output_file.to_str().unwrap())?);
-
-    // Compare with vyper
-    let vyper_args = &[
-        cli::TEST_VYPER_CONTRACT_PATH,
-        "-o",
-        bin_output_file.to_str().unwrap(),
-    ];
-    let vyper_result = cli::execute_vyper(vyper_args)?;
+    let vyper_result = common::execute_vyper(args)?;
     vyper_result.code(zkvyper_status);
+
+    Ok(())
+}
+
+#[test]
+fn with_proxy_zkvyper() -> anyhow::Result<()> {
+    let _ = common::setup();
+
+    let format = [
+        VyperSelector::IRJson,
+        VyperSelector::AST,
+        VyperSelector::ABI,
+        VyperSelector::MethodIdentifiers,
+        VyperSelector::Layout,
+        VyperSelector::UserDocumentation,
+        VyperSelector::DeveloperDocumentation,
+        VyperSelector::EraVMAssembly,
+        VyperSelector::ProjectMetadata,
+    ]
+    .into_iter()
+    .map(|selection| selection.to_string())
+    .collect::<Vec<String>>()
+    .join(",");
+
+    let args = &[
+        common::TEST_CREATE_MINIMAL_PROXY_TO_CONTRACT_PATH,
+        "-f",
+        format.as_str(),
+    ];
+
+    let result = common::execute_zkvyper(args)?;
+    result.success().stdout(predicate::str::contains("0x"));
+
+    Ok(())
+}
+
+#[test]
+fn with_warnings() -> anyhow::Result<()> {
+    let _ = common::setup();
+
+    let args = &[common::TEST_TX_ORIGIN_CONTRACT_PATH];
+
+    let result = common::execute_zkvyper(args)?;
+    let zkvyper_status = result
+        .success()
+        .stdout(predicate::str::contains("0x"))
+        .get_output()
+        .status
+        .code()
+        .expect("No exit code.");
+
+    let vyper_result = common::execute_vyper(args)?;
+    vyper_result.code(zkvyper_status);
+
+    Ok(())
+}
+
+#[test]
+fn without_input_files() -> anyhow::Result<()> {
+    let _ = common::setup();
+
+    let args = &[];
+
+    let result = common::execute_zkvyper(args)?;
+    result
+        .failure()
+        .stderr(predicate::str::contains("No input files provided."));
+
+    let vyper_result = common::execute_vyper(args)?;
+    vyper_result.code(2);
+
+    Ok(())
+}
+
+#[test]
+fn multiple_modes() -> anyhow::Result<()> {
+    let _ = common::setup();
+
+    let args = &[
+        common::TEST_GREETER_CONTRACT_PATH,
+        "--llvm-ir",
+        "--eravm-assembly",
+    ];
+
+    let result = common::execute_zkvyper(args)?;
+    result.failure().stderr(predicate::str::contains(
+        "Only one mode is allowed at the same time: format, LLVM IR, EraVM assembly, disassembler.",
+    ));
 
     Ok(())
 }

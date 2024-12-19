@@ -30,7 +30,7 @@ pub fn run() -> anyhow::Result<()> {
         input.optimizer_settings,
         input.llvm_options,
         input.output_selection,
-        input.suppressed_messages,
+        input.suppressed_warnings,
         input.debug_config,
     )?;
     unsafe { inkwell::support::shutdown_llvm() };

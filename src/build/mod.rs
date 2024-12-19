@@ -5,7 +5,6 @@
 pub mod contract;
 
 use std::collections::BTreeMap;
-use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
@@ -14,7 +13,7 @@ use normpath::PathExt;
 
 use crate::vyper::combined_json::extra_data::ExtraData as CombinedJsonExtraData;
 use crate::vyper::combined_json::CombinedJson;
-use crate::vyper::selection::Selection as VyperSelection;
+use crate::vyper::selector::Selector as VyperSelector;
 use crate::vyper::Compiler as VyperCompiler;
 
 use self::contract::Contract;
@@ -67,11 +66,15 @@ impl Build {
                 &linker_symbols,
                 &factory_dependencies,
             )?;
+            assert_eq!(
+                object_format,
+                era_compiler_common::ObjectFormat::Raw,
+                "Linked Vyper bytecode cannot be ELF"
+            );
             contract.build.bytecode = memory_buffer_linked.as_slice().to_vec();
-            if let era_compiler_common::ObjectFormat::Raw = object_format {
-                let bytecode_hash = era_compiler_llvm_context::eravm_hash(&memory_buffer_linked)?;
-                contract.build.bytecode_hash = Some(bytecode_hash);
-            }
+            contract.build.bytecode_hash = Some(era_compiler_llvm_context::eravm_hash(
+                &memory_buffer_linked,
+            )?);
         }
 
         Ok(())
@@ -80,12 +83,12 @@ impl Build {
     ///
     /// Writes all contracts to the terminal.
     ///
-    pub fn write_to_terminal(self, selection: &[VyperSelection]) -> anyhow::Result<()> {
+    pub fn write_to_terminal(self, selection: &[VyperSelector]) -> anyhow::Result<()> {
         for (path, contract) in self.contracts.into_iter() {
             contract.write_to_terminal(path, selection)?;
         }
 
-        if selection.contains(&VyperSelection::ProjectMetadata) {
+        if selection.contains(&VyperSelector::ProjectMetadata) {
             writeln!(std::io::stderr(), "Project metadata:")?;
             writeln!(std::io::stdout(), "{}", self.project_metadata)?;
         }
@@ -98,7 +101,7 @@ impl Build {
     ///
     pub fn write_to_directory(
         self,
-        selection: &[VyperSelection],
+        selection: &[VyperSelector],
         output_directory: &Path,
         overwrite: bool,
     ) -> anyhow::Result<()> {
@@ -113,7 +116,7 @@ impl Build {
             )?;
         }
 
-        if selection.contains(&VyperSelection::ProjectMetadata) {
+        if selection.contains(&VyperSelector::ProjectMetadata) {
             let metadata_file_name = format!("meta.{}", era_compiler_common::EXTENSION_JSON);
             let mut metadata_file_path = output_directory.to_owned();
             metadata_file_path.push(metadata_file_name);
@@ -122,18 +125,15 @@ impl Build {
                     "Refusing to overwrite an existing file {metadata_file_path:?} (use --overwrite to force).",
                 );
             }
-            File::create(&metadata_file_path)
-                .map_err(|error| {
-                    anyhow::anyhow!("File {:?} creating error: {}", metadata_file_path, error)
-                })?
-                .write_all(
-                    serde_json::to_string(&self.project_metadata)
-                        .expect("Always valid")
-                        .as_bytes(),
-                )
-                .map_err(|error| {
-                    anyhow::anyhow!("File {:?} writing error: {}", metadata_file_path, error)
-                })?;
+            std::fs::write(
+                &metadata_file_path,
+                serde_json::to_string(&self.project_metadata)
+                    .expect("Always valid")
+                    .as_bytes(),
+            )
+            .map_err(|error| {
+                anyhow::anyhow!("File {metadata_file_path:?} writing error: {error}")
+            })?;
         }
 
         Ok(())

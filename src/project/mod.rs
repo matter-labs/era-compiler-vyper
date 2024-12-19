@@ -14,14 +14,14 @@ use rayon::iter::ParallelIterator;
 
 use crate::build::contract::Contract as ContractBuild;
 use crate::build::Build;
-use crate::message_type::MessageType;
 use crate::process::input::Input as ProcessInput;
 use crate::process::output::Output as ProcessOutput;
 use crate::project::contract::vyper::ast::AST as VyperAST;
 use crate::project::contract::vyper::Contract as VyperContract;
 use crate::project::contract::Contract as ProjectContract;
-use crate::vyper::selection::Selection as VyperSelection;
+use crate::vyper::selector::Selector as VyperSelector;
 use crate::vyper::standard_json::output::Output as VyperStandardJsonOutput;
+use crate::warning_type::WarningType;
 
 use self::contract::eravm_assembly::Contract as EraVMAssemblyContract;
 use self::contract::llvm_ir::Contract as LLVMIRContract;
@@ -38,7 +38,7 @@ pub struct Project {
     /// The contract data,
     pub contracts: BTreeMap<String, Contract>,
     /// The selection output.
-    pub output_selection: Vec<VyperSelection>,
+    pub output_selection: Vec<VyperSelector>,
     /// The project source code hash.
     pub project_hash: era_compiler_common::Hash,
 }
@@ -50,7 +50,7 @@ impl Project {
     pub fn new(
         version: semver::Version,
         contracts: BTreeMap<String, Contract>,
-        output_selection: Vec<VyperSelection>,
+        output_selection: Vec<VyperSelector>,
     ) -> Self {
         let source_codes = contracts
             .values()
@@ -70,22 +70,21 @@ impl Project {
     /// Converts Vyper standard JSON output into a project.
     ///
     pub fn try_from_standard_json(
-        mut standard_json: VyperStandardJsonOutput,
+        standard_json: VyperStandardJsonOutput,
         version: &semver::Version,
     ) -> anyhow::Result<Self> {
-        let files = match standard_json.contracts.take() {
-            Some(files) => files,
-            None => {
-                anyhow::bail!(
-                    "{}",
-                    standard_json
-                        .errors
-                        .as_ref()
-                        .map(|errors| serde_json::to_string_pretty(errors).expect("Always valid"))
-                        .unwrap_or_else(|| "Unknown project assembling error".to_owned())
-                );
-            }
-        };
+        let files = standard_json.contracts.unwrap_or_default();
+        let errors = standard_json.errors.unwrap_or_default();
+        if files.is_empty() && !errors.is_empty() {
+            anyhow::bail!(
+                "{}",
+                errors
+                    .into_iter()
+                    .map(|error| error.message)
+                    .collect::<Vec<String>>()
+                    .join("\n\n")
+            );
+        }
 
         let mut project_contracts: BTreeMap<String, ProjectContract> = BTreeMap::new();
         for (path, file) in files.into_iter() {
@@ -122,7 +121,7 @@ impl Project {
     ///
     pub fn try_from_llvm_ir_paths(
         paths: &[&Path],
-        output_selection: &[VyperSelection],
+        output_selection: &[VyperSelector],
     ) -> anyhow::Result<Self> {
         let contracts = paths
             .iter()
@@ -152,7 +151,7 @@ impl Project {
     ///
     pub fn try_from_eravm_assembly_paths(
         paths: &[&Path],
-        output_selection: &[VyperSelection],
+        output_selection: &[VyperSelector],
     ) -> anyhow::Result<Self> {
         let contracts = paths
             .iter()
@@ -188,7 +187,7 @@ impl Project {
         metadata_hash_type: era_compiler_common::HashType,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
-        suppressed_messages: Vec<MessageType>,
+        suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<Build> {
         let metadata = ContractMetadata::new(
@@ -225,7 +224,7 @@ impl Project {
                         self.output_selection.clone(),
                         optimizer_settings.clone(),
                         llvm_options.clone(),
-                        suppressed_messages.clone(),
+                        suppressed_warnings.clone(),
                         debug_config.clone(),
                     ),
                 );
@@ -258,7 +257,7 @@ impl Project {
                 crate::r#const::MINIMAL_PROXY_CONTRACT_NAME.to_owned(),
                 ContractBuild::new_minimal_proxy(
                     self.output_selection
-                        .contains(&VyperSelection::EraVMAssembly),
+                        .contains(&VyperSelector::EraVMAssembly),
                 ),
             );
         }

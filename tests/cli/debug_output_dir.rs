@@ -1,20 +1,21 @@
-use crate::{cli, common};
-use predicates::prelude::*;
-use std::fs;
 use tempfile::TempDir;
 
+use era_compiler_vyper::VyperSelector;
+
+use crate::common;
+
 #[test]
-fn run_contract_with_debug_output_dir() -> anyhow::Result<()> {
+fn default() -> anyhow::Result<()> {
     let _ = common::setup();
+
     let tmp_dir_zkvyper = TempDir::new()?;
     let args = &[
-        cli::TEST_VYPER_CONTRACT_PATH,
+        common::TEST_GREETER_CONTRACT_PATH,
         "--debug-output-dir",
         tmp_dir_zkvyper.path().to_str().unwrap(),
     ];
 
-    // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
+    let result = common::execute_zkvyper(args)?;
     result
         .success()
         .get_output()
@@ -27,12 +28,12 @@ fn run_contract_with_debug_output_dir() -> anyhow::Result<()> {
 
     // Ensure it contains expected filenames
     let expected_substrings = [
-        cli::LLVM_IR_EXTENSION,
-        cli::LLVM_IR_OPTIMIZED_EXTENSION,
-        cli::LLVM_IR_UNOPTIMIZED_EXTENSION,
-        cli::ERAVM_ASSEMBLY_EXTENSION,
+        common::LLVM_IR_EXTENSION,
+        common::LLVM_IR_OPTIMIZED_EXTENSION,
+        common::LLVM_IR_UNOPTIMIZED_EXTENSION,
+        common::ERAVM_ASSEMBLY_EXTENSION,
     ];
-    let filenames = fs::read_dir(tmp_dir_zkvyper.path())?
+    let filenames = std::fs::read_dir(tmp_dir_zkvyper.path())?
         .map(|entry| entry.unwrap().file_name().into_string().unwrap())
         .collect::<Vec<_>>();
     assert!(filenames.iter().all(|filename| expected_substrings
@@ -43,54 +44,43 @@ fn run_contract_with_debug_output_dir() -> anyhow::Result<()> {
 }
 
 #[test]
-fn run_without_contract_with_debug_output_dir() -> anyhow::Result<()> {
+fn combined_json() -> anyhow::Result<()> {
     let _ = common::setup();
+
     let tmp_dir_zkvyper = TempDir::new()?;
+    let selector = VyperSelector::CombinedJson.to_string();
     let args = &[
+        common::TEST_GREETER_CONTRACT_PATH,
+        "-f",
+        selector.as_str(),
         "--debug-output-dir",
         tmp_dir_zkvyper.path().to_str().unwrap(),
     ];
 
-    // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
+    let result = common::execute_zkvyper(args)?;
     result
-        .failure()
-        .stderr(predicate::str::contains("No input files provided"));
+        .success()
+        .get_output()
+        .status
+        .code()
+        .expect("No exit code.");
 
-    Ok(())
-}
+    // Ensure output directory is created
+    assert!(tmp_dir_zkvyper.path().exists());
 
-#[test]
-fn run_with_debug_output_dir_no_folder_arg() -> anyhow::Result<()> {
-    let _ = common::setup();
-    let args = &[cli::TEST_VYPER_CONTRACT_PATH, "--debug-output-dir"];
-
-    // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
-    result
-        .failure()
-        .stderr(predicate::str::contains("error: a value is required for '--debug-output-dir <DEBUG_OUTPUT_DIR>' but none was supplied"));
-
-    Ok(())
-}
-
-#[test]
-fn run_with_duplicate_debug_output_dir_option() -> anyhow::Result<()> {
-    let _ = common::setup();
-    let tmp_dir_zkvyper = TempDir::new()?;
-    let args = &[
-        cli::TEST_VYPER_CONTRACT_PATH,
-        "--debug-output-dir",
-        tmp_dir_zkvyper.path().to_str().unwrap(),
-        "--debug-output-dir",
-        tmp_dir_zkvyper.path().to_str().unwrap(),
+    // Ensure it contains expected filenames
+    let expected_substrings = [
+        common::LLVM_IR_EXTENSION,
+        common::LLVM_IR_OPTIMIZED_EXTENSION,
+        common::LLVM_IR_UNOPTIMIZED_EXTENSION,
+        common::ERAVM_ASSEMBLY_EXTENSION,
     ];
-
-    // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
-    result
-        .failure()
-        .stderr(predicate::str::contains("cannot be used multiple times"));
+    let filenames = std::fs::read_dir(tmp_dir_zkvyper.path())?
+        .map(|entry| entry.unwrap().file_name().into_string().unwrap())
+        .collect::<Vec<_>>();
+    assert!(filenames.iter().all(|filename| expected_substrings
+        .iter()
+        .any(|substring| filename.contains(substring))));
 
     Ok(())
 }

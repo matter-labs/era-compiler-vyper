@@ -11,7 +11,7 @@ use crate::project::contract::vyper::ast::AST;
 use crate::project::contract::vyper::expression::Expression as IR;
 use crate::vyper::combined_json::contract::warning::Warning as CombinedJsonContractWarning;
 use crate::vyper::combined_json::contract::Contract as CombinedJsonContract;
-use crate::vyper::selection::Selection as VyperSelection;
+use crate::vyper::selector::Selector as VyperSelector;
 
 ///
 /// The Vyper contract build.
@@ -100,7 +100,7 @@ impl Contract {
     pub fn write_to_terminal(
         self,
         path: String,
-        selection: &[VyperSelection],
+        selection: &[VyperSelector],
     ) -> anyhow::Result<()> {
         for warning in self.warnings.iter() {
             writeln!(std::io::stderr(), "\n{warning}")?;
@@ -111,49 +111,49 @@ impl Contract {
 
         for flag in selection.iter() {
             match flag {
-                VyperSelection::IRJson => {
+                VyperSelector::IRJson => {
                     serde_json::to_writer(
                         std::io::stdout(),
                         self.ir_json.as_ref().expect("Always exists"),
                     )?;
                     writeln!(std::io::stdout())?;
                 }
-                VyperSelection::AST => {
+                VyperSelector::AST => {
                     serde_json::to_writer(
                         std::io::stdout(),
                         self.ast.as_ref().expect("Always exists"),
                     )?;
                     writeln!(std::io::stdout())?;
                 }
-                VyperSelection::ABI => {
+                VyperSelector::ABI => {
                     serde_json::to_writer(
                         std::io::stdout(),
                         self.abi.as_ref().expect("Always exists"),
                     )?;
                     writeln!(std::io::stdout())?;
                 }
-                VyperSelection::MethodIdentifiers => {
+                VyperSelector::MethodIdentifiers => {
                     serde_json::to_writer(
                         std::io::stdout(),
                         self.method_identifiers.as_ref().expect("Always exists"),
                     )?;
                     writeln!(std::io::stdout())?;
                 }
-                VyperSelection::Layout => {
+                VyperSelector::Layout => {
                     serde_json::to_writer(
                         std::io::stdout(),
                         self.layout.as_ref().expect("Always exists"),
                     )?;
                     writeln!(std::io::stdout())?;
                 }
-                VyperSelection::UserDocumentation => {
+                VyperSelector::UserDocumentation => {
                     serde_json::to_writer(
                         std::io::stdout(),
                         self.userdoc.as_ref().expect("Always exists"),
                     )?;
                     writeln!(std::io::stdout())?;
                 }
-                VyperSelection::DeveloperDocumentation => {
+                VyperSelector::DeveloperDocumentation => {
                     serde_json::to_writer(
                         std::io::stdout(),
                         self.devdoc.as_ref().expect("Always exists"),
@@ -161,7 +161,7 @@ impl Contract {
                     writeln!(std::io::stdout())?;
                 }
 
-                VyperSelection::EraVMAssembly => {
+                VyperSelector::EraVMAssembly => {
                     writeln!(std::io::stderr(), "Contract `{path}` assembly:")?;
                     writeln!(
                         std::io::stdout(),
@@ -169,9 +169,9 @@ impl Contract {
                         self.build.assembly.as_ref().expect("Always exists")
                     )?;
                 }
-                VyperSelection::ProjectMetadata => {}
+                VyperSelector::ProjectMetadata => {}
 
-                VyperSelection::CombinedJson => {
+                VyperSelector::CombinedJson => {
                     panic!("Combined JSON is printed with another pipeline");
                 }
             }
@@ -185,7 +185,7 @@ impl Contract {
     ///
     pub fn write_to_directory(
         self,
-        selection: &[VyperSelection],
+        selection: &[VyperSelector],
         output_directory: &Path,
         contract_path: &Path,
         overwrite: bool,
@@ -212,14 +212,11 @@ impl Contract {
                 "Refusing to overwrite an existing file {binary_file_path:?} (use --overwrite to force).",
             );
         }
-        File::create(&binary_file_path)
-            .map_err(|error| {
-                anyhow::anyhow!("File {:?} creating error: {}", binary_file_path, error)
-            })?
-            .write_all(format!("0x{}", hex::encode(self.build.bytecode.as_slice())).as_bytes())
-            .map_err(|error| {
-                anyhow::anyhow!("File {:?} writing error: {}", binary_file_path, error)
-            })?;
+        std::fs::write(
+            &binary_file_path,
+            format!("0x{}", hex::encode(self.build.bytecode.as_slice())).as_bytes(),
+        )
+        .map_err(|error| anyhow::anyhow!("File {binary_file_path:?} writing error: {error}"))?;
 
         if selection.is_empty() {
             return Ok(());
@@ -237,49 +234,49 @@ impl Contract {
             })?;
         for flag in selection.iter() {
             match flag {
-                VyperSelection::IRJson => {
+                VyperSelector::IRJson => {
                     serde_json::to_writer(
                         &extra_output_file,
                         self.ir_json.as_ref().expect("Always exists"),
                     )?;
                     writeln!(&extra_output_file)?;
                 }
-                VyperSelection::AST => {
+                VyperSelector::AST => {
                     serde_json::to_writer(
                         &extra_output_file,
                         self.ast.as_ref().expect("Always exists"),
                     )?;
                     writeln!(&extra_output_file)?;
                 }
-                VyperSelection::ABI => {
+                VyperSelector::ABI => {
                     serde_json::to_writer(
                         &extra_output_file,
                         self.abi.as_ref().expect("Always exists"),
                     )?;
                     writeln!(&extra_output_file)?;
                 }
-                VyperSelection::MethodIdentifiers => {
+                VyperSelector::MethodIdentifiers => {
                     serde_json::to_writer(
                         &extra_output_file,
                         self.method_identifiers.as_ref().expect("Always exists"),
                     )?;
                     writeln!(&extra_output_file)?;
                 }
-                VyperSelection::Layout => {
+                VyperSelector::Layout => {
                     serde_json::to_writer(
                         &extra_output_file,
                         self.layout.as_ref().expect("Always exists"),
                     )?;
                     writeln!(&extra_output_file)?;
                 }
-                VyperSelection::UserDocumentation => {
+                VyperSelector::UserDocumentation => {
                     serde_json::to_writer(
                         &extra_output_file,
                         self.userdoc.as_ref().expect("Always exists"),
                     )?;
                     writeln!(&extra_output_file)?;
                 }
-                VyperSelection::DeveloperDocumentation => {
+                VyperSelector::DeveloperDocumentation => {
                     serde_json::to_writer(
                         &extra_output_file,
                         self.devdoc.as_ref().expect("Always exists"),
@@ -287,7 +284,7 @@ impl Contract {
                     writeln!(&extra_output_file)?;
                 }
 
-                VyperSelection::EraVMAssembly => {
+                VyperSelector::EraVMAssembly => {
                     let assembly_file_name = format!(
                         "{}.{}",
                         file_name,
@@ -300,32 +297,21 @@ impl Contract {
                             "Refusing to overwrite an existing file {assembly_file_path:?} (use --overwrite to force).",
                         );
                     }
-                    File::create(&assembly_file_path)
-                        .map_err(|error| {
-                            anyhow::anyhow!(
-                                "File {:?} creating error: {}",
-                                assembly_file_path,
-                                error
-                            )
-                        })?
-                        .write_all(
-                            self.build
-                                .assembly
-                                .as_ref()
-                                .expect("Always exists")
-                                .as_bytes(),
-                        )
-                        .map_err(|error| {
-                            anyhow::anyhow!(
-                                "File {:?} writing error: {}",
-                                assembly_file_path,
-                                error
-                            )
-                        })?;
+                    std::fs::write(
+                        &assembly_file_path,
+                        self.build
+                            .assembly
+                            .as_ref()
+                            .expect("Always exists")
+                            .as_bytes(),
+                    )
+                    .map_err(|error| {
+                        anyhow::anyhow!("File {assembly_file_path:?} writing error: {error}")
+                    })?;
                 }
-                VyperSelection::ProjectMetadata => {}
+                VyperSelector::ProjectMetadata => {}
 
-                VyperSelection::CombinedJson => {
+                VyperSelector::CombinedJson => {
                     panic!("Combined JSON is printed with another pipeline");
                 }
             }

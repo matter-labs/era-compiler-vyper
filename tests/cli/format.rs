@@ -1,39 +1,67 @@
-use crate::{cli, common};
 use predicates::prelude::*;
+use test_case::test_case;
 
-#[test]
-fn run_with_format_options() -> anyhow::Result<()> {
+use era_compiler_vyper::VyperSelector;
+
+use crate::common;
+
+#[test_case(VyperSelector::CombinedJson)]
+#[test_case(VyperSelector::IRJson)]
+#[test_case(VyperSelector::AST)]
+#[test_case(VyperSelector::ABI)]
+#[test_case(VyperSelector::MethodIdentifiers)]
+#[test_case(VyperSelector::Layout)]
+#[test_case(VyperSelector::UserDocumentation)]
+#[test_case(VyperSelector::DeveloperDocumentation)]
+#[test_case(VyperSelector::EraVMAssembly)]
+#[test_case(VyperSelector::ProjectMetadata)]
+fn default(selector: VyperSelector) -> anyhow::Result<()> {
     let _ = common::setup();
-    let format_args = [
-        "combined_json",
-        "ir_json",
-        "ast",
-        "abi",
-        "method_identifiers",
-        "layout",
-        "userdoc",
-        "devdoc",
-        "eravm_assembly",
-    ];
 
-    for format in format_args.iter() {
-        let args = &[cli::TEST_VYPER_CONTRACT_PATH, "-f", format];
+    let selector = selector.to_string();
+    let args = &[common::TEST_GREETER_CONTRACT_PATH, "-f", selector.as_str()];
 
-        // Execute zkvyper command
-        let result = cli::execute_zkvyper(args)?;
-        result.success();
-    }
+    let result = common::execute_zkvyper(args)?;
+    result.success();
 
     Ok(())
 }
 
 #[test]
-fn run_with_unsupported_format() -> anyhow::Result<()> {
+fn all() -> anyhow::Result<()> {
     let _ = common::setup();
-    let args = &[cli::TEST_VYPER_CONTRACT_PATH, "-f", "llvm"];
 
-    // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
+    let format = [
+        VyperSelector::IRJson,
+        VyperSelector::AST,
+        VyperSelector::ABI,
+        VyperSelector::MethodIdentifiers,
+        VyperSelector::Layout,
+        VyperSelector::UserDocumentation,
+        VyperSelector::DeveloperDocumentation,
+        VyperSelector::EraVMAssembly,
+        VyperSelector::ProjectMetadata,
+    ]
+    .into_iter()
+    .map(|selection| selection.to_string())
+    .collect::<Vec<String>>()
+    .join(",");
+
+    let args = &[common::TEST_GREETER_CONTRACT_PATH, "-f", format.as_str()];
+
+    let result = common::execute_zkvyper(args)?;
+    result.success();
+
+    Ok(())
+}
+
+#[test]
+fn unsupported_selector() -> anyhow::Result<()> {
+    let _ = common::setup();
+
+    let args = &[common::TEST_GREETER_CONTRACT_PATH, "-f", "llvm"];
+
+    let result = common::execute_zkvyper(args)?;
     result
         .failure()
         .stderr(predicate::str::contains("Unknown selection flag"));
@@ -42,22 +70,21 @@ fn run_with_unsupported_format() -> anyhow::Result<()> {
 }
 
 #[test]
-fn run_with_duplicate_format_option() -> anyhow::Result<()> {
+fn combined_json_with_other_option() -> anyhow::Result<()> {
     let _ = common::setup();
-    let format_args = ["combined_json", "ir_json"];
-    let args = &[
-        cli::TEST_VYPER_CONTRACT_PATH,
-        "-f",
-        format_args[0],
-        "-f",
-        format_args[1],
-    ];
 
-    // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
-    result
-        .failure()
-        .stderr(predicate::str::contains("cannot be used multiple times"));
+    let format = [VyperSelector::CombinedJson, VyperSelector::AST]
+        .into_iter()
+        .map(|selection| selection.to_string())
+        .collect::<Vec<String>>()
+        .join(",");
+
+    let args = &[common::TEST_GREETER_CONTRACT_PATH, "-f", format.as_str()];
+
+    let result = common::execute_zkvyper(args)?;
+    result.failure().stderr(predicate::str::contains(
+        "`combined_json` cannot be requested together with other output",
+    ));
 
     Ok(())
 }

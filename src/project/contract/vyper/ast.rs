@@ -2,8 +2,10 @@
 //! The Vyper contract AST.
 //!
 
-use crate::message_type::MessageType;
+use boolinator::Boolinator;
+
 use crate::vyper::combined_json::contract::warning::Warning as CombinedJsonContractWarning;
+use crate::warning_type::WarningType;
 
 ///
 /// The Vyper contract AST.
@@ -29,21 +31,12 @@ impl AST {
     ///
     pub fn check_tx_origin(&self, node: &serde_json::Value) -> Option<CombinedJsonContractWarning> {
         let ast = node.as_object()?;
-
-        if ast.get("ast_type")?.as_str()? != "Attribute" {
-            return None;
-        }
-        if ast.get("attr")?.as_str()? != "origin" {
-            return None;
-        }
+        (ast.get("ast_type")?.as_str()? == "Attribute").as_option()?;
+        (ast.get("attr")?.as_str()? == "origin").as_option()?;
 
         let value = ast.get("value")?.as_object()?;
-        if value.get("ast_type")?.as_str()? != "Name" {
-            return None;
-        }
-        if value.get("id")?.as_str()? != "tx" {
-            return None;
-        }
+        (value.get("ast_type")?.as_str()? == "Name").as_option()?;
+        (value.get("id")?.as_str()? == "tx").as_option()?;
 
         let message = r#"
 Warning: You are checking for 'tx.origin', which may lead to unexpected behavior.
@@ -52,11 +45,11 @@ ZKsync Era comes with native account abstraction support, and therefore the init
 transaction might be different from the contract calling your code. It is highly recommended NOT
 to rely on tx.origin, but use msg.sender instead.
 
-Learn more about Account Abstraction at https://docs.zksync.io/build/developer-reference/account-abstraction/
+Learn more about Account Abstraction at https://docs.zksync.io/zksync-protocol/account-abstraction
 
 You may disable this warning with `--suppress-warnings txorigin`.
 "#
-            .to_owned();
+        .to_owned();
         let (line, column) = self.location(node).unwrap_or((0, 0));
         Some(CombinedJsonContractWarning::new(
             self.contract_name.clone(),
@@ -67,35 +60,35 @@ You may disable this warning with `--suppress-warnings txorigin`.
     }
 
     ///
-    /// Returns the list of messages for some specific parts of the AST.
+    /// Returns the list of warnings for some specific parts of the AST.
     ///
-    pub fn get_messages(
+    pub fn get_warnings(
         &self,
         ast: &serde_json::Value,
-        suppressed_messages: &[MessageType],
+        suppressed_warnings: &[WarningType],
     ) -> Vec<CombinedJsonContractWarning> {
-        let mut messages = Vec::new();
-        if !suppressed_messages.contains(&MessageType::TxOrigin) {
+        let mut warnings = Vec::new();
+        if !suppressed_warnings.contains(&WarningType::TxOrigin) {
             if let Some(message) = self.check_tx_origin(ast) {
-                messages.push(message);
+                warnings.push(message);
             }
         }
 
         match ast {
             serde_json::Value::Array(array) => {
                 for element in array.iter() {
-                    messages.extend(self.get_messages(element, suppressed_messages));
+                    warnings.extend(self.get_warnings(element, suppressed_warnings));
                 }
             }
             serde_json::Value::Object(object) => {
                 for (_key, value) in object.iter() {
-                    messages.extend(self.get_messages(value, suppressed_messages));
+                    warnings.extend(self.get_warnings(value, suppressed_warnings));
                 }
             }
             _ => {}
         }
 
-        messages
+        warnings
     }
 
     ///
