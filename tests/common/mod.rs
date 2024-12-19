@@ -242,3 +242,13 @@ pub fn create_files(dir: &str, files: &[&str]) {
         writeln!(file, "").expect("Failed to write to file");
     }
 }
+
+///
+/// Helper function to delete files in a directory.
+///
+pub fn delete_files(dir: &str, files: &[&str]) {
+    for file in files {
+        let path = Path::new(dir).join(Path::new(file));
+        std::fs::remove_file(path).expect("Failed to delete a file");
+    }
+}

@@ -37,7 +37,6 @@ fn default() -> anyhow::Result<()> {
         .failure()
         .stderr(predicate::str::contains("Refusing to overwrite"));
 
-    // Trying to add a flag and verify that command passed with 0 exit code
     let args = &[
         common::TEST_GREETER_CONTRACT_PATH,
         "-o",
@@ -105,7 +104,6 @@ fn all_output() -> anyhow::Result<()> {
     .collect::<Vec<String>>()
     .join(",");
 
-    // Trying to add a flag and verify that command passed with 0 exit code
     let args = &[
         common::TEST_GREETER_CONTRACT_PATH,
         "-o",
@@ -175,7 +173,6 @@ fn one_output_not_passed(selector: VyperSelector) -> anyhow::Result<()> {
     Ok(())
 }
 
-#[test_case(VyperSelector::CombinedJson)]
 #[test_case(VyperSelector::IRJson)]
 #[test_case(VyperSelector::AST)]
 #[test_case(VyperSelector::ABI)]
@@ -191,8 +188,6 @@ fn one_output_not_passed_bytecode_deleted(selector: VyperSelector) -> anyhow::Re
     let tmp_dir = TempDir::new().expect("Failed to create temp dir");
     let tmp_dir_path = tmp_dir.path().to_str().unwrap();
 
-    // Adding empty files to tmp dir
-
     let selector = selector.to_string();
     let args = &[
         common::TEST_GREETER_CONTRACT_PATH,
@@ -206,12 +201,43 @@ fn one_output_not_passed_bytecode_deleted(selector: VyperSelector) -> anyhow::Re
         .success()
         .stderr(predicate::str::contains("Refusing to overwrite").not());
 
-    std::fs::remove_file(format!(
-        "{}{}",
-        common::TEST_GREETER_CONTRACT_NAME,
-        common::BIN_EXTENSION
-    ))
-    .expect("Failed to delete the bytecode");
+    // Delete the bytecode file to skip its preceding check
+    common::delete_files(
+        tmp_dir_path,
+        &[&format!(
+            "{}{}",
+            common::TEST_GREETER_CONTRACT_NAME,
+            common::BIN_EXTENSION
+        )],
+    );
+
+    let result = common::execute_zkvyper(args)?;
+    result
+        .failure()
+        .stderr(predicate::str::contains("Refusing to overwrite"));
+
+    Ok(())
+}
+
+#[test]
+fn combined_json_not_passed_bytecode_deleted() -> anyhow::Result<()> {
+    let _ = common::setup();
+
+    let tmp_dir = TempDir::new().expect("Failed to create temp dir");
+    let tmp_dir_path = tmp_dir.path().to_str().unwrap();
+
+    let selector = VyperSelector::CombinedJson.to_string();
+    let args = &[
+        common::TEST_GREETER_CONTRACT_PATH,
+        "-o",
+        tmp_dir_path,
+        "-f",
+        selector.as_str(),
+    ];
+    let result = common::execute_zkvyper(args)?;
+    result
+        .success()
+        .stderr(predicate::str::contains("Refusing to overwrite").not());
 
     let result = common::execute_zkvyper(args)?;
     result
@@ -244,7 +270,6 @@ fn all_output_not_passed() -> anyhow::Result<()> {
     .collect::<Vec<String>>()
     .join(",");
 
-    // Trying to add a flag and verify that command passed with 0 exit code
     let args = &[
         common::TEST_GREETER_CONTRACT_PATH,
         "-o",

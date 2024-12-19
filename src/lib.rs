@@ -131,9 +131,11 @@ pub fn standard_output(
 
     if let Some(ref debug_config) = debug_config {
         for (path, contract) in project.contracts.iter() {
-            if let Some(ir_string) = contract.ir_string() {
-                debug_config.dump_lll(path.as_str(), None, ir_string.as_str())?;
-            }
+            debug_config.dump_lll(
+                path.as_str(),
+                None,
+                contract.ir_string().unwrap_or_default().as_str(),
+            )?;
         }
     }
 
@@ -191,9 +193,11 @@ pub fn combined_json(
 
     if let Some(ref debug_config) = debug_config {
         for (path, contract) in project.contracts.iter() {
-            if let Some(ir_string) = contract.ir_string() {
-                debug_config.dump_lll(path.as_str(), None, ir_string.as_str())?;
-            }
+            debug_config.dump_lll(
+                path.as_str(),
+                None,
+                contract.ir_string().unwrap_or_default().as_str(),
+            )?;
         }
     }
 

@@ -70,22 +70,21 @@ impl Project {
     /// Converts Vyper standard JSON output into a project.
     ///
     pub fn try_from_standard_json(
-        mut standard_json: VyperStandardJsonOutput,
+        standard_json: VyperStandardJsonOutput,
         version: &semver::Version,
     ) -> anyhow::Result<Self> {
-        let files = match standard_json.contracts.take() {
-            Some(files) => files,
-            None => {
-                anyhow::bail!(
-                    "{}",
-                    standard_json
-                        .errors
-                        .as_ref()
-                        .map(|errors| serde_json::to_string_pretty(errors).expect("Always valid"))
-                        .unwrap_or_else(|| "Unknown project assembling error".to_owned())
-                );
-            }
-        };
+        let files = standard_json.contracts.unwrap_or_default();
+        let errors = standard_json.errors.unwrap_or_default();
+        if files.is_empty() && !errors.is_empty() {
+            anyhow::bail!(
+                "{}",
+                errors
+                    .into_iter()
+                    .map(|error| error.message)
+                    .collect::<Vec<String>>()
+                    .join("\n\n")
+            );
+        }
 
         let mut project_contracts: BTreeMap<String, ProjectContract> = BTreeMap::new();
         for (path, file) in files.into_iter() {
