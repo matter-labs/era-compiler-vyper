@@ -2,6 +2,8 @@
 //! The Vyper contract AST.
 //!
 
+use boolinator::Boolinator;
+
 use crate::vyper::combined_json::contract::warning::Warning as CombinedJsonContractWarning;
 use crate::warning_type::WarningType;
 
@@ -29,21 +31,12 @@ impl AST {
     ///
     pub fn check_tx_origin(&self, node: &serde_json::Value) -> Option<CombinedJsonContractWarning> {
         let ast = node.as_object()?;
-
-        if ast.get("ast_type")?.as_str()? != "Attribute" {
-            return None;
-        }
-        if ast.get("attr")?.as_str()? != "origin" {
-            return None;
-        }
+        (ast.get("ast_type")?.as_str()? == "Attribute").as_option()?;
+        (ast.get("attr")?.as_str()? == "origin").as_option()?;
 
         let value = ast.get("value")?.as_object()?;
-        if value.get("ast_type")?.as_str()? != "Name" {
-            return None;
-        }
-        if value.get("id")?.as_str()? != "tx" {
-            return None;
-        }
+        (value.get("ast_type")?.as_str()? == "Name").as_option()?;
+        (value.get("id")?.as_str()? == "tx").as_option()?;
 
         let message = r#"
 Warning: You are checking for 'tx.origin', which may lead to unexpected behavior.
@@ -52,11 +45,11 @@ ZKsync Era comes with native account abstraction support, and therefore the init
 transaction might be different from the contract calling your code. It is highly recommended NOT
 to rely on tx.origin, but use msg.sender instead.
 
-Learn more about Account Abstraction at https://docs.zksync.io/build/developer-reference/account-abstraction/
+Learn more about Account Abstraction at https://docs.zksync.io/zksync-protocol/account-abstraction
 
 You may disable this warning with `--suppress-warnings txorigin`.
 "#
-            .to_owned();
+        .to_owned();
         let (line, column) = self.location(node).unwrap_or((0, 0));
         Some(CombinedJsonContractWarning::new(
             self.contract_name.clone(),

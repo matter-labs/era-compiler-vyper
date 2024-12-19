@@ -175,6 +175,52 @@ fn one_output_not_passed(selector: VyperSelector) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[test_case(VyperSelector::CombinedJson)]
+#[test_case(VyperSelector::IRJson)]
+#[test_case(VyperSelector::AST)]
+#[test_case(VyperSelector::ABI)]
+#[test_case(VyperSelector::MethodIdentifiers)]
+#[test_case(VyperSelector::Layout)]
+#[test_case(VyperSelector::UserDocumentation)]
+#[test_case(VyperSelector::DeveloperDocumentation)]
+#[test_case(VyperSelector::EraVMAssembly)]
+#[test_case(VyperSelector::ProjectMetadata)]
+fn one_output_not_passed_bytecode_deleted(selector: VyperSelector) -> anyhow::Result<()> {
+    let _ = common::setup();
+
+    let tmp_dir = TempDir::new().expect("Failed to create temp dir");
+    let tmp_dir_path = tmp_dir.path().to_str().unwrap();
+
+    // Adding empty files to tmp dir
+
+    let selector = selector.to_string();
+    let args = &[
+        common::TEST_GREETER_CONTRACT_PATH,
+        "-o",
+        tmp_dir_path,
+        "-f",
+        selector.as_str(),
+    ];
+    let result = common::execute_zkvyper(args)?;
+    result
+        .success()
+        .stderr(predicate::str::contains("Refusing to overwrite").not());
+
+    std::fs::remove_file(format!(
+        "{}{}",
+        common::TEST_GREETER_CONTRACT_NAME,
+        common::BIN_EXTENSION
+    ))
+    .expect("Failed to delete the bytecode");
+
+    let result = common::execute_zkvyper(args)?;
+    result
+        .failure()
+        .stderr(predicate::str::contains("Refusing to overwrite"));
+
+    Ok(())
+}
+
 #[test]
 fn all_output_not_passed() -> anyhow::Result<()> {
     let _ = common::setup();

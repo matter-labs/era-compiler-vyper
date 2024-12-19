@@ -6,7 +6,7 @@ use crate::common;
 fn default() -> anyhow::Result<()> {
     let _ = common::setup();
 
-    let args = &[common::TEST_LLVM_CONTRACT_PATH, "--llvm-ir"];
+    let args = &["--llvm-ir", common::TEST_LLVM_CONTRACT_PATH];
 
     let result = common::execute_zkvyper(args)?;
     result.success().stdout(predicate::str::contains("0x"));
@@ -15,15 +15,29 @@ fn default() -> anyhow::Result<()> {
 }
 
 #[test]
-fn invalid_llvm_ir() -> anyhow::Result<()> {
+fn invalid() -> anyhow::Result<()> {
     let _ = common::setup();
 
-    let args = &[common::TEST_GREETER_CONTRACT_PATH, "--llvm-ir"];
+    let args = &["--llvm-ir", common::TEST_GREETER_CONTRACT_PATH];
 
     let result = common::execute_zkvyper(args)?;
     result
         .failure()
         .stderr(predicate::str::contains("expected top-level entity"));
+
+    Ok(())
+}
+
+#[test]
+fn not_found() -> anyhow::Result<()> {
+    let _ = common::setup();
+
+    let args = &["--llvm-ir", "unknown"];
+
+    let result = common::execute_zkvyper(args)?;
+    result
+        .failure()
+        .stderr(predicate::str::contains("reading error"));
 
     Ok(())
 }
