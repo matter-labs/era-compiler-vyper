@@ -1,31 +1,32 @@
-use crate::{cli, common};
 use predicates::prelude::*;
 use tempfile::TempDir;
 
+use era_compiler_vyper::VyperSelector;
+
+use crate::common;
+
 #[test]
-fn default_run_with_output_dir() -> anyhow::Result<()> {
+fn default() -> anyhow::Result<()> {
     let _ = common::setup();
+
     let tmp_dir_zk_vyper = TempDir::new().expect("Failed to create temp dir");
     let tmp_dir_path_zk_vyper = tmp_dir_zk_vyper.path().to_str().unwrap();
 
     // Check if output is empty and exit code
-    let args = &[cli::TEST_VYPER_CONTRACT_PATH, "-o", tmp_dir_path_zk_vyper];
-    let result = cli::execute_zkvyper(args)?;
-    result
-        .success()
-        .stderr(predicate::str::contains("Refusing to overwrite").not())
-        .get_output()
-        .status
-        .code()
-        .expect("No exit code.");
+    let args = &[
+        common::TEST_GREETER_CONTRACT_PATH,
+        "-o",
+        tmp_dir_path_zk_vyper,
+    ];
+    let result = common::execute_zkvyper(args)?;
+    result.success();
 
     // Verify output directory and file creation
     assert_eq!(
         false,
-        cli::is_file_empty(&format!(
-            "{}/{}",
-            tmp_dir_path_zk_vyper,
-            cli::VYPER_BIN_OUTPUT_NAME
+        common::is_file_empty(&format!(
+            "{tmp_dir_path_zk_vyper}/{}",
+            common::VYPER_BIN_OUTPUT_NAME
         ))?
     );
 
@@ -33,20 +34,71 @@ fn default_run_with_output_dir() -> anyhow::Result<()> {
 }
 
 #[test]
-fn default_run_with_output_dir_and_assembly() -> anyhow::Result<()> {
+fn with_warnings() -> anyhow::Result<()> {
     let _ = common::setup();
+
     let tmp_dir_zk_vyper = TempDir::new().expect("Failed to create temp dir");
     let tmp_dir_path_zk_vyper = tmp_dir_zk_vyper.path().to_str().unwrap();
 
     // Check if output is empty and exit code
     let args = &[
-        cli::TEST_VYPER_CONTRACT_PATH,
+        common::TEST_TX_ORIGIN_CONTRACT_PATH,
+        "-o",
+        tmp_dir_path_zk_vyper,
+    ];
+    let result = common::execute_zkvyper(args)?;
+    result.success().stderr(predicate::str::contains("Warning"));
+
+    Ok(())
+}
+
+#[test]
+fn combined_json() -> anyhow::Result<()> {
+    let _ = common::setup();
+
+    let tmp_dir_zk_vyper = TempDir::new().expect("Failed to create temp dir");
+    let tmp_dir_path_zk_vyper = tmp_dir_zk_vyper.path().to_str().unwrap();
+
+    let args = &[
+        common::TEST_GREETER_CONTRACT_PATH,
+        "-f",
+        "combined_json",
+        "-o",
+        tmp_dir_path_zk_vyper,
+    ];
+
+    let result = common::execute_zkvyper(args)?;
+    result.success();
+
+    assert!(
+        std::fs::exists(format!(
+            "{tmp_dir_path_zk_vyper}/combined.{}",
+            era_compiler_common::EXTENSION_JSON,
+        ))
+        .expect("Always valid"),
+        "Combined JSON file not found"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn eravm_assembly_only() -> anyhow::Result<()> {
+    let _ = common::setup();
+
+    let tmp_dir_zk_vyper = TempDir::new().expect("Failed to create temp dir");
+    let tmp_dir_path_zk_vyper = tmp_dir_zk_vyper.path().to_str().unwrap();
+
+    // Check if output is empty and exit code
+    let args = &[
+        common::TEST_GREETER_CONTRACT_PATH,
         "-o",
         tmp_dir_path_zk_vyper,
         "-f",
         "eravm_assembly",
     ];
-    let result = cli::execute_zkvyper(args)?;
+
+    let result = common::execute_zkvyper(args)?;
     result
         .success()
         .stderr(predicate::str::contains("Refusing to overwrite").not())
@@ -58,18 +110,16 @@ fn default_run_with_output_dir_and_assembly() -> anyhow::Result<()> {
     // Verify output directory and file creation
     assert_eq!(
         false,
-        cli::is_file_empty(&format!(
-            "{}/{}",
-            tmp_dir_path_zk_vyper,
-            cli::VYPER_BIN_OUTPUT_NAME
+        common::is_file_empty(&format!(
+            "{tmp_dir_path_zk_vyper}/{}",
+            common::VYPER_BIN_OUTPUT_NAME
         ))?
     );
     assert_eq!(
         false,
-        cli::is_file_empty(&format!(
-            "{}/{}",
-            tmp_dir_path_zk_vyper,
-            cli::VYPER_ASM_OUTPUT_NAME
+        common::is_file_empty(&format!(
+            "{tmp_dir_path_zk_vyper}/{}",
+            common::VYPER_ASM_OUTPUT_NAME
         ))?
     );
 
@@ -77,23 +127,68 @@ fn default_run_with_output_dir_and_assembly() -> anyhow::Result<()> {
 }
 
 #[test]
-fn default_run_with_dual_output_dir_options() -> anyhow::Result<()> {
+fn all_output() -> anyhow::Result<()> {
     let _ = common::setup();
+
     let tmp_dir_zk_vyper = TempDir::new().expect("Failed to create temp dir");
     let tmp_dir_path_zk_vyper = tmp_dir_zk_vyper.path().to_str().unwrap();
 
-    // Check if dual output dir options results in an error
+    let format = [
+        VyperSelector::IRJson,
+        VyperSelector::AST,
+        VyperSelector::ABI,
+        VyperSelector::MethodIdentifiers,
+        VyperSelector::Layout,
+        VyperSelector::UserDocumentation,
+        VyperSelector::DeveloperDocumentation,
+        VyperSelector::EraVMAssembly,
+        VyperSelector::ProjectMetadata,
+    ]
+    .into_iter()
+    .map(|selection| selection.to_string())
+    .collect::<Vec<String>>()
+    .join(",");
+
+    // Check if output is empty and exit code
     let args = &[
-        cli::TEST_VYPER_CONTRACT_PATH,
+        common::TEST_GREETER_CONTRACT_PATH,
         "-o",
         tmp_dir_path_zk_vyper,
-        "-o",
-        tmp_dir_path_zk_vyper,
+        "-f",
+        format.as_str(),
     ];
-    let result = cli::execute_zkvyper(args)?;
-    result.failure().stderr(predicate::str::contains(
-        "error: the argument '--output-dir <OUTPUT_DIR>' cannot be used multiple times",
-    ));
+
+    let result = common::execute_zkvyper(args)?;
+    result
+        .success()
+        .stderr(predicate::str::contains("Refusing to overwrite").not())
+        .get_output()
+        .status
+        .code()
+        .expect("No exit code.");
+
+    // Verify output directory and file creation
+    assert_eq!(
+        false,
+        common::is_file_empty(&format!(
+            "{tmp_dir_path_zk_vyper}/{}",
+            common::VYPER_BIN_OUTPUT_NAME
+        ))?
+    );
+    assert_eq!(
+        false,
+        common::is_file_empty(&format!(
+            "{tmp_dir_path_zk_vyper}/{}",
+            common::VYPER_ASM_OUTPUT_NAME
+        ))?
+    );
+    assert_eq!(
+        false,
+        common::is_file_empty(&format!(
+            "{tmp_dir_path_zk_vyper}/{}",
+            common::TEST_GREETER_CONTRACT_NAME
+        ))?
+    );
 
     Ok(())
 }

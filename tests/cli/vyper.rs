@@ -1,43 +1,76 @@
-use crate::{cli, common};
 use predicates::prelude::*;
 
-#[test]
-fn run_with_vyper() -> anyhow::Result<()> {
-    let _ = common::setup();
-    let vyper = common::get_vyper_compiler(&semver::Version::new(0, 4, 0))?.executable;
-    let args = &[cli::TEST_VYPER_CONTRACT_PATH, "--vyper", &vyper];
+use crate::common;
 
-    // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
+#[test]
+fn default() -> anyhow::Result<()> {
+    let _ = common::setup();
+
+    let vyper = common::get_vyper_compiler(&semver::Version::new(0, 4, 0))?.executable;
+    let args = &[
+        common::TEST_GREETER_CONTRACT_PATH,
+        "--vyper",
+        vyper.as_str(),
+    ];
+
+    let result = common::execute_zkvyper(args)?;
     result.success().stdout(predicate::str::contains("0x"));
 
     Ok(())
 }
 
 #[test]
-fn run_with_vyper_empty_arg() -> anyhow::Result<()> {
+fn invalid_path() -> anyhow::Result<()> {
     let _ = common::setup();
-    let args = &[cli::TEST_VYPER_CONTRACT_PATH, "--vyper"];
 
-    // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
+    let args = &[
+        common::TEST_GREETER_CONTRACT_PATH,
+        "--vyper",
+        "invalid_path",
+    ];
+
+    let result = common::execute_zkvyper(args)?;
+    result.failure();
+
+    Ok(())
+}
+
+#[test]
+fn llvm_ir_mode() -> anyhow::Result<()> {
+    let _ = common::setup();
+
+    let vyper = common::get_vyper_compiler(&semver::Version::new(0, 4, 0))?.executable;
+    let args = &[
+        "--vyper",
+        vyper.as_str(),
+        "--llvm-ir",
+        common::TEST_GREETER_CONTRACT_PATH,
+    ];
+
+    let result = common::execute_zkvyper(args)?;
     result.failure().stderr(predicate::str::contains(
-        "error: a value is required for '--vyper <VYPER>' but none was supplied",
+        "`vyper` is not used in LLVM IR and EraVM assembly modes.",
     ));
 
     Ok(())
 }
 
 #[test]
-fn run_with_vyper_wrong_arg() -> anyhow::Result<()> {
+fn eravm_assembly_mode() -> anyhow::Result<()> {
     let _ = common::setup();
-    let args = &[cli::TEST_VYPER_CONTRACT_PATH, "--vyper", ".."];
 
-    // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
-    result
-        .failure()
-        .stderr(predicate::str::contains("error").or(predicate::str::contains("not found")));
+    let vyper = common::get_vyper_compiler(&semver::Version::new(0, 4, 0))?.executable;
+    let args = &[
+        "--vyper",
+        vyper.as_str(),
+        "--eravm-assembly",
+        common::TEST_GREETER_CONTRACT_PATH,
+    ];
+
+    let result = common::execute_zkvyper(args)?;
+    result.failure().stderr(predicate::str::contains(
+        "`vyper` is not used in LLVM IR and EraVM assembly modes.",
+    ));
 
     Ok(())
 }

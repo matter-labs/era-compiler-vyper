@@ -1,56 +1,43 @@
-use crate::{cli, common};
 use predicates::prelude::*;
 
-#[test]
-fn run_with_llvm_ir() -> anyhow::Result<()> {
-    let _ = common::setup();
-    let args = &[cli::TEST_LLVM_CONTRACT_PATH, "--llvm-ir"];
+use crate::common;
 
-    // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
+#[test]
+fn default() -> anyhow::Result<()> {
+    let _ = common::setup();
+
+    let args = &["--llvm-ir", common::TEST_LLVM_CONTRACT_PATH];
+
+    let result = common::execute_zkvyper(args)?;
     result.success().stdout(predicate::str::contains("0x"));
 
     Ok(())
 }
 
 #[test]
-fn run_only_with_llvm_ir() -> anyhow::Result<()> {
+fn invalid() -> anyhow::Result<()> {
     let _ = common::setup();
-    let args = &["--llvm-ir"];
 
-    // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
-    result
-        .failure()
-        .stderr(predicate::str::contains("No input files provided"));
+    let args = &["--llvm-ir", common::TEST_GREETER_CONTRACT_PATH];
 
-    Ok(())
-}
-
-#[test]
-fn run_with_duplicate_llvm_ir() -> anyhow::Result<()> {
-    let _ = common::setup();
-    let args = &[cli::TEST_LLVM_CONTRACT_PATH, "--llvm-ir", "--llvm-ir"];
-
-    // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
-    result.failure().stderr(predicate::str::contains(
-        "error: the argument '--llvm-ir' cannot be used multiple times",
-    ));
-
-    Ok(())
-}
-
-#[test]
-fn run_with_incompatible_contract_and_llvm_ir() -> anyhow::Result<()> {
-    let _ = common::setup();
-    let args = &[cli::TEST_VYPER_CONTRACT_PATH, "--llvm-ir"];
-
-    // Execute zkvyper command
-    let result = cli::execute_zkvyper(args)?;
+    let result = common::execute_zkvyper(args)?;
     result
         .failure()
         .stderr(predicate::str::contains("expected top-level entity"));
+
+    Ok(())
+}
+
+#[test]
+fn not_found() -> anyhow::Result<()> {
+    let _ = common::setup();
+
+    let args = &["--llvm-ir", "unknown"];
+
+    let result = common::execute_zkvyper(args)?;
+    result
+        .failure()
+        .stderr(predicate::str::contains("reading error"));
 
     Ok(())
 }

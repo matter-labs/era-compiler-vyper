@@ -78,20 +78,20 @@ fn main_inner() -> anyhow::Result<()> {
         None => None,
     };
 
-    let suppressed_messages = match arguments.suppress_warnings {
-        Some(warnings) => era_compiler_vyper::MessageType::try_from_strings(warnings.as_slice())?,
+    let suppressed_warnings = match arguments.suppress_warnings {
+        Some(warnings) => era_compiler_vyper::WarningType::try_from_strings(warnings.as_slice())?,
         None => vec![],
     };
 
     let output_selection = match arguments.format.as_ref() {
         Some(format) => format
             .split(',')
-            .map(era_compiler_vyper::VyperSelection::from_str)
-            .collect::<anyhow::Result<Vec<era_compiler_vyper::VyperSelection>>>()?,
+            .map(era_compiler_vyper::VyperSelector::from_str)
+            .collect::<anyhow::Result<Vec<era_compiler_vyper::VyperSelector>>>()?,
         None => vec![],
     };
     let is_combined_json =
-        output_selection.contains(&era_compiler_vyper::VyperSelection::CombinedJson);
+        output_selection.contains(&era_compiler_vyper::VyperSelector::CombinedJson);
     if is_combined_json && output_selection.len() > 1 {
         anyhow::bail!(
             "`combined_json` cannot be requested together with other output: `{:?}`",
@@ -133,7 +133,7 @@ fn main_inner() -> anyhow::Result<()> {
             metadata_hash_type,
             optimizer_settings,
             llvm_options,
-            suppressed_messages,
+            suppressed_warnings,
             debug_config,
         )
     } else if arguments.eravm_assembly {
@@ -142,12 +142,11 @@ fn main_inner() -> anyhow::Result<()> {
             output_selection.as_slice(),
             metadata_hash_type,
             llvm_options,
-            suppressed_messages,
+            suppressed_warnings,
             debug_config,
         )
     } else if arguments.disassemble {
-        era_compiler_vyper::disassemble_eravm(arguments.input_paths)?;
-        return Ok(());
+        return era_compiler_vyper::disassemble_eravm(arguments.input_paths);
     } else {
         let vyper = era_compiler_vyper::VyperCompiler::new(
             arguments
@@ -167,7 +166,7 @@ fn main_inner() -> anyhow::Result<()> {
                 vyper_optimizer_enabled,
                 optimizer_settings,
                 llvm_options,
-                suppressed_messages,
+                suppressed_warnings,
                 debug_config,
             )?;
 
@@ -193,7 +192,7 @@ fn main_inner() -> anyhow::Result<()> {
             vyper_optimizer_enabled,
             optimizer_settings,
             llvm_options,
-            suppressed_messages,
+            suppressed_warnings,
             debug_config,
         )
     }?;

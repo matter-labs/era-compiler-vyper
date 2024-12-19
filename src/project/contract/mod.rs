@@ -8,8 +8,8 @@ pub mod metadata;
 pub mod vyper;
 
 use crate::build::contract::Contract as ContractBuild;
-use crate::message_type::MessageType;
-use crate::vyper::selection::Selection as VyperSelection;
+use crate::vyper::selector::Selector as VyperSelector;
+use crate::warning_type::WarningType;
 
 use self::eravm_assembly::Contract as EraVMAssemblyContract;
 use self::llvm_ir::Contract as LLVMIRContract;
@@ -56,8 +56,8 @@ impl Contract {
         metadata_hash: Option<era_compiler_common::Hash>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
-        output_selection: Vec<VyperSelection>,
-        suppressed_messages: Vec<MessageType>,
+        output_selection: Vec<VyperSelector>,
+        suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
         match self {
@@ -67,7 +67,7 @@ impl Contract {
                 optimizer_settings,
                 llvm_options,
                 output_selection,
-                suppressed_messages,
+                suppressed_warnings,
                 debug_config,
             ),
             Self::LLVMIR(inner) => inner.compile(
@@ -76,7 +76,7 @@ impl Contract {
                 optimizer_settings,
                 llvm_options,
                 output_selection,
-                suppressed_messages,
+                suppressed_warnings,
                 debug_config,
             ),
             Self::EraVMAssembly(inner) => inner.compile(
@@ -85,7 +85,7 @@ impl Contract {
                 optimizer_settings,
                 llvm_options,
                 output_selection,
-                suppressed_messages,
+                suppressed_warnings,
                 debug_config,
             ),
         }

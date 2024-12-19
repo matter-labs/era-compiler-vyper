@@ -9,14 +9,13 @@
 
 pub mod build;
 pub mod r#const;
-pub mod message_type;
 pub mod process;
 pub mod project;
 pub mod vyper;
+pub mod warning_type;
 
 pub use self::build::contract::Contract as ContractBuild;
 pub use self::build::Build;
-pub use self::message_type::MessageType;
 pub use self::process::input::Input as ProcessInput;
 pub use self::process::output::Output as ProcessOutput;
 pub use self::process::run as run_recursive;
@@ -26,7 +25,7 @@ pub use self::project::Project;
 pub use self::r#const::*;
 pub use self::vyper::combined_json::contract::Contract as VyperCompilerCombinedJsonContract;
 pub use self::vyper::combined_json::CombinedJson as VyperCompilerCombinedJson;
-pub use self::vyper::selection::Selection as VyperSelection;
+pub use self::vyper::selector::Selector as VyperSelector;
 pub use self::vyper::standard_json::input::language::Language as VyperCompilerStandardInputJsonLanguage;
 pub use self::vyper::standard_json::input::settings::selection::Selection as VyperCompilerStandardInputJsonSettingsSelection;
 pub use self::vyper::standard_json::input::settings::Settings as VyperCompilerStandardInputJsonSettings;
@@ -38,6 +37,7 @@ pub use self::vyper::standard_json::output::error::Error as VyperCompilerStandar
 pub use self::vyper::standard_json::output::Output as VyperCompilerStandardOutputJson;
 pub use self::vyper::version::Version as VyperVersion;
 pub use self::vyper::Compiler as VyperCompiler;
+pub use self::warning_type::WarningType;
 
 use std::collections::BTreeMap;
 use std::io::Write;
@@ -53,17 +53,13 @@ use rayon::iter::ParallelIterator;
 ///
 pub fn llvm_ir(
     input_paths: Vec<PathBuf>,
-    output_selection: &[VyperSelection],
+    output_selection: &[VyperSelector],
     metadata_hash_type: era_compiler_common::HashType,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
-    suppressed_messages: Vec<MessageType>,
+    suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
-    if input_paths.is_empty() {
-        writeln!(std::io::stderr(), "No input sources provided").expect("Stderr writing error");
-    }
-
     let paths: Vec<&Path> = input_paths.iter().map(|path| path.as_path()).collect();
     let project = Project::try_from_llvm_ir_paths(paths.as_slice(), output_selection)?;
 
@@ -72,7 +68,7 @@ pub fn llvm_ir(
         metadata_hash_type,
         optimizer_settings,
         llvm_options,
-        suppressed_messages,
+        suppressed_warnings,
         debug_config,
     )?;
     build.link(BTreeMap::new())?;
@@ -84,16 +80,12 @@ pub fn llvm_ir(
 ///
 pub fn eravm_assembly(
     input_paths: Vec<PathBuf>,
-    output_selection: &[VyperSelection],
+    output_selection: &[VyperSelector],
     metadata_hash_type: era_compiler_common::HashType,
     llvm_options: Vec<String>,
-    suppressed_messages: Vec<MessageType>,
+    suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
-    if input_paths.is_empty() {
-        writeln!(std::io::stderr(), "No input sources provided").expect("Stderr writing error");
-    }
-
     let paths: Vec<&Path> = input_paths.iter().map(|path| path.as_path()).collect();
     let project = Project::try_from_eravm_assembly_paths(paths.as_slice(), output_selection)?;
 
@@ -103,7 +95,7 @@ pub fn eravm_assembly(
         metadata_hash_type,
         optimizer_settings,
         llvm_options,
-        suppressed_messages,
+        suppressed_warnings,
         debug_config,
     )?;
     build.link(BTreeMap::new())?;
@@ -116,7 +108,7 @@ pub fn eravm_assembly(
 pub fn standard_output(
     input_paths: Vec<PathBuf>,
     vyper: &VyperCompiler,
-    output_selection: &[VyperSelection],
+    output_selection: &[VyperSelector],
     evm_version: Option<era_compiler_common::EVMVersion>,
     enable_decimals: bool,
     search_paths: Option<Vec<String>>,
@@ -124,7 +116,7 @@ pub fn standard_output(
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
-    suppressed_messages: Vec<MessageType>,
+    suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<Build> {
     let project = vyper.batch(
@@ -139,9 +131,11 @@ pub fn standard_output(
 
     if let Some(ref debug_config) = debug_config {
         for (path, contract) in project.contracts.iter() {
-            if let Some(ir_string) = contract.ir_string() {
-                debug_config.dump_lll(path.as_str(), None, ir_string.as_str())?;
-            }
+            debug_config.dump_lll(
+                path.as_str(),
+                None,
+                contract.ir_string().unwrap_or_default().as_str(),
+            )?;
         }
     }
 
@@ -150,7 +144,7 @@ pub fn standard_output(
         metadata_hash_type,
         optimizer_settings,
         llvm_options,
-        suppressed_messages,
+        suppressed_warnings,
         debug_config,
     )?;
     build.link(BTreeMap::new())?;
@@ -170,21 +164,21 @@ pub fn combined_json(
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
-    suppressed_messages: Vec<MessageType>,
+    suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
 ) -> anyhow::Result<VyperCompilerCombinedJson> {
     let zkvyper_version = semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("Always valid");
 
-    let output_selection: Vec<VyperSelection> = vec![
-        VyperSelection::IRJson,
-        VyperSelection::AST,
-        VyperSelection::ABI,
-        VyperSelection::MethodIdentifiers,
-        VyperSelection::Layout,
-        VyperSelection::UserDocumentation,
-        VyperSelection::DeveloperDocumentation,
-        VyperSelection::EraVMAssembly,
-        VyperSelection::ProjectMetadata,
+    let output_selection: Vec<VyperSelector> = vec![
+        VyperSelector::IRJson,
+        VyperSelector::AST,
+        VyperSelector::ABI,
+        VyperSelector::MethodIdentifiers,
+        VyperSelector::Layout,
+        VyperSelector::UserDocumentation,
+        VyperSelector::DeveloperDocumentation,
+        VyperSelector::EraVMAssembly,
+        VyperSelector::ProjectMetadata,
     ];
 
     let project: Project = vyper.batch(
@@ -199,9 +193,11 @@ pub fn combined_json(
 
     if let Some(ref debug_config) = debug_config {
         for (path, contract) in project.contracts.iter() {
-            if let Some(ir_string) = contract.ir_string() {
-                debug_config.dump_lll(path.as_str(), None, ir_string.as_str())?;
-            }
+            debug_config.dump_lll(
+                path.as_str(),
+                None,
+                contract.ir_string().unwrap_or_default().as_str(),
+            )?;
         }
     }
 
@@ -210,7 +206,7 @@ pub fn combined_json(
         metadata_hash_type,
         optimizer_settings,
         llvm_options,
-        suppressed_messages,
+        suppressed_warnings,
         debug_config,
     )?;
     build.link(BTreeMap::new())?;
