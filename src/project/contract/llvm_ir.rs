@@ -32,7 +32,7 @@ impl Contract {
     /// Compiles the contract, returning the build.
     ///
     pub fn compile(
-        self,
+        mut self,
         contract_path: &str,
         metadata_hash: Option<era_compiler_common::Hash>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
@@ -44,9 +44,11 @@ impl Contract {
         let llvm = inkwell::context::Context::create();
         let optimizer = era_compiler_llvm_context::Optimizer::new(optimizer_settings.clone());
 
-        let memory_buffer = inkwell::memory_buffer::MemoryBuffer::create_from_memory_range_copy(
-            self.source_code.as_bytes(),
+        self.source_code.push(char::from(0));
+        let memory_buffer = inkwell::memory_buffer::MemoryBuffer::create_from_memory_range(
+            &self.source_code.as_bytes()[..self.source_code.len() - 1],
             contract_path,
+            true,
         );
         let module = llvm
             .create_module_from_ir(memory_buffer)
