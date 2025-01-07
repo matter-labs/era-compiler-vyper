@@ -56,13 +56,13 @@ impl Build {
         );
 
         for (path, contract) in self.contracts.iter_mut() {
-            let memory_buffer = inkwell::memory_buffer::MemoryBuffer::create_from_memory_range(
+            let bytecode_buffer = inkwell::memory_buffer::MemoryBuffer::create_from_memory_range(
                 contract.build.bytecode.as_slice(),
                 path.as_str(),
                 false,
             );
-            let (memory_buffer_linked, object_format) = era_compiler_llvm_context::eravm_link(
-                memory_buffer,
+            let (bytecode_buffer_linked, object_format) = era_compiler_llvm_context::eravm_link(
+                bytecode_buffer,
                 &linker_symbols,
                 &factory_dependencies,
             )?;
@@ -71,10 +71,12 @@ impl Build {
                 era_compiler_common::ObjectFormat::Raw,
                 "Linked Vyper bytecode cannot be ELF"
             );
-            contract.build.bytecode = memory_buffer_linked.as_slice().to_vec();
+
+            // Reassign bytecode only after getting the hash, since `bytecode_buffer_linked` and `contract.build.bytecode` can refer to the same memory segment.
             contract.build.bytecode_hash = Some(era_compiler_llvm_context::eravm_hash(
-                &memory_buffer_linked,
+                &bytecode_buffer_linked,
             )?);
+            contract.build.bytecode = bytecode_buffer_linked.as_slice().to_vec();
         }
 
         Ok(())
