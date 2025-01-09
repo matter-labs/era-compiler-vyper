@@ -1,6 +1,6 @@
 [package]
 name = "era-compiler-vyper"
-version = "1.5.8"
+version = "1.5.9"
 authors = [
     "Oleksandr Zarudnyi <a.zarudnyy@matterlabs.dev>",
 ]
