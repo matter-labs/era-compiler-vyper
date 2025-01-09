@@ -1,5 +1,15 @@
 # The `zkvyper` changelog
 
+## [1.5.9] - 2025-01-09
+
+### Added
+
+- Full CLI test coverage
+
+### Fixed
+
+- Several memory errors found by the sanitizer
+
 ## [1.5.8] - 2024-12-10
 
 ### Added
