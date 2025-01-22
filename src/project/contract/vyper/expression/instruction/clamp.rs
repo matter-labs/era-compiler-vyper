@@ -9,16 +9,13 @@ use era_compiler_llvm_context::IContext;
 ///
 /// Translates the two-sides bounded clamp.
 ///
-pub fn ordinary<'ctx, D>(
-    context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
+pub fn ordinary<'ctx>(
+    context: &mut era_compiler_llvm_context::EraVMContext<'ctx>,
     operand_1: inkwell::values::IntValue<'ctx>,
     operand_2: inkwell::values::IntValue<'ctx>,
     operand_3: inkwell::values::IntValue<'ctx>,
     is_signed: bool,
-) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>>
-where
-    D: era_compiler_llvm_context::Dependency,
-{
+) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>> {
     let error_block = context.append_basic_block("if_error");
     let join_block = context.append_basic_block("if_join");
 
@@ -60,15 +57,12 @@ where
 ///
 /// Translates the one-side bounded clamp with predicate.
 ///
-pub fn with_predicate<'ctx, D>(
-    context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
+pub fn with_predicate<'ctx>(
+    context: &mut era_compiler_llvm_context::EraVMContext<'ctx>,
     operand_1: inkwell::values::IntValue<'ctx>,
     operand_2: inkwell::values::IntValue<'ctx>,
     predicate: inkwell::IntPredicate,
-) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>>
-where
-    D: era_compiler_llvm_context::Dependency,
-{
+) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>> {
     let error_block = context.append_basic_block("clamp_single_error");
     let join_block = context.append_basic_block("clamp_single_join");
 

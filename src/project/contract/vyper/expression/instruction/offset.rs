@@ -9,13 +9,10 @@ use era_compiler_llvm_context::IContext;
 ///
 /// Translates the Vyper LLL-specific `ceil32` instruction.
 ///
-pub fn ceil_32<'ctx, D>(
-    context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
+pub fn ceil_32<'ctx>(
+    context: &mut era_compiler_llvm_context::EraVMContext<'ctx>,
     value: inkwell::values::IntValue<'ctx>,
-) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>>
-where
-    D: era_compiler_llvm_context::Dependency,
-{
+) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>> {
     let remainder = context.builder().build_int_unsigned_rem(
         value,
         context.field_const(era_compiler_common::BYTE_LENGTH_FIELD as u64),

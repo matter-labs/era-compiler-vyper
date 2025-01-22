@@ -131,13 +131,10 @@ impl Label {
     ///
     /// Declares the label block, so all the blocks are predeclared before translating the bodies.
     ///
-    pub fn declare<D>(
+    pub fn declare(
         &self,
-        context: &mut era_compiler_llvm_context::EraVMContext<D>,
-    ) -> anyhow::Result<()>
-    where
-        D: era_compiler_llvm_context::Dependency,
-    {
+        context: &mut era_compiler_llvm_context::EraVMContext,
+    ) -> anyhow::Result<()> {
         if self.is_empty() || self.can_block_be_ignored() {
             return Ok(());
         }
@@ -186,13 +183,10 @@ impl Label {
     ///
     /// Converts the entity to an LLVM value.
     ///
-    pub fn into_llvm_value<D>(
+    pub fn into_llvm_value(
         mut self,
-        context: &mut era_compiler_llvm_context::EraVMContext<D>,
-    ) -> anyhow::Result<()>
-    where
-        D: era_compiler_llvm_context::Dependency,
-    {
+        context: &mut era_compiler_llvm_context::EraVMContext,
+    ) -> anyhow::Result<()> {
         if self.is_empty() || self.can_block_be_ignored() {
             return Ok(());
         }

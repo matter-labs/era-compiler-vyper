@@ -323,13 +323,10 @@ impl Instruction {
     ///
     /// Translates the specified number of arguments into LLVM values.
     ///
-    fn translate_arguments_llvm<'ctx, D, const N: usize>(
+    fn translate_arguments_llvm<'ctx, const N: usize>(
         arguments: [Box<Expression>; N],
-        context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
-    ) -> anyhow::Result<[inkwell::values::BasicValueEnum<'ctx>; N]>
-    where
-        D: era_compiler_llvm_context::Dependency,
-    {
+        context: &mut era_compiler_llvm_context::EraVMContext<'ctx>,
+    ) -> anyhow::Result<[inkwell::values::BasicValueEnum<'ctx>; N]> {
         let debug_string = format!("`{arguments:?}`");
 
         let mut values = Vec::with_capacity(N);
@@ -358,13 +355,10 @@ impl Instruction {
     /// Translates the specified number of arguments into representation preserving
     /// original LLL identifiers and constants.
     ///
-    fn translate_arguments<'ctx, D, const N: usize>(
+    fn translate_arguments<'ctx, const N: usize>(
         arguments: [Box<Expression>; N],
-        context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
-    ) -> anyhow::Result<[era_compiler_llvm_context::Value<'ctx>; N]>
-    where
-        D: era_compiler_llvm_context::Dependency,
-    {
+        context: &mut era_compiler_llvm_context::EraVMContext<'ctx>,
+    ) -> anyhow::Result<[era_compiler_llvm_context::Value<'ctx>; N]> {
         let debug_string = format!("`{arguments:?}`");
 
         let mut values = Vec::with_capacity(N);
@@ -437,13 +431,10 @@ impl Instruction {
     ///
     /// Converts the entity to an LLVM value.
     ///
-    pub fn into_llvm_value<'ctx, D>(
+    pub fn into_llvm_value<'ctx>(
         self,
-        context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
-    ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
-    where
-        D: era_compiler_llvm_context::Dependency,
-    {
+        context: &mut era_compiler_llvm_context::EraVMContext<'ctx>,
+    ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>> {
         match self {
             Self::With(inner) => inner.into_llvm_value(context),
             Self::Set(inner) => inner.into_llvm_value(context).map(|_| None),
@@ -454,7 +445,7 @@ impl Instruction {
             Self::GoTo(inner) => inner.into_llvm_value(context),
             Self::Exit_To(inner) => inner.into_llvm_value(context).map(|_| None),
             Self::Jump(arguments) => {
-                let _arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
+                let _arguments = Self::translate_arguments_llvm::<1>(arguments, context)?;
                 let block = context.current_function().borrow().return_block();
                 context.build_unconditional_branch(block)?;
                 Ok(None)
@@ -477,7 +468,7 @@ impl Instruction {
             Self::Unique_Symbol(_inner) => Ok(None),
 
             Self::UCLAMP(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<3>(arguments, context)?;
                 clamp::ordinary(
                     context,
                     arguments[0].into_int_value(),
@@ -488,7 +479,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::CLAMP(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<3>(arguments, context)?;
                 clamp::ordinary(
                     context,
                     arguments[0].into_int_value(),
@@ -499,7 +490,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::UCLAMPLT(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 clamp::with_predicate(
                     context,
                     arguments[0].into_int_value(),
@@ -509,7 +500,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::UCLAMPLE(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 clamp::with_predicate(
                     context,
                     arguments[0].into_int_value(),
@@ -519,7 +510,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::UCLAMPGT(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 clamp::with_predicate(
                     context,
                     arguments[0].into_int_value(),
@@ -529,7 +520,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::UCLAMPGE(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 clamp::with_predicate(
                     context,
                     arguments[0].into_int_value(),
@@ -539,7 +530,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::CLAMPLT(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 clamp::with_predicate(
                     context,
                     arguments[0].into_int_value(),
@@ -549,7 +540,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::CLAMPLE(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 clamp::with_predicate(
                     context,
                     arguments[0].into_int_value(),
@@ -559,7 +550,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::CLAMPGT(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 clamp::with_predicate(
                     context,
                     arguments[0].into_int_value(),
@@ -569,7 +560,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::CLAMPGE(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 clamp::with_predicate(
                     context,
                     arguments[0].into_int_value(),
@@ -579,7 +570,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::CLAMP_NONZERO(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<1>(arguments, context)?;
                 clamp::with_predicate(
                     context,
                     arguments[0].into_int_value(),
@@ -590,11 +581,11 @@ impl Instruction {
             }
 
             Self::CEIL32(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<1>(arguments, context)?;
                 offset::ceil_32(context, arguments[0].into_int_value()).map(Some)
             }
             Self::SELECT(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<3>(arguments, context)?;
                 let condition = context.builder().build_int_compare(
                     inkwell::IntPredicate::NE,
                     arguments[0].into_int_value(),
@@ -615,12 +606,12 @@ impl Instruction {
             Self::Var_List(_inner) => Ok(None),
 
             Self::POP(arguments) => {
-                let _arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
+                let _arguments = Self::translate_arguments_llvm::<1>(arguments, context)?;
                 Ok(None)
             }
 
             Self::ADD(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_arithmetic::addition(
                     context,
                     arguments[0].into_int_value(),
@@ -633,7 +624,7 @@ impl Instruction {
                     return Ok(Some(result));
                 }
 
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_arithmetic::subtraction(
                     context,
                     arguments[0].into_int_value(),
@@ -642,7 +633,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::MUL(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_arithmetic::multiplication(
                     context,
                     arguments[0].into_int_value(),
@@ -651,7 +642,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::DIV(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_arithmetic::division(
                     context,
                     arguments[0].into_int_value(),
@@ -660,7 +651,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::MOD(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_arithmetic::remainder(
                     context,
                     arguments[0].into_int_value(),
@@ -669,7 +660,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::SDIV(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_arithmetic::division_signed(
                     context,
                     arguments[0].into_int_value(),
@@ -678,7 +669,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::SMOD(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_arithmetic::remainder_signed(
                     context,
                     arguments[0].into_int_value(),
@@ -688,7 +679,7 @@ impl Instruction {
             }
 
             Self::LT(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
@@ -698,7 +689,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::LE(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
@@ -708,7 +699,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::GT(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
@@ -718,7 +709,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::GE(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
@@ -728,7 +719,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::EQ(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
@@ -738,7 +729,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::NE(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
@@ -748,7 +739,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::ISZERO(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<1>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
@@ -758,7 +749,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::SLT(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
@@ -768,7 +759,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::SLE(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
@@ -778,7 +769,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::SGT(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
@@ -788,7 +779,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::SGE(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_comparison::compare(
                     context,
                     arguments[0].into_int_value(),
@@ -799,7 +790,7 @@ impl Instruction {
             }
 
             Self::OR(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_bitwise::or(
                     context,
                     arguments[0].into_int_value(),
@@ -808,7 +799,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::XOR(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_bitwise::xor(
                     context,
                     arguments[0].into_int_value(),
@@ -817,7 +808,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::NOT(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<1>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_bitwise::xor(
                     context,
                     arguments[0].into_int_value(),
@@ -826,7 +817,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::AND(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_bitwise::and(
                     context,
                     arguments[0].into_int_value(),
@@ -835,7 +826,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::SHL(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_bitwise::shift_left(
                     context,
                     arguments[0].into_int_value(),
@@ -844,7 +835,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::SHR(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_bitwise::shift_right(
                     context,
                     arguments[0].into_int_value(),
@@ -853,7 +844,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::SAR(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_bitwise::shift_right_arithmetic(
                     context,
                     arguments[0].into_int_value(),
@@ -862,7 +853,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::BYTE(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_bitwise::byte(
                     context,
                     arguments[0].into_int_value(),
@@ -872,7 +863,7 @@ impl Instruction {
             }
 
             Self::ADDMOD(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<3>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_math::add_mod(
                     context,
                     arguments[0].into_int_value(),
@@ -882,7 +873,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::MULMOD(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<3>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_math::mul_mod(
                     context,
                     arguments[0].into_int_value(),
@@ -892,7 +883,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::EXP(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_math::exponent(
                     context,
                     arguments[0].into_int_value(),
@@ -901,7 +892,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::SIGNEXTEND(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_math::sign_extend(
                     context,
                     arguments[0].into_int_value(),
@@ -911,7 +902,7 @@ impl Instruction {
             }
 
             Self::SHA3(arguments) | Self::KECCAK256(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_crypto::sha3(
                     context,
                     arguments[0].into_int_value(),
@@ -920,7 +911,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::SHA3_32(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<1>(arguments, context)?;
 
                 let pointer_one = era_compiler_llvm_context::Pointer::new_with_offset(
                     context,
@@ -939,7 +930,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::SHA3_64(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
 
                 let pointer_one = era_compiler_llvm_context::Pointer::new_with_offset(
                     context,
@@ -967,7 +958,7 @@ impl Instruction {
             }
 
             Self::MLOAD(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<1>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_memory::load(
                     context,
                     arguments[0].into_int_value(),
@@ -975,7 +966,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::MSTORE(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_memory::store(
                     context,
                     arguments[0].into_int_value(),
@@ -984,7 +975,7 @@ impl Instruction {
                 .map(|_| None)
             }
             Self::MSTORE8(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_memory::store_byte(
                     context,
                     arguments[0].into_int_value(),
@@ -993,7 +984,7 @@ impl Instruction {
                 .map(|_| None)
             }
             Self::MCOPY(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<3>(arguments, context)?;
                 let destination = era_compiler_llvm_context::Pointer::new_with_offset(
                     context,
                     era_compiler_llvm_context::EraVMAddressSpace::Heap,
@@ -1020,7 +1011,7 @@ impl Instruction {
             }
 
             Self::SLOAD(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<1>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_storage::load(
                     context,
                     arguments[0].into_int_value(),
@@ -1028,7 +1019,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::SSTORE(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_storage::store(
                     context,
                     arguments[0].into_int_value(),
@@ -1037,7 +1028,7 @@ impl Instruction {
                 .map(|_| None)
             }
             Self::TLOAD(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<1>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_storage::transient_load(
                     context,
                     arguments[0].into_int_value(),
@@ -1045,7 +1036,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::TSTORE(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_storage::transient_store(
                     context,
                     arguments[0].into_int_value(),
@@ -1055,7 +1046,7 @@ impl Instruction {
             }
 
             Self::ILOAD(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<1>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_immutable::load(
                     context,
                     arguments[0].into_int_value(),
@@ -1063,7 +1054,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::ISTORE(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_immutable::store(
                     context,
                     arguments[0].into_int_value(),
@@ -1073,7 +1064,7 @@ impl Instruction {
             }
 
             Self::CALLDATALOAD(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<1>(arguments, context)?;
 
                 match context
                     .code_segment()
@@ -1105,7 +1096,7 @@ impl Instruction {
                 }
             }
             Self::CALLDATACOPY(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<3>(arguments, context)?;
 
                 let source_offset = match context
                     .code_segment()
@@ -1130,7 +1121,7 @@ impl Instruction {
             }
 
             Self::DLOAD(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<1>(arguments, context)?;
 
                 match context.code_segment() {
                     None => {
@@ -1152,7 +1143,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::DLOADBYTES(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<3>(arguments, context)?;
 
                 match context.code_segment() {
                     None => {
@@ -1207,7 +1198,7 @@ impl Instruction {
                     );
                 }
 
-                let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<3>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_calldata::copy(
                     context,
                     arguments[0].into_int_value(),
@@ -1221,7 +1212,7 @@ impl Instruction {
                 era_compiler_llvm_context::eravm_evm_return_data::size(context).map(Some)
             }
             Self::RETURNDATACOPY(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<3>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_return_data::copy(
                     context,
                     arguments[0].into_int_value(),
@@ -1232,7 +1223,7 @@ impl Instruction {
             }
 
             Self::EXTCODESIZE(arguments) => {
-                let arguments = Self::translate_arguments::<D, 1>(arguments, context)?;
+                let arguments = Self::translate_arguments::<1>(arguments, context)?;
                 let mut requested_size = era_compiler_llvm_context::eravm_evm_ext_code::size(
                     context,
                     arguments[0].value.into_int_value(),
@@ -1279,7 +1270,7 @@ impl Instruction {
                 Ok(Some(requested_size))
             }
             Self::EXTCODEHASH(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<1>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_ext_code::hash(
                     context,
                     arguments[0].into_int_value(),
@@ -1287,7 +1278,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::EXTCODECOPY(arguments) => {
-                let arguments = Self::translate_arguments::<D, 4>(arguments, context)?;
+                let arguments = Self::translate_arguments::<4>(arguments, context)?;
 
                 if Some(crate::r#const::EXTCODESIZE_BLUEPRINT_ARGUMENT_NAME)
                     != arguments[0].original.as_deref()
@@ -1346,7 +1337,7 @@ impl Instruction {
             }
 
             Self::LOG0(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 2>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<2>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_event::log(
                     context,
                     arguments[0].into_int_value(),
@@ -1356,7 +1347,7 @@ impl Instruction {
                 .map(|_| None)
             }
             Self::LOG1(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<3>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_event::log(
                     context,
                     arguments[0].into_int_value(),
@@ -1369,7 +1360,7 @@ impl Instruction {
                 .map(|_| None)
             }
             Self::LOG2(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 4>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<4>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_event::log(
                     context,
                     arguments[0].into_int_value(),
@@ -1382,7 +1373,7 @@ impl Instruction {
                 .map(|_| None)
             }
             Self::LOG3(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 5>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<5>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_event::log(
                     context,
                     arguments[0].into_int_value(),
@@ -1395,7 +1386,7 @@ impl Instruction {
                 .map(|_| None)
             }
             Self::LOG4(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 6>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<6>(arguments, context)?;
                 era_compiler_llvm_context::eravm_evm_event::log(
                     context,
                     arguments[0].into_int_value(),
@@ -1409,7 +1400,7 @@ impl Instruction {
             }
 
             Self::CALL(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 7>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<7>(arguments, context)?;
 
                 let gas = arguments[0].into_int_value();
                 let address = arguments[1].into_int_value();
@@ -1434,7 +1425,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::STATICCALL(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 6>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<6>(arguments, context)?;
 
                 let gas = arguments[0].into_int_value();
                 let address = arguments[1].into_int_value();
@@ -1458,7 +1449,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::DELEGATECALL(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 6>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<6>(arguments, context)?;
 
                 let gas = arguments[0].into_int_value();
                 let address = arguments[1].into_int_value();
@@ -1483,7 +1474,7 @@ impl Instruction {
             }
 
             Self::CREATE(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 3>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<3>(arguments, context)?;
 
                 create::create(
                     context,
@@ -1495,7 +1486,7 @@ impl Instruction {
                 .map(Some)
             }
             Self::CREATE2(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 4>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<4>(arguments, context)?;
 
                 create::create(
                     context,
@@ -1515,7 +1506,7 @@ impl Instruction {
             }
             Self::GAS => era_compiler_llvm_context::eravm_evm_ether_gas::gas(context).map(Some),
             Self::BALANCE(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<1>(arguments, context)?;
 
                 let address = arguments[0].into_int_value();
                 era_compiler_llvm_context::eravm_evm_ether_gas::balance(context, address).map(Some)
@@ -1550,7 +1541,7 @@ impl Instruction {
                     .map(Some)
             }
             Self::BLOCKHASH(arguments) => {
-                let arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
+                let arguments = Self::translate_arguments_llvm::<1>(arguments, context)?;
                 let index = arguments[0].into_int_value();
 
                 era_compiler_llvm_context::eravm_evm_contract_context::block_hash(context, index)
@@ -1570,12 +1561,12 @@ impl Instruction {
             }
 
             Self::CALLCODE(arguments) => {
-                let _arguments = Self::translate_arguments_llvm::<D, 7>(arguments, context)?;
+                let _arguments = Self::translate_arguments_llvm::<7>(arguments, context)?;
                 anyhow::bail!("The `CALLCODE` instruction is not supported")
             }
             Self::PC => anyhow::bail!("The `PC` instruction is not supported"),
             Self::SELFDESTRUCT(arguments) => {
-                let _arguments = Self::translate_arguments_llvm::<D, 1>(arguments, context)?;
+                let _arguments = Self::translate_arguments_llvm::<1>(arguments, context)?;
                 anyhow::bail!("The `SELFDESTRUCT` instruction is not supported")
             }
 
@@ -1588,22 +1579,19 @@ impl Instruction {
     ///
     /// Checks if it is code offset is subtracted from `EXTCODESIZE`.
     ///
-    fn check_sub_code_offset<'ctx, D>(
-        context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
+    fn check_sub_code_offset<'ctx>(
+        context: &mut era_compiler_llvm_context::EraVMContext<'ctx>,
         arguments: &[Box<Expression>; 2],
-    ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
-    where
-        D: era_compiler_llvm_context::Dependency,
-    {
+    ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>> {
         if let Expression::Instruction(Instruction::EXTCODESIZE(extcodesize_arguments)) =
             *(arguments[0].clone())
         {
             let extcodesize_arguments =
-                Self::translate_arguments::<D, 1>(extcodesize_arguments.to_owned(), context)?;
+                Self::translate_arguments::<1>(extcodesize_arguments.to_owned(), context)?;
             if Some(crate::r#const::EXTCODESIZE_BLUEPRINT_ARGUMENT_NAME)
                 == extcodesize_arguments[0].original.as_deref()
             {
-                let arguments = Self::translate_arguments::<D, 2>(arguments.to_owned(), context)?;
+                let arguments = Self::translate_arguments::<2>(arguments.to_owned(), context)?;
                 return Ok(Some(arguments[0].value));
             }
         }

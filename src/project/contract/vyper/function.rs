@@ -53,13 +53,10 @@ impl Function {
     }
 }
 
-impl<D> EraVMWriteLLVM<D> for Function
-where
-    D: era_compiler_llvm_context::Dependency,
-{
+impl EraVMWriteLLVM for Function {
     fn declare(
         &mut self,
-        context: &mut era_compiler_llvm_context::EraVMContext<D>,
+        context: &mut era_compiler_llvm_context::EraVMContext,
     ) -> anyhow::Result<()> {
         let mut argument_types = Vec::with_capacity(1);
         if self.has_return_value() {
@@ -81,7 +78,7 @@ where
 
     fn into_llvm(
         self,
-        context: &mut era_compiler_llvm_context::EraVMContext<D>,
+        context: &mut era_compiler_llvm_context::EraVMContext,
     ) -> anyhow::Result<()> {
         context.set_current_function(self.name.as_str())?;
 

@@ -33,13 +33,10 @@ impl If {
     ///
     /// Converts the entity to an LLVM value.
     ///
-    pub fn into_llvm_value<'ctx, D>(
+    pub fn into_llvm_value<'ctx>(
         mut self,
-        context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
-    ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
-    where
-        D: era_compiler_llvm_context::Dependency,
-    {
+        context: &mut era_compiler_llvm_context::EraVMContext<'ctx>,
+    ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>> {
         let main_block = context.append_basic_block("if_main");
         let join_block = context.append_basic_block("if_join");
 

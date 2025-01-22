@@ -144,13 +144,10 @@ impl Seq {
     ///
     /// Converts the entity to an LLVM value.
     ///
-    pub fn into_llvm_value<'ctx, D>(
+    pub fn into_llvm_value<'ctx>(
         mut self,
-        context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
-    ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
-    where
-        D: era_compiler_llvm_context::Dependency,
-    {
+        context: &mut era_compiler_llvm_context::EraVMContext<'ctx>,
+    ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>> {
         let (mut labels, expressions) = self.drain_and_split();
 
         for label in labels.iter_mut() {
@@ -173,13 +170,10 @@ impl Seq {
     }
 }
 
-impl<D> era_compiler_llvm_context::EraVMWriteLLVM<D> for Seq
-where
-    D: era_compiler_llvm_context::Dependency,
-{
+impl era_compiler_llvm_context::EraVMWriteLLVM for Seq {
     fn into_llvm(
         mut self,
-        context: &mut era_compiler_llvm_context::EraVMContext<D>,
+        context: &mut era_compiler_llvm_context::EraVMContext,
     ) -> anyhow::Result<()> {
         let current_block = context.basic_block();
 

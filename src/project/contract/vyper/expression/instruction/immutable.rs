@@ -10,15 +10,12 @@ use era_compiler_llvm_context::IContext;
 /// It is a custom Vyper-specific instruction, which is capable of copying an array of immutables
 /// from the immutable storage system contract to the heap.
 ///
-pub fn load_bytes<'ctx, D>(
-    context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
+pub fn load_bytes<'ctx>(
+    context: &mut era_compiler_llvm_context::EraVMContext<'ctx>,
     heap_offset: inkwell::values::IntValue<'ctx>,
     immutable_offset: inkwell::values::IntValue<'ctx>,
     length: inkwell::values::IntValue<'ctx>,
-) -> anyhow::Result<()>
-where
-    D: era_compiler_llvm_context::Dependency,
-{
+) -> anyhow::Result<()> {
     let condition_block = context.append_basic_block("immutable_load_bytes_repeat_condition");
     let body_block = context.append_basic_block("immutable_load_bytes_repeat_body");
     let increment_block = context.append_basic_block("immutable_load_bytes_repeat_increment");

@@ -12,7 +12,6 @@ use era_compiler_llvm_context::EraVMWriteLLVM;
 use era_compiler_llvm_context::IContext;
 
 use crate::build::contract::Contract as ContractBuild;
-use crate::project::dependency_data::DependencyData;
 use crate::vyper::selector::Selector as VyperSelector;
 use crate::warning_type::WarningType;
 
@@ -43,8 +42,6 @@ pub struct Contract {
     pub userdoc: Option<serde_json::Value>,
     /// The contract developer documentation.
     pub devdoc: Option<serde_json::Value>,
-    /// The dependency data.
-    pub dependency_data: DependencyData,
 }
 
 impl Contract {
@@ -72,7 +69,6 @@ impl Contract {
             layout,
             userdoc,
             devdoc,
-            dependency_data: DependencyData::default(),
         }
     }
 
@@ -163,16 +159,14 @@ impl Contract {
         let llvm = inkwell::context::Context::create();
         let optimizer = era_compiler_llvm_context::Optimizer::new(optimizer_settings.clone());
 
-        let mut context: era_compiler_llvm_context::EraVMContext<
-            '_,
-            era_compiler_llvm_context::DummyDependency,
-        > = era_compiler_llvm_context::EraVMContext::new(
-            &llvm,
-            llvm.create_module(contract_path),
-            llvm_options,
-            optimizer,
-            debug_config,
-        );
+        let mut context: era_compiler_llvm_context::EraVMContext =
+            era_compiler_llvm_context::EraVMContext::new(
+                &llvm,
+                llvm.create_module(contract_path),
+                llvm_options,
+                optimizer,
+                debug_config,
+            );
 
         let ir = if output_selection.contains(&VyperSelector::IRJson) {
             Some(self.ir.clone())
@@ -263,13 +257,10 @@ impl Contract {
     }
 }
 
-impl<D> EraVMWriteLLVM<D> for Contract
-where
-    D: era_compiler_llvm_context::Dependency,
-{
+impl EraVMWriteLLVM for Contract {
     fn declare(
         &mut self,
-        context: &mut era_compiler_llvm_context::EraVMContext<D>,
+        context: &mut era_compiler_llvm_context::EraVMContext,
     ) -> anyhow::Result<()> {
         let mut entry = era_compiler_llvm_context::EraVMEntryFunction::default();
         entry.declare(context)?;
@@ -309,7 +300,7 @@ where
 
     fn into_llvm(
         mut self,
-        context: &mut era_compiler_llvm_context::EraVMContext<D>,
+        context: &mut era_compiler_llvm_context::EraVMContext,
     ) -> anyhow::Result<()> {
         let (mut runtime_code, immutables_size) =
             self.ir.extract_runtime_code()?.unwrap_or_default();
@@ -366,11 +357,5 @@ where
             .into_llvm(context)?;
 
         Ok(())
-    }
-}
-
-impl era_compiler_llvm_context::Dependency for DependencyData {
-    fn resolve_path(&self, _identifier: &str) -> anyhow::Result<String> {
-        anyhow::bail!("Dependency mechanism is not available in Vyper");
     }
 }

@@ -16,13 +16,10 @@ impl Set {
     ///
     /// Converts the entity to an LLVM value.
     ///
-    pub fn into_llvm_value<D>(
+    pub fn into_llvm_value(
         self,
-        context: &mut era_compiler_llvm_context::EraVMContext<D>,
-    ) -> anyhow::Result<()>
-    where
-        D: era_compiler_llvm_context::Dependency,
-    {
+        context: &mut era_compiler_llvm_context::EraVMContext,
+    ) -> anyhow::Result<()> {
         let [identifier, value] = self.0;
         let identifier = identifier.try_into_identifier()?;
 
