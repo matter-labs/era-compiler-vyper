@@ -3,7 +3,6 @@
 //!
 
 pub mod contract;
-pub mod dependency_data;
 
 use std::borrow::Cow;
 use std::collections::BTreeMap;

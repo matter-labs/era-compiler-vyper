@@ -16,13 +16,10 @@ impl ExitTo {
     ///
     /// Converts the entity to an LLVM value.
     ///
-    pub fn into_llvm_value<D>(
+    pub fn into_llvm_value(
         mut self,
-        context: &mut era_compiler_llvm_context::EraVMContext<D>,
-    ) -> anyhow::Result<()>
-    where
-        D: era_compiler_llvm_context::Dependency,
-    {
+        context: &mut era_compiler_llvm_context::EraVMContext,
+    ) -> anyhow::Result<()> {
         let label_name = self.0.remove(0).try_into_identifier()?;
         if label_name.as_str() == crate::r#const::VARIABLE_IDENTIFIER_RETURN_PC {
             context

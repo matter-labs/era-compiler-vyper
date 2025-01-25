@@ -10,16 +10,13 @@ use era_compiler_llvm_context::IContext;
 /// If `input_length` is `54`, the built-in is `create_minimal_proxy_to`.
 /// If `input_length` is `143`, the built-in is `create_copy_of`.
 ///
-pub fn create<'ctx, D>(
-    context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
+pub fn create<'ctx>(
+    context: &mut era_compiler_llvm_context::EraVMContext<'ctx>,
     value: inkwell::values::IntValue<'ctx>,
     input_offset: inkwell::values::IntValue<'ctx>,
     input_length: inkwell::values::IntValue<'ctx>,
     salt: Option<inkwell::values::IntValue<'ctx>>,
-) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>>
-where
-    D: era_compiler_llvm_context::Dependency,
-{
+) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>> {
     let create_minimal_proxy_to_block = context.append_basic_block("create_minimal_proxy_to_block");
     let create_from_blueprint_block = context.append_basic_block("create_from_blueprint_block");
     let create_join_block = context.append_basic_block("create_join_block");
@@ -59,15 +56,12 @@ where
 ///
 /// Before Vyper v0.3.4, the built-in was called `create_forwarder_to`.
 ///
-fn create_minimal_proxy_to<'ctx, D>(
-    context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
+fn create_minimal_proxy_to<'ctx>(
+    context: &mut era_compiler_llvm_context::EraVMContext<'ctx>,
     value: inkwell::values::IntValue<'ctx>,
     input_offset: inkwell::values::IntValue<'ctx>,
     salt: Option<inkwell::values::IntValue<'ctx>>,
-) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>>
-where
-    D: era_compiler_llvm_context::Dependency,
-{
+) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>> {
     if let Some(vyper_data) = context.vyper_mut() {
         vyper_data.set_is_minimal_proxy_used();
     }
@@ -208,16 +202,13 @@ where
 ///
 /// Makes use of the `EXTCODECOPY` substituted with `EXTCODEHASH` for EraVM.
 ///
-fn create_from_blueprint<'ctx, D>(
-    context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
+fn create_from_blueprint<'ctx>(
+    context: &mut era_compiler_llvm_context::EraVMContext<'ctx>,
     value: inkwell::values::IntValue<'ctx>,
     input_offset: inkwell::values::IntValue<'ctx>,
     input_length: inkwell::values::IntValue<'ctx>,
     salt: Option<inkwell::values::IntValue<'ctx>>,
-) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>>
-where
-    D: era_compiler_llvm_context::Dependency,
-{
+) -> anyhow::Result<inkwell::values::BasicValueEnum<'ctx>> {
     let success_block = context.append_basic_block("create_from_blueprint_success_block");
     let failure_block = context.append_basic_block("create_from_blueprint_failure_block");
     let join_block = context.append_basic_block("create_from_blueprint_join_block");

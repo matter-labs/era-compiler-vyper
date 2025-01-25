@@ -28,13 +28,10 @@ impl With {
     ///
     /// Converts the entity to an LLVM value.
     ///
-    pub fn into_llvm_value<'ctx, D>(
+    pub fn into_llvm_value<'ctx>(
         self,
-        context: &mut era_compiler_llvm_context::EraVMContext<'ctx, D>,
-    ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
-    where
-        D: era_compiler_llvm_context::Dependency,
-    {
+        context: &mut era_compiler_llvm_context::EraVMContext<'ctx>,
+    ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>> {
         let [identifier, value, block] = self.0;
         let identifier = identifier.try_into_identifier()?;
 

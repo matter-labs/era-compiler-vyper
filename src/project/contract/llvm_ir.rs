@@ -53,16 +53,14 @@ impl Contract {
         let module = llvm
             .create_module_from_ir(memory_buffer)
             .map_err(|error| anyhow::anyhow!(error.to_string()))?;
-        let context: era_compiler_llvm_context::EraVMContext<
-            '_,
-            era_compiler_llvm_context::DummyDependency,
-        > = era_compiler_llvm_context::EraVMContext::new(
-            &llvm,
-            module,
-            llvm_options,
-            optimizer,
-            debug_config,
-        );
+        let context: era_compiler_llvm_context::EraVMContext =
+            era_compiler_llvm_context::EraVMContext::new(
+                &llvm,
+                module,
+                llvm_options,
+                optimizer,
+                debug_config,
+            );
 
         let build = context.build(
             contract_path,

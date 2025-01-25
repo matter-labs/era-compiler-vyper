@@ -23,14 +23,11 @@ impl Goto {
     ///
     /// Generates the function call code.
     ///
-    pub fn into_function_call<'ctx, D>(
+    pub fn into_function_call<'ctx>(
         self,
-        context: &mut era_compiler_llvm_context::EraVMContext<D>,
+        context: &mut era_compiler_llvm_context::EraVMContext,
         label_name: String,
-    ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
-    where
-        D: era_compiler_llvm_context::Dependency,
-    {
+    ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>> {
         let function = context
             .get_function(label_name.as_str())
             .ok_or_else(|| anyhow::anyhow!("Function `{label_name}` does not exist"))?;
@@ -59,14 +56,11 @@ impl Goto {
     ///
     /// Generates the block call code.
     ///
-    pub fn into_block_call<'ctx, D>(
+    pub fn into_block_call<'ctx>(
         self,
-        context: &mut era_compiler_llvm_context::EraVMContext<D>,
+        context: &mut era_compiler_llvm_context::EraVMContext,
         label_name: String,
-    ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
-    where
-        D: era_compiler_llvm_context::Dependency,
-    {
+    ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>> {
         let block = context
             .current_function()
             .borrow()
@@ -106,13 +100,10 @@ impl Goto {
     ///
     /// Converts the entity to an LLVM value.
     ///
-    pub fn into_llvm_value<'ctx, D>(
+    pub fn into_llvm_value<'ctx>(
         mut self,
-        context: &mut era_compiler_llvm_context::EraVMContext<D>,
-    ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>>
-    where
-        D: era_compiler_llvm_context::Dependency,
-    {
+        context: &mut era_compiler_llvm_context::EraVMContext,
+    ) -> anyhow::Result<Option<inkwell::values::BasicValueEnum<'ctx>>> {
         let label_name = self.0.remove(0).try_into_identifier()?;
 
         if label_name.ends_with(crate::r#const::LABEL_SUFFIX_CLEANUP)

@@ -16,14 +16,11 @@ impl Assert {
     ///
     /// Converts the entity to an LLVM value.
     ///
-    pub fn into_llvm_value<D>(
+    pub fn into_llvm_value(
         self,
-        context: &mut era_compiler_llvm_context::EraVMContext<D>,
+        context: &mut era_compiler_llvm_context::EraVMContext,
         is_unreachable: bool,
-    ) -> anyhow::Result<()>
-    where
-        D: era_compiler_llvm_context::Dependency,
-    {
+    ) -> anyhow::Result<()> {
         let [condition] = self.0;
 
         let error_block = context.append_basic_block("if_error");
