@@ -133,7 +133,6 @@ pub fn standard_output(
         for (path, contract) in project.contracts.iter() {
             debug_config.dump_lll(
                 path.as_str(),
-                None,
                 contract.ir_string().unwrap_or_default().as_str(),
             )?;
         }
@@ -195,7 +194,6 @@ pub fn combined_json(
         for (path, contract) in project.contracts.iter() {
             debug_config.dump_lll(
                 path.as_str(),
-                None,
                 contract.ir_string().unwrap_or_default().as_str(),
             )?;
         }
