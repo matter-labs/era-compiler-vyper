@@ -628,7 +628,7 @@ dependencies = [
 [[package]]
 name = "era-compiler-llvm-context"
 version = "1.5.0"
-source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=az-support-evm-dependencies#0858d7465be90f0df595e0bdad12d77d91296834"
+source = "git+https://github.com/matter-labs/era-compiler-llvm-context?branch=main#e027808608c63c45206d7bc5d61f86126e5f6252"
 dependencies = [
  "anyhow",
  "era-compiler-common",
@@ -1237,7 +1237,7 @@ dependencies = [
 [[package]]
 name = "inkwell"
 version = "0.4.0"
-source = "git+https://github.com/matter-labs-forks/inkwell?branch=az-support-evm-dependencies#bf1c86667118dd2dd8ea7bbf2bb1d201414b0aed"
+source = "git+https://github.com/matter-labs-forks/inkwell?branch=llvm-17#49b96062340ea89a2ac45c3ba037e339592bb783"
 dependencies = [
  "either",
  "inkwell_internals",
@@ -1252,7 +1252,7 @@ dependencies = [
 [[package]]
 name = "inkwell_internals"
 version = "0.9.0"
-source = "git+https://github.com/matter-labs-forks/inkwell?branch=az-support-evm-dependencies#bf1c86667118dd2dd8ea7bbf2bb1d201414b0aed"
+source = "git+https://github.com/matter-labs-forks/inkwell?branch=llvm-17#49b96062340ea89a2ac45c3ba037e339592bb783"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1356,9 +1356,9 @@ checksum = "c19937216e9d3aa9956d9bb8dfc0b0c8beb6058fc4f7a4dc4d850edf86a237d6"
 
 [[package]]
 name = "libmimalloc-sys"
-version = "0.1.39"
+version = "0.1.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23aa6811d3bd4deb8a84dde645f943476d13b248d818edcf8ce0b2f37f036b44"
+checksum = "07d0e07885d6a754b9c7993f2625187ad694ee985d60f23355ff0e7077261502"
 dependencies = [
  "cc",
  "libc",
@@ -1390,7 +1390,7 @@ checksum = "23fb14cb19457329c82206317a5663005a4d404783dc74f4252769b0d5f42856"
 [[package]]
 name = "llvm-sys"
 version = "170.0.1"
-source = "git+https://github.com/matter-labs-forks/llvm-sys.rs?branch=az-support-evm-dependencies#fac2a747819b3265370fc9d0bce94b604ce81c1c"
+source = "git+https://github.com/matter-labs-forks/llvm-sys.rs?branch=llvm-17.0#686fdddec1389b48a3a44c32e8725a2817ab5089"
 dependencies = [
  "anyhow",
  "cc",
@@ -1424,9 +1424,9 @@ checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
 
 [[package]]
 name = "mimalloc"
-version = "0.1.43"
+version = "0.1.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68914350ae34959d83f732418d51e2427a794055d0b9529f48259ac07af65633"
+checksum = "99585191385958383e13f6b822e6b6d8d9cf928e7d286ceb092da92b43c87bc1"
 dependencies = [
  "libmimalloc-sys",
 ]
@@ -2085,9 +2085,9 @@ dependencies = [
 
 [[package]]
 name = "rustls"
-version = "0.23.23"
+version = "0.23.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47796c98c480fce5406ef69d1c76378375492c3b0a0de587be0c1d9feb12f395"
+checksum = "822ee9188ac4ec04a2f0531e55d035fb2de73f18b41a63c70c2712503b6fb13c"
 dependencies = [
  "once_cell",
  "rustls-pki-types",
@@ -2113,9 +2113,9 @@ checksum = "917ce264624a4b4db1c364dcc35bfca9ded014d0a958cd47ad3e960e988ea51c"
 
 [[package]]
 name = "rustls-webpki"
-version = "0.102.8"
+version = "0.103.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64ca1bc8749bd4cf37b5ce386cc146580777b4e8572c7b97baf22c83f444bee9"
+checksum = "0aa4eeac2588ffff23e9d7a7e9b3f971c5fb5b7ebc9452745e0c232c64f83b2f"
 dependencies = [
  "ring",
  "rustls-pki-types",
