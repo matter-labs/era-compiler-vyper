@@ -1,5 +1,11 @@
 # The `zkvyper` changelog
 
+## [Unreleased]
+
+### Changed
+
+- Updated to Rust v1.85.1
+
 ## [1.5.9] - 2025-01-09
 
 ### Added
