@@ -22,6 +22,11 @@ fn tx_origin_0_4_0() {
     tx_origin(semver::Version::new(0, 4, 0));
 }
 
+#[test]
+fn tx_origin_0_4_1() {
+    tx_origin(semver::Version::new(0, 4, 1));
+}
+
 fn tx_origin(version: semver::Version) {
     assert!(common::check_warning(
         common::TEST_TX_ORIGIN_CONTRACT_PATH,

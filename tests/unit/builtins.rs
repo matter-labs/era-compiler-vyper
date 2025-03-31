@@ -15,6 +15,12 @@ fn create_copy_of_0_4_0() {
     create_copy_of(semver::Version::new(0, 4, 0));
 }
 
+#[test]
+#[should_panic(expected = "Built-in function `create_copy_of` is not supported")]
+fn create_copy_of_0_4_1() {
+    create_copy_of(semver::Version::new(0, 4, 1));
+}
+
 fn create_copy_of(version: semver::Version) {
     let _ = common::build_vyper_combined_json(
         vec![common::TEST_CREATE_COPY_OF_CONTRACT_PATH],
