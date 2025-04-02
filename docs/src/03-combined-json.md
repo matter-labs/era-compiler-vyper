@@ -69,7 +69,7 @@ The format below is a modification of the original combined JSON output format i
     // Byte-array hash of the whole project's source code.
     "source_code_hash": [147,242,126,144,/* ... */22,153,132,218],
     // Version of vyper.
-    "source_version": "0.4.0",
+    "source_version": "0.4.1",
     // Version of zkvyper.
     "zk_version": "1.5.8"
   },

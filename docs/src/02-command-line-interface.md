@@ -101,7 +101,7 @@ __entry:
 ... (truncated)
 
 Project metadata:
-{"evm_version":"cancun","llvm_options":[],"optimizer_settings":"M3B3","source_code_hash":[147,242,126,144,(truncated),22,153,132,218],"source_version":"0.4.0","zk_version":"1.5.8"}
+{"evm_version":"cancun","llvm_options":[],"optimizer_settings":"M3B3","source_code_hash":[147,242,126,144,(truncated),22,153,132,218],"source_version":"0.4.1","zk_version":"1.5.8"}
 ```
 
 The output order above is fixed and cannot be changed by the order of the selectors in the `--format` argument:
