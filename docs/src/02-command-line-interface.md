@@ -330,7 +330,7 @@ The following values are allowed by *zkvyper*:
 - prague
 
 > However, have in mind that many of them are not supported by *vyper*, or only supported by its newer versions.
-> For instance, the `--help` message of *vyper* v0.4.0 only declares the following EVM versions as supported: *london*, *paris*, *shanghai*, *cancun*.
+> For instance, the `--help` message of *vyper* v0.4.x only declares the following EVM versions as supported: *london*, *paris*, *shanghai*, *cancun*.
 > For the full list of supported EVM versions, refer to [the official *vyper* documentation](https://docs.vyperlang.org/en/stable/).
 
 Usage:
@@ -359,7 +359,7 @@ zkvyper './Simple.vy' --disable-vyper-optimizer
 
 ### `--enable-decimals`
 
-Enables [decimals](https://docs.vyperlang.org/en/stable/types.html#decimals) in *vyper* v0.4.0.
+Enables [decimals](https://docs.vyperlang.org/en/stable/types.html#decimals) in *vyper* v0.4.x.
 
 Usage:
 
