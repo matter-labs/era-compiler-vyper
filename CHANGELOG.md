@@ -2,13 +2,13 @@
 
 ## [Unreleased]
 
-### Added
-
-- Support for `vyper==0.4.1`
-
 ### Changed
 
 - Updated to Rust v1.85.1
+
+### Added
+
+- Support for `vyper==0.4.1`
 
 ## [1.5.9] - 2025-01-09
 
