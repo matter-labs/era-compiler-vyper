@@ -2,13 +2,13 @@
 
 ## [Unreleased]
 
+### Added
+
+- Support for Vyper v0.4.1
+
 ### Changed
 
 - Updated to Rust v1.85.1
-
-### Added
-
-- Support for `vyper==0.4.1`
 
 ## [1.5.9] - 2025-01-09
 
@@ -124,7 +124,7 @@
 
 ### Added
 
-- The vyper v0.4.0 support
+- Support for Vyper v0.4.0
 - The `--enable-decimals` parameter
 - The support for compiling multiple files in Yul, LLVM IR, and EraVM assembly modes
 - More LLVM optimizations
@@ -236,7 +236,7 @@
 
 ### Added
 
-- The vyper v0.3.10 support
+- Support for Vyper v0.3.10
 
 ## [1.3.11] - 2023-10-05
 
@@ -281,7 +281,7 @@
 ### Added
 
 - The EraVM assembly compilation mode (`--zkasm`)
-- The vyper v0.3.9 support
+- Support for Vyper v0.3.9
 
 ### Fixed
 
