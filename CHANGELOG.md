@@ -5,8 +5,6 @@
 ### Added
 
 - Support for `vyper==0.4.1`
-- Update tests to include `vyper==0.4.1` and others
-- Add Vyper binary for `0.4.1`
 
 ### Changed
 
