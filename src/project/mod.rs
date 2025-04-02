@@ -161,7 +161,7 @@ impl Project {
                 let path = path.to_string_lossy().to_string();
 
                 let contract = EraVMAssemblyContract::new(
-                    era_compiler_llvm_context::eravm_const::ZKEVM_VERSION,
+                    era_compiler_llvm_context::eravm_const::ERAVM_VERSION,
                     source_code,
                 )
                 .into();
@@ -171,7 +171,7 @@ impl Project {
             .collect::<anyhow::Result<BTreeMap<String, Contract>>>()?;
 
         Ok(Self::new(
-            era_compiler_llvm_context::eravm_const::ZKEVM_VERSION,
+            era_compiler_llvm_context::eravm_const::ERAVM_VERSION,
             contracts,
             output_selection.to_owned(),
         ))
