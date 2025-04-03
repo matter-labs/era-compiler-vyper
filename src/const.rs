@@ -12,7 +12,7 @@ use lazy_static::lazy_static;
 pub static DEFAULT_EXECUTABLE_NAME: &str = "zkvyper";
 
 /// The worker thread stack size.
-pub const WORKER_THREAD_STACK_SIZE: usize = 16 * 1024 * 1024;
+pub const WORKER_THREAD_STACK_SIZE: usize = 64 * 1024 * 1024;
 
 /// The `FREE_VAR_SPACE` offset.
 pub const OFFSET_FREE_VAR_SPACE: usize = 0;
