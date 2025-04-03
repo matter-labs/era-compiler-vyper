@@ -9,6 +9,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 use std::sync::OnceLock;
+use std::thread::Builder;
 
 use self::input::Input;
 use self::output::Output;
@@ -24,15 +25,22 @@ pub fn run() -> anyhow::Result<()> {
     let input: Input = era_compiler_common::deserialize_from_str(input_json.as_str())
         .expect("Stdin reading error");
 
-    let build = input.contract.into_owned().compile(
-        input.full_path.as_str(),
-        input.metadata_hash,
-        input.optimizer_settings,
-        input.llvm_options,
-        input.output_selection,
-        input.suppressed_warnings,
-        input.debug_config,
-    )?;
+    let build = Builder::new()
+        .stack_size(crate::WORKER_THREAD_STACK_SIZE)
+        .spawn(move || {
+            input.contract.into_owned().compile(
+                input.full_path.as_str(),
+                input.metadata_hash,
+                input.optimizer_settings,
+                input.llvm_options,
+                input.output_selection,
+                input.suppressed_warnings,
+                input.debug_config,
+            )
+        })
+        .expect("Threading error")
+        .join()
+        .expect("Threading error")?;
     unsafe { inkwell::support::shutdown_llvm() };
 
     let output = Output::new(build);
