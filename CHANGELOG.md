@@ -1,15 +1,21 @@
 # The `zkvyper` changelog
 
-## [Unreleased]
+## [1.5.10] - 2025-04-07
 
 ### Added
 
 - Support for Vyper v0.4.1
+- CBOR payload with the IPFS hash and compiler versions at the end of bytecode
+- The `--no-bytecode-metadata` flag to disable the CBOR metadata
 
 ### Changed
 
 - Set the stack size limit for all threads to 64 MB
 - Updated to Rust v1.85.1
+
+### Deprecated
+
+- The `keccak256` metadata hash type
 
 ## [1.5.9] - 2025-01-09
 

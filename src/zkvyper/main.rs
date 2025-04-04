@@ -11,10 +11,6 @@ use clap::Parser;
 
 use self::arguments::Arguments;
 
-#[cfg(target_env = "musl")]
-#[global_allocator]
-static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
-
 ///
 /// The application entry point.
 ///
@@ -48,7 +44,7 @@ fn main_inner() -> anyhow::Result<()> {
         .expect("Thread pool configuration failure");
 
     inkwell::support::enable_llvm_pretty_stack_trace();
-    era_compiler_llvm_context::initialize_target(era_compiler_common::Target::EraVM); // TODO: pass from CLI
+    era_compiler_llvm_context::initialize_target(era_compiler_common::Target::EraVM);
 
     if arguments.version {
         writeln!(
@@ -121,13 +117,14 @@ fn main_inner() -> anyhow::Result<()> {
 
     let metadata_hash_type = arguments
         .metadata_hash
-        .unwrap_or(era_compiler_common::HashType::Keccak256);
+        .unwrap_or(era_compiler_common::EraVMMetadataHashType::None);
 
     let build = if arguments.llvm_ir {
         era_compiler_vyper::llvm_ir(
             arguments.input_paths,
             output_selection.as_slice(),
             metadata_hash_type,
+            arguments.no_bytecode_metadata,
             optimizer_settings,
             llvm_options,
             suppressed_warnings,
@@ -138,6 +135,7 @@ fn main_inner() -> anyhow::Result<()> {
             arguments.input_paths,
             output_selection.as_slice(),
             metadata_hash_type,
+            arguments.no_bytecode_metadata,
             llvm_options,
             suppressed_warnings,
             debug_config,
@@ -160,6 +158,7 @@ fn main_inner() -> anyhow::Result<()> {
                 arguments.enable_decimals,
                 arguments.search_paths,
                 metadata_hash_type,
+                arguments.no_bytecode_metadata,
                 vyper_optimizer_enabled,
                 optimizer_settings,
                 llvm_options,
@@ -186,6 +185,7 @@ fn main_inner() -> anyhow::Result<()> {
             arguments.enable_decimals,
             arguments.search_paths,
             metadata_hash_type,
+            arguments.no_bytecode_metadata,
             vyper_optimizer_enabled,
             optimizer_settings,
             llvm_options,

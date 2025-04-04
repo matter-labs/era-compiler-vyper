@@ -29,7 +29,7 @@ Specifies the path to the *vyper* compiler. Useful when the *vyper* compiler is 
 Usage:
 
 ```shell
-zkvyper './Simple.vy' --vyper '/path/to/vyper'
+zkvyper 'Simple.vy' --vyper '/path/to/vyper'
 ```
 
 > Examples in the subsequent sections assume that *vyper* [is installed and available](./01-installation.md#installing-vyper) in the system path.
@@ -42,7 +42,7 @@ zkvyper './Simple.vy' --vyper '/path/to/vyper'
 *zkvyper* supports multiple input files. The following command compiles two Vyper files and prints the bytecode:
 
 ```shell
-zkvyper './Simple.vy' './Complex.vy'
+zkvyper 'Simple.vy' './Complex.vy'
 ```
 
 
@@ -73,7 +73,7 @@ In basic CLI mode, the following selectors are available:
 Usage:
 
 ```shell
-zkvyper './Simple.vy' --format 'ir_json,ast,abi,method_identifiers,layout,userdoc,devdoc,eravm_assembly,project_metadata'
+zkvyper 'Simple.vy' --format 'ir_json,ast,abi,method_identifiers,layout,userdoc,devdoc,eravm_assembly,project_metadata'
 ```
 
 Output:
@@ -101,10 +101,11 @@ __entry:
 ... (truncated)
 
 Project metadata:
-{"evm_version":"cancun","llvm_options":[],"optimizer_settings":"M3B3","source_code_hash":[147,242,126,144,(truncated),22,153,132,218],"source_version":"0.4.1","zk_version":"1.5.8"}
+{"evm_version":"cancun","llvm_options":[],"optimizer_settings":"M3B3","source_code_hash":[147,242,126,144,(truncated),22,153,132,218],"source_version":"0.4.1","zk_version":"1.5.10"}
 ```
 
 The output order above is fixed and cannot be changed by the order of the selectors in the `--format` argument:
+
 1. Bytecode
 2. LLL IR JSON
 3. AST
@@ -125,7 +126,7 @@ Specifies the output directory for build artifacts. Can only be used in [basic C
 Usage in basic CLI mode:
 
 ```shell
-zkvyper './Simple.vy' --output-dir './build/'
+zkvyper 'Simple.vy' --output-dir './build/'
 ls './build/'
 ```
 
@@ -138,7 +139,7 @@ default.vy.zbin
 Usage in combined JSON mode:
 
 ```shell
-zkvyper './Simple.vy' --format 'combined_json' --output-dir './build/'
+zkvyper 'Simple.vy' --format 'combined_json' --output-dir './build/'
 ls './build/'
 ```
 
@@ -159,7 +160,7 @@ Can only be used in combination with the [`--output-dir`](#--output-dir) option.
 Usage:
 
 ```shell
-zkvyper './Simple.vy' --format 'combined_json' --output-dir './build/' --overwrite
+zkvyper 'Simple.vy' --format 'combined_json' --output-dir './build/' --overwrite
 ```
 
 If the `--overwrite` option is not specified and the output files already exist, *zkvyper* will print an error message and exit:
@@ -199,7 +200,7 @@ zkvyper --help
 To switch to combined JSON mode, use [the `--format` option](#--format---f) with the `combined_json` argument:
 
 ```shell
-zkvyper './Simple.vy' --format 'combined_json'
+zkvyper 'Simple.vy' --format 'combined_json'
 ```
 
 The mode-altering CLI options are mutually exclusive. This means that only one of the options below can be enabled at a time:
@@ -247,11 +248,11 @@ Under the hood, this option automatically triggers recompilation of contracts wi
 
 ### `--metadata-hash`
 
-Specifies the hash function used for project metadata.
+Specifies the hash function used for project metadata appended to the end of bytecode.
 
 <div class="warning">
-For security reasons, the source code of all input Vyper contracts are hashed together, so a change in one contract will affect the metadata hash appended to the bytecode of all contracts, even if there are no dependency relations between them.
-It may be changed in the future, so each contract will be hashed separately just like *vyper* does.
+For security reasons, the source code of all input Vyper contracts is hashed together, so a change in one contract will affect the metadata hash appended to the bytecode of all contracts, even if there are no dependency relations between them.
+It may be changed in the future, so each contract will be hashed separately, as it is done by the *vyper* compiler.
 </div>
 
 The following values are allowed:
@@ -259,17 +260,54 @@ The following values are allowed:
 |     Value    |  Size  | Padding | Reference |
 |:------------:|:------:|:-------:|:---------:|
 | none         |  0 B   | 0-32 B  | 
-| keccak256    | 32 B   | 0-32 B  | [SHA-3 Wikipedia Page](https://en.wikipedia.org/wiki/SHA-3)
 | ipfs         | 44 B   | 20-52 B | [IPFS Documentation](https://docs.ipfs.tech/)
 
-The default value is `keccak256`.
+The default value is `none`.
 
 > EraVM requires its bytecode size to be an odd number of 32-byte words. If the size after appending the hash does not satisfy this requirement, the hash is *prepended* with zeros according to the *Padding* column in the table above.
 
 Usage:
 
 ```shell
-zkvyper './Simple.vy' --metadata-hash 'ipfs'
+zkvyper 'Simple.vy' --metadata-hash 'ipfs'
+```
+
+Output:
+
+```text
+Contract `Simple.vy`:
+0x0000000100200190000000110000c13d0000000a001001980000001d0000613d000000000101043b000000e0011002700000000b0010009c000000160000613d0000000c0010009c0000001d00
+...
+a2646970667358221220cabf07f8316a1b55f55aa859b4e4c910f226ab11ab9a786f3a90acb586be0406657679706572781a7a6b76797065723a312e352e31303b76797065723a302e342e30004c
+```
+
+The byte array starting with `a2` at the end of the bytecode is a CBOR-encoded compiler version data and an optional metadata hash.
+
+JSON representation of a CBOR payload:
+
+```javascript
+{
+    // Optional: included if `--metadata-hash` is set to `ipfs`.
+    "ipfs": h'1220CABF07F8316A1B55F55AA859B4E4C910F226AB11AB9A786F3A90ACB586BE0406',
+    // Required: consists of semicolon-separated pairs of colon-separated compiler names and versions.
+    // `zkvyper:<version>` is always included.
+    // `vyper:<version>` is included for Vyper input, and not included for LLVM IR and EraVM assembly input.
+    "vyper": "zkvyper:1.5.10;vyper:0.4.1"
+}
+```
+
+
+
+### `--no-bytecode-metadata`
+
+Disables the metadata hash appended to the bytecode. This option is useful for debugging and research purposes.
+
+> It is not recommended to use this option in production, as it is not possible to verify contracts deployed without metadata.
+
+Usage:
+
+```shell
+zkvyper 'Simple.vy' --no-bytecode-metadata
 ```
 
 
@@ -283,7 +321,7 @@ Only one warning can be suppressed with this option: [`txorigin`](https://docs.z
 Usage:
 
 ```shell
-zkvyper './Simple.vy' --suppress-warnings 'txorigin'
+zkvyper 'Simple.vy' --suppress-warnings 'txorigin'
 ```
 
 
@@ -295,7 +333,7 @@ Specifies additional options for the LLVM framework. The argument must be a sing
 Usage:
 
 ```shell
-zkvyper './Simple.vy' --llvm-options='-eravm-jump-table-density-threshold=10'
+zkvyper 'Simple.vy' --llvm-options='-eravm-jump-table-density-threshold=10'
 ```
 
 > The `--llvm-options` option is experimental and must only be used by experienced users. All supported options will be documented in the future.
@@ -336,7 +374,7 @@ The following values are allowed by *zkvyper*:
 Usage:
 
 ```shell
-zkvyper './Simple.vy' --evm-version 'cancun'
+zkvyper 'Simple.vy' --evm-version 'cancun'
 ```
 
 
@@ -352,7 +390,7 @@ The optimizer is enabled by default for *vyper* v0.3.x. For *vyper* v0.4.x it is
 Usage:
 
 ```shell
-zkvyper './Simple.vy' --disable-vyper-optimizer
+zkvyper 'Simple.vy' --disable-vyper-optimizer
 ```
 
 
@@ -364,7 +402,7 @@ Enables [decimals](https://docs.vyperlang.org/en/stable/types.html#decimals) in 
 Usage:
 
 ```shell
-zkvyper './Simple.vy' --enable-decimals
+zkvyper 'Simple.vy' --enable-decimals
 ```
 
 
@@ -376,7 +414,7 @@ Passes additional [search paths](https://docs.vyperlang.org/en/stable/structure-
 Usage:
 
 ```shell
-zkvyper './Simple.vy' --search-paths '/path/to/libraries-1/' '/path/to/libraries-2/'
+zkvyper 'Simple.vy' --search-paths '/path/to/libraries-1/' '/path/to/libraries-2/'
 ```
 
 
@@ -505,7 +543,7 @@ The intermediate build artifacts can be:
 Usage:
 
 ```shell
-zkvyper './Simple.vy' --debug-output-dir './debug/'
+zkvyper 'Simple.vy' --debug-output-dir './debug/'
 ls './debug/'
 ```
 
@@ -529,7 +567,7 @@ Enables the verification of the LLVM IR after each optimization pass. This optio
 Usage:
 
 ```shell
-zkvyper './Simple.vy' --llvm-verify-each
+zkvyper 'Simple.vy' --llvm-verify-each
 ```
 
 
@@ -541,5 +579,5 @@ Enables the debug logging of the LLVM IR optimization passes. This option is use
 Usage:
 
 ```shell
-zkvyper './Simple.vy' --llvm-debug-logging
+zkvyper 'Simple.vy' --llvm-debug-logging
 ```

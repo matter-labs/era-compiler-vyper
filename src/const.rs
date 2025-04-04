@@ -8,8 +8,18 @@ use std::collections::BTreeMap;
 
 use lazy_static::lazy_static;
 
+/// The `vyper` compiler production name.
+pub static VYPER_PRODUCTION_NAME: &str = "vyper";
+
 /// The default executable name.
 pub static DEFAULT_EXECUTABLE_NAME: &str = "zkvyper";
+
+///
+/// The compiler version default function.
+///
+pub fn version() -> String {
+    env!("CARGO_PKG_VERSION").to_owned()
+}
 
 /// The worker thread stack size.
 pub const WORKER_THREAD_STACK_SIZE: usize = 64 * 1024 * 1024;
@@ -76,20 +86,19 @@ lazy_static! {
     pub static ref MINIMAL_PROXY_BUILD: era_compiler_llvm_context::EraVMBuild = {
         let target_machine = era_compiler_llvm_context::TargetMachine::new(era_compiler_common::Target::EraVM, &era_compiler_llvm_context::OptimizerSettings::cycles(), &[])
                 .expect("Minimal proxy target machine initialization error");
+
         let assembly_buffer = era_compiler_llvm_context::eravm_assemble(&target_machine, MINIMAL_PROXY_CONTRACT_NAME, MINIMAL_PROXY_CONTRACT_ASSEMBLY, None)
                 .expect("Minimal proxy assembling error");
-        let build = era_compiler_llvm_context::eravm_build(assembly_buffer, None, Some(MINIMAL_PROXY_CONTRACT_ASSEMBLY.to_owned()))
+        let mut build = era_compiler_llvm_context::eravm_build(assembly_buffer, None, None, Some(MINIMAL_PROXY_CONTRACT_ASSEMBLY.to_owned()))
                 .expect("Minimal proxy building error");
+
         let bytecode_buffer = inkwell::memory_buffer::MemoryBuffer::create_from_memory_range(build.bytecode.as_slice(), MINIMAL_PROXY_CONTRACT_NAME, false);
         let (bytecode_buffer_linked, object_format) = era_compiler_llvm_context::eravm_link(bytecode_buffer, &BTreeMap::new(), &BTreeMap::new()).expect("Minimal proxy linking error");
         assert_eq!(object_format, era_compiler_common::ObjectFormat::Raw, "Minimal proxy object format error");
-        let bytecode_hash = era_compiler_llvm_context::eravm_hash(&bytecode_buffer_linked).expect("Minimal proxy hashing error");
-        era_compiler_llvm_context::EraVMBuild::new_with_bytecode_hash(
-            bytecode_buffer_linked.as_slice().to_vec(),
-            bytecode_hash,
-            None,
-            None,
-        )
+
+        build.bytecode = bytecode_buffer_linked.as_slice().to_vec();
+        build.bytecode_hash = Some(era_compiler_llvm_context::eravm_hash(&bytecode_buffer_linked).expect("Minimal proxy hashing error"));
+        build
     };
 }
 

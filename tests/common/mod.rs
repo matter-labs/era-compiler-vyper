@@ -136,7 +136,8 @@ pub fn build_vyper_standard_json(
     let project = Project::try_from_standard_json(output, &vyper.version.default)?;
     let mut build = project.compile(
         None,
-        era_compiler_common::HashType::Ipfs,
+        era_compiler_common::EraVMMetadataHashType::IPFS,
+        false,
         optimizer_settings,
         vec![],
         vec![],
@@ -173,7 +174,8 @@ pub fn build_vyper_combined_json(
 
     let mut build = project.compile(
         None,
-        era_compiler_common::HashType::Ipfs,
+        era_compiler_common::EraVMMetadataHashType::IPFS,
+        false,
         optimizer_settings,
         vec![],
         vec![],
