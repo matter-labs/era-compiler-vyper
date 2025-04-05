@@ -255,16 +255,11 @@ For security reasons, the source code of all input Vyper contracts is hashed tog
 It may be changed in the future, so each contract will be hashed separately, as it is done by the *vyper* compiler.
 </div>
 
-The following values are allowed:
+The following values are allowed: `none`, `ipfs`.
 
-|     Value    |  Size  | Padding | Reference |
-|:------------:|:------:|:-------:|:---------:|
-| none         |  0 B   | 0-32 B  | 
-| ipfs         | 44 B   | 20-52 B | [IPFS Documentation](https://docs.ipfs.tech/)
+The default value is `ipfs`.
 
-The default value is `none`.
-
-> EraVM requires its bytecode size to be an odd number of 32-byte words. If the size after appending the hash does not satisfy this requirement, the hash is *prepended* with zeros according to the *Padding* column in the table above.
+> EraVM requires its bytecode size to be an odd number of 32-byte words. If the size after appending the hash does not satisfy this requirement, the metadata is *prepended* with zeros.
 
 Usage:
 
@@ -288,19 +283,22 @@ JSON representation of a CBOR payload:
 ```javascript
 {
     // Optional: included if `--metadata-hash` is set to `ipfs`.
-    "ipfs": h'1220CABF07F8316A1B55F55AA859B4E4C910F226AB11AB9A786F3A90ACB586BE0406',
+    "ipfs": "1220cabf07f8316a1b55f55aa859b4e4c910f226ab11ab9a786f3a90acb586be0406",
+
     // Required: consists of semicolon-separated pairs of colon-separated compiler names and versions.
     // `zkvyper:<version>` is always included.
-    // `vyper:<version>` is included for Vyper input, and not included for LLVM IR and EraVM assembly input.
+    // `vyper:<version>` is included for Vyper contracts, but not included for LLVM IR and EraVM assembly contracts.
     "vyper": "zkvyper:1.5.10;vyper:0.4.1"
 }
 ```
+
+For more information on these formats, see the [CBOR](https://cbor.io/) and [IPFS](https://docs.ipfs.tech/) documentation.
 
 
 
 ### `--no-bytecode-metadata`
 
-Disables the metadata hash appended to the bytecode. This option is useful for debugging and research purposes.
+Disables the CBOR metadata that is appended at the end of bytecode. This option is useful for debugging and research purposes.
 
 > It is not recommended to use this option in production, as it is not possible to verify contracts deployed without metadata.
 
