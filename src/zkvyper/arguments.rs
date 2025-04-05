@@ -98,10 +98,14 @@ pub struct Arguments {
     pub disassemble: bool,
 
     /// Set the metadata hash type.
-    /// Available types: `none`, `keccak256`, `ipfs`.
-    /// The default is `keccak256`.
+    /// Available types: `none`, `ipfs`.
+    /// The default is `ipfs`.
     #[arg(long)]
-    pub metadata_hash: Option<era_compiler_common::HashType>,
+    pub metadata_hash: Option<era_compiler_common::EraVMMetadataHashType>,
+
+    /// Turn off CBOR metadata at the end of bytecode.
+    #[arg(long)]
+    pub no_bytecode_metadata: bool,
 
     /// Dump all IR (LLL, LLVM IR, assembly) to files in the specified directory.
     /// Only for testing and debugging.
@@ -152,6 +156,12 @@ impl Arguments {
 
         if self.input_paths.is_empty() {
             anyhow::bail!("No input files provided.");
+        }
+
+        if let Some(era_compiler_common::EraVMMetadataHashType::Keccak256) = self.metadata_hash {
+            eprintln!(
+                "Warning: `keccak256` metadata hash type is deprecated. Please use `ipfs` instead."
+            );
         }
 
         let modes_count = [

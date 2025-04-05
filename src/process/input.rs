@@ -21,6 +21,8 @@ pub struct Input<'a> {
     pub contract: Cow<'a, Contract>,
     /// The metadata hash.
     pub metadata_hash: Option<era_compiler_common::Hash>,
+    /// Do not include the metadata in the bytecode.
+    pub no_bytecode_metadata: bool,
     /// The output selection flags.
     pub output_selection: Vec<VyperSelector>,
     /// The optimizer settings.
@@ -41,6 +43,7 @@ impl<'a> Input<'a> {
         full_path: Cow<'a, String>,
         contract: Cow<'a, Contract>,
         metadata_hash: Option<era_compiler_common::Hash>,
+        no_bytecode_metadata: bool,
         output_selection: Vec<VyperSelector>,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
@@ -51,6 +54,7 @@ impl<'a> Input<'a> {
             full_path,
             contract,
             metadata_hash,
+            no_bytecode_metadata,
             output_selection,
             optimizer_settings,
             llvm_options,

@@ -54,7 +54,8 @@ use rayon::iter::ParallelIterator;
 pub fn llvm_ir(
     input_paths: Vec<PathBuf>,
     output_selection: &[VyperSelector],
-    metadata_hash_type: era_compiler_common::HashType,
+    metadata_hash_type: era_compiler_common::EraVMMetadataHashType,
+    no_bytecode_metadata: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
     suppressed_warnings: Vec<WarningType>,
@@ -66,6 +67,7 @@ pub fn llvm_ir(
     let mut build = project.compile(
         None,
         metadata_hash_type,
+        no_bytecode_metadata,
         optimizer_settings,
         llvm_options,
         suppressed_warnings,
@@ -81,7 +83,8 @@ pub fn llvm_ir(
 pub fn eravm_assembly(
     input_paths: Vec<PathBuf>,
     output_selection: &[VyperSelector],
-    metadata_hash_type: era_compiler_common::HashType,
+    metadata_hash_type: era_compiler_common::EraVMMetadataHashType,
+    no_bytecode_metadata: bool,
     llvm_options: Vec<String>,
     suppressed_warnings: Vec<WarningType>,
     debug_config: Option<era_compiler_llvm_context::DebugConfig>,
@@ -93,6 +96,7 @@ pub fn eravm_assembly(
     let mut build = project.compile(
         None,
         metadata_hash_type,
+        no_bytecode_metadata,
         optimizer_settings,
         llvm_options,
         suppressed_warnings,
@@ -112,7 +116,8 @@ pub fn standard_output(
     evm_version: Option<era_compiler_common::EVMVersion>,
     enable_decimals: bool,
     search_paths: Option<Vec<String>>,
-    metadata_hash_type: era_compiler_common::HashType,
+    metadata_hash_type: era_compiler_common::EraVMMetadataHashType,
+    no_bytecode_metadata: bool,
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
@@ -141,6 +146,7 @@ pub fn standard_output(
     let mut build = project.compile(
         evm_version,
         metadata_hash_type,
+        no_bytecode_metadata,
         optimizer_settings,
         llvm_options,
         suppressed_warnings,
@@ -159,7 +165,8 @@ pub fn combined_json(
     evm_version: Option<era_compiler_common::EVMVersion>,
     enable_decimals: bool,
     search_paths: Option<Vec<String>>,
-    metadata_hash_type: era_compiler_common::HashType,
+    metadata_hash_type: era_compiler_common::EraVMMetadataHashType,
+    no_bytecode_metadata: bool,
     vyper_optimizer_enabled: bool,
     optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
     llvm_options: Vec<String>,
@@ -202,6 +209,7 @@ pub fn combined_json(
     let mut build = project.compile(
         evm_version,
         metadata_hash_type,
+        no_bytecode_metadata,
         optimizer_settings,
         llvm_options,
         suppressed_warnings,

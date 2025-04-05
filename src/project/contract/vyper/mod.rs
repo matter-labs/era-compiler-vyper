@@ -146,12 +146,15 @@ impl Contract {
         mut self,
         contract_path: &str,
         metadata_hash: Option<era_compiler_common::Hash>,
+        no_bytecode_metadata: bool,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
         output_selection: Vec<VyperSelector>,
         suppressed_warnings: Vec<WarningType>,
         debug_config: Option<era_compiler_llvm_context::DebugConfig>,
     ) -> anyhow::Result<ContractBuild> {
+        let version = self.version.clone();
+
         let warnings = self
             .ast
             .get_warnings(&self.ast.ast, suppressed_warnings.as_slice());
@@ -219,6 +222,20 @@ impl Contract {
             )
         })?;
 
+        let cbor_data = if no_bytecode_metadata {
+            None
+        } else {
+            let cbor_key = crate::r#const::VYPER_PRODUCTION_NAME.to_owned();
+            let cbor_data = vec![
+                (
+                    crate::r#const::DEFAULT_EXECUTABLE_NAME.to_owned(),
+                    crate::r#const::version().parse().expect("Always valid"),
+                ),
+                (crate::r#const::VYPER_PRODUCTION_NAME.to_owned(), version),
+            ];
+            Some((cbor_key, cbor_data))
+        };
+
         let is_minimal_proxy_used = context
             .vyper()
             .expect("Always exists")
@@ -226,6 +243,7 @@ impl Contract {
         let mut build = context.build(
             contract_path,
             metadata_hash,
+            cbor_data,
             output_selection.contains(&VyperSelector::EraVMAssembly)
                 || output_selection.contains(&VyperSelector::CombinedJson),
             false,

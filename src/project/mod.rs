@@ -39,7 +39,7 @@ pub struct Project {
     /// The selection output.
     pub output_selection: Vec<VyperSelector>,
     /// The project source code hash.
-    pub project_hash: era_compiler_common::Hash,
+    pub project_hash: era_compiler_common::Keccak256Hash,
 }
 
 impl Project {
@@ -55,7 +55,7 @@ impl Project {
             .values()
             .map(|contract| contract.source_code().as_bytes())
             .collect::<Vec<&[u8]>>();
-        let project_hash = era_compiler_common::Hash::keccak256_multiple(source_codes.as_slice());
+        let project_hash = era_compiler_common::Keccak256Hash::from_slices(source_codes.as_slice());
 
         Self {
             version,
@@ -160,11 +160,7 @@ impl Project {
                 })?;
                 let path = path.to_string_lossy().to_string();
 
-                let contract = EraVMAssemblyContract::new(
-                    era_compiler_llvm_context::eravm_const::ERAVM_VERSION,
-                    source_code,
-                )
-                .into();
+                let contract = EraVMAssemblyContract::new(source_code).into();
 
                 Ok((path, contract))
             })
@@ -183,7 +179,8 @@ impl Project {
     pub fn compile(
         self,
         evm_version: Option<era_compiler_common::EVMVersion>,
-        metadata_hash_type: era_compiler_common::HashType,
+        metadata_hash_type: era_compiler_common::EraVMMetadataHashType,
+        no_bytecode_metadata: bool,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
         suppressed_warnings: Vec<WarningType>,
@@ -198,14 +195,15 @@ impl Project {
             llvm_options.as_slice(),
         );
         let metadata_json = serde_json::to_value(&metadata).expect("Always valid");
+
         let metadata_bytes = metadata_json.to_string().into_bytes();
         let metadata_hash = match metadata_hash_type {
-            era_compiler_common::HashType::None => None,
-            era_compiler_common::HashType::Keccak256 => Some(era_compiler_common::Hash::keccak256(
-                metadata_bytes.as_slice(),
-            )),
-            era_compiler_common::HashType::Ipfs => {
-                Some(era_compiler_common::Hash::ipfs(metadata_bytes.as_slice()))
+            era_compiler_common::EraVMMetadataHashType::None => None,
+            era_compiler_common::EraVMMetadataHashType::Keccak256 => Some(
+                era_compiler_common::Keccak256Hash::from_slice(metadata_bytes.as_slice()).into(),
+            ),
+            era_compiler_common::EraVMMetadataHashType::IPFS => {
+                Some(era_compiler_common::IPFSHash::from_slice(metadata_bytes.as_slice()).into())
             }
         };
 
@@ -220,6 +218,7 @@ impl Project {
                         Cow::Borrowed(full_path),
                         Cow::Borrowed(contract),
                         metadata_hash.clone(),
+                        no_bytecode_metadata,
                         self.output_selection.clone(),
                         optimizer_settings.clone(),
                         llvm_options.clone(),

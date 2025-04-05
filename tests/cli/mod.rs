@@ -15,6 +15,7 @@ mod llvm_ir;
 mod llvm_options;
 mod llvm_verify_each;
 mod metadata_hash;
+mod no_bytecode_metadata;
 mod optimization;
 mod output_dir;
 mod overwrite;

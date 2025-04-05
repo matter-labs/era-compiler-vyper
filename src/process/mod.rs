@@ -31,6 +31,7 @@ pub fn run() -> anyhow::Result<()> {
             input.contract.into_owned().compile(
                 input.full_path.as_str(),
                 input.metadata_hash,
+                input.no_bytecode_metadata,
                 input.optimizer_settings,
                 input.llvm_options,
                 input.output_selection,

@@ -71,11 +71,11 @@ The format below is a modification of the original combined JSON output format i
     // Version of vyper.
     "source_version": "0.4.1",
     // Version of zkvyper.
-    "zk_version": "1.5.8"
+    "zk_version": "1.5.10"
   },
   // Version of vyper.
-  "version": "0.4.0",
+  "version": "0.4.1",
   // zkvyper: Version of zkvyper.
-  "zk_version": "1.5.8"
+  "zk_version": "1.5.10"
 }
 ```
