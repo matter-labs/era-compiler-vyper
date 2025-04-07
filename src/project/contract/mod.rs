@@ -54,7 +54,7 @@ impl Contract {
         self,
         contract_path: &str,
         metadata_hash: Option<era_compiler_common::Hash>,
-        no_bytecode_metadata: bool,
+        append_bytecode_metadata: bool,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
         output_selection: Vec<VyperSelector>,
@@ -65,7 +65,7 @@ impl Contract {
             Self::Vyper(inner) => inner.compile(
                 contract_path,
                 metadata_hash,
-                no_bytecode_metadata,
+                append_bytecode_metadata,
                 optimizer_settings,
                 llvm_options,
                 output_selection,
@@ -75,7 +75,7 @@ impl Contract {
             Self::LLVMIR(inner) => inner.compile(
                 contract_path,
                 metadata_hash,
-                no_bytecode_metadata,
+                append_bytecode_metadata,
                 optimizer_settings,
                 llvm_options,
                 output_selection,
@@ -85,7 +85,7 @@ impl Contract {
             Self::EraVMAssembly(inner) => inner.compile(
                 contract_path,
                 metadata_hash,
-                no_bytecode_metadata,
+                append_bytecode_metadata,
                 optimizer_settings,
                 llvm_options,
                 output_selection,

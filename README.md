@@ -7,32 +7,28 @@ or decentralization. As it’s EVM-compatible (with Solidity/Vyper), 99% of Ethe
 needing to refactor or re-audit any code. ZKsync Era also uses an LLVM-based compiler that will eventually enable
 developers to write smart contracts in popular languages such as C++ and Rust.
 
-This repository contains the ZKsync Vyper compiler.
+This repository contains the ZKsync Compiler for Vyper.
 
 ## Installation
 
-To install the *zkvyper* compiler, follow the [installation guide](./docs/src/01-installation.md).
+To install the *zkvyper* compiler, follow our [installation guide](https://matter-labs.github.io/era-compiler-vyper/latest/01-installation.html).
 
-For local development, [build zkvyper from sources](./docs/src/01-installation.md#building-from-source).
+For local development, [build zkvyper from its source code](https://matter-labs.github.io/era-compiler-vyper/latest/01-installation.html#building-from-source).
 
 ## Usage
 
-For the detailed usage guide, see the [comprehensive documentation](./docs/src/02-command-line-interface.md).
+For the detailed usage guide, see the [comprehensive documentation](https://matter-labs.github.io/era-compiler-vyper/latest/).
+
+Alternatively, you may check out its Markdown representation in [this repository](./docs/src/).
 
 ## Testing
 
-To run the unit and CLI tests, execute the following command from the repository root:
-
-```shell
-cargo test
-```
+To run the unit and CLI tests, execute `cargo test` from the repository root.
 
 ## Documentation
 
 Documentation is using [mdBook](https://github.com/rust-lang/mdBook) utility and its sources available in the `docs/` directory.
 To build the documentation, follow the [instructions](./docs/README.md).
-
-The deployed versioned builds can be found [here](https://matter-labs.github.io/era-compiler-vyper/latest/).
 
 ## Troubleshooting
 

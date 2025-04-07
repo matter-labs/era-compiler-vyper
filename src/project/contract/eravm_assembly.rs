@@ -30,7 +30,7 @@ impl Contract {
         self,
         contract_path: &str,
         metadata_hash: Option<era_compiler_common::Hash>,
-        no_bytecode_metadata: bool,
+        append_bytecode_metadata: bool,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
         _output_selection: Vec<VyperSelector>,
@@ -50,15 +50,15 @@ impl Contract {
             debug_config.as_ref(),
         )?;
 
-        let cbor_data = if no_bytecode_metadata {
-            None
-        } else {
+        let cbor_data = if append_bytecode_metadata {
             let cbor_key = crate::r#const::VYPER_PRODUCTION_NAME.to_owned();
             let cbor_data = vec![(
                 crate::r#const::DEFAULT_EXECUTABLE_NAME.to_owned(),
                 crate::r#const::version().parse().expect("Always valid"),
             )];
             Some((cbor_key, cbor_data))
+        } else {
+            None
         };
 
         let build = era_compiler_llvm_context::eravm_build(

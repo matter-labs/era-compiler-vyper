@@ -15,7 +15,7 @@
 
 ### Deprecated
 
-- The `keccak256` metadata hash type
+- The `keccak256` metadata hash type in favor of CBOR-encoded `ipfs`
 
 ## [1.5.9] - 2025-01-09
 

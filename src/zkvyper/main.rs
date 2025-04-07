@@ -119,12 +119,14 @@ fn main_inner() -> anyhow::Result<()> {
         .metadata_hash
         .unwrap_or(era_compiler_common::EraVMMetadataHashType::None);
 
+    let append_bytecode_metadata = !arguments.no_bytecode_metadata;
+
     let build = if arguments.llvm_ir {
         era_compiler_vyper::llvm_ir(
             arguments.input_paths,
             output_selection.as_slice(),
             metadata_hash_type,
-            arguments.no_bytecode_metadata,
+            append_bytecode_metadata,
             optimizer_settings,
             llvm_options,
             suppressed_warnings,
@@ -135,7 +137,7 @@ fn main_inner() -> anyhow::Result<()> {
             arguments.input_paths,
             output_selection.as_slice(),
             metadata_hash_type,
-            arguments.no_bytecode_metadata,
+            append_bytecode_metadata,
             llvm_options,
             suppressed_warnings,
             debug_config,
@@ -158,7 +160,7 @@ fn main_inner() -> anyhow::Result<()> {
                 arguments.enable_decimals,
                 arguments.search_paths,
                 metadata_hash_type,
-                arguments.no_bytecode_metadata,
+                append_bytecode_metadata,
                 vyper_optimizer_enabled,
                 optimizer_settings,
                 llvm_options,
@@ -185,7 +187,7 @@ fn main_inner() -> anyhow::Result<()> {
             arguments.enable_decimals,
             arguments.search_paths,
             metadata_hash_type,
-            arguments.no_bytecode_metadata,
+            append_bytecode_metadata,
             vyper_optimizer_enabled,
             optimizer_settings,
             llvm_options,

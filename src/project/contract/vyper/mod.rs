@@ -146,7 +146,7 @@ impl Contract {
         mut self,
         contract_path: &str,
         metadata_hash: Option<era_compiler_common::Hash>,
-        no_bytecode_metadata: bool,
+        append_bytecode_metadata: bool,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
         output_selection: Vec<VyperSelector>,
@@ -222,9 +222,7 @@ impl Contract {
             )
         })?;
 
-        let cbor_data = if no_bytecode_metadata {
-            None
-        } else {
+        let cbor_data = if append_bytecode_metadata {
             let cbor_key = crate::r#const::VYPER_PRODUCTION_NAME.to_owned();
             let cbor_data = vec![
                 (
@@ -234,6 +232,8 @@ impl Contract {
                 (crate::r#const::VYPER_PRODUCTION_NAME.to_owned(), version),
             ];
             Some((cbor_key, cbor_data))
+        } else {
+            None
         };
 
         let is_minimal_proxy_used = context
