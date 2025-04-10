@@ -24,7 +24,6 @@ jobs:
         run: |
           gh cache list
           gh cache delete --all || true
-          
 
   regen-ccache:
     needs: cleanup-ccache
@@ -62,6 +61,24 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      # This step is required to checkout submodules
+      # that are disabled in .gitmodules config
+      - name: Checkout submodules
+        run: |
+          git config --global --add safe.directory '*'
+          git submodule update --force --depth=1 --recursive --checkout
+
+      - name: Checkout host LLVM for musl build
+        uses: actions/checkout@v4
+        if: contains(matrix.target, 'musl')
+        with:
+          repository: 'llvm/llvm-project'
+          path: 'llvm-host'
+          ref: 'llvmorg-17.0.6'
+          fetch-depth: '1'
 
       - name: Prepare Windows env
         if: runner.os == 'Windows'
@@ -70,6 +87,7 @@ jobs:
       - name: Build LLVM for tests
         uses: matter-labs/era-compiler-ci/.github/actions/build-llvm@v1
         with:
+          clone-llvm: 'false'
           target-env: ${{ contains(matrix.target, 'musl') && 'musl' || 'gnu' }}
           enable-assertions: 'true'
           build-type: RelWithDebInfo
@@ -90,3 +108,8 @@ jobs:
           save-ccache: 'true'
           clone-llvm: 'false'
           ccache-key: ${{ format('llvm-{0}-{1}-{2}', runner.os, runner.arch, contains(matrix.target, 'musl') && 'musl' || 'gnu') }}
+
+      - name: Run tests
+        uses: matter-labs/era-compiler-ci/.github/actions/rust-unit-tests@v1
+        with:
+          target: ${{ matrix.target || '' }}
