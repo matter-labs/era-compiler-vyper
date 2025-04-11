@@ -257,7 +257,7 @@ It may be changed in the future, so each contract will be hashed separately, as 
 
 The following values are allowed: `none`, `ipfs`.
 
-The default value is `ipfs`.
+The default value is `none`.
 
 > EraVM requires its bytecode size to be an odd number of 32-byte words. If the size after appending the hash does not satisfy this requirement, the metadata is *prepended* with zeros.
 
@@ -278,7 +278,9 @@ a2646970667358221220cabf07f8316a1b55f55aa859b4e4c910f226ab11ab9a786f3a90acb586be
 
 The byte array starting with `a2` at the end of the bytecode is a CBOR-encoded compiler version data and an optional metadata hash.
 
-JSON representation of a CBOR payload:
+The last two bytes of the metadata (`0x004c`) are not a part of the CBOR payload, but the length of it, which must be known to correctly decode the payload. 
+
+JSON representation of the CBOR payload:
 
 ```javascript
 {
