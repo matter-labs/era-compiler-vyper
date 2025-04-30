@@ -69,7 +69,7 @@ jobs:
           # TODO: uncomment as soon as the Vyper is available on Linux ARM64
           # - name: "Linux ARM64"
           #   runner: matterlabs-ci-runner-arm
-          #   image: matterlabs/llvm_runner:ubuntu22-llvm17-latest
+          #   image: matterlabs/llvm_runner:ubuntu22-llvm19-latest
           #   target: "aarch64-unknown-linux-musl"
           # - name: "Linux ARM64 gnu"
           #   runner: matterlabs-ci-runner-arm
@@ -101,7 +101,7 @@ jobs:
         with:
           repository: 'llvm/llvm-project'
           path: 'llvm-host'
-          ref: 'llvmorg-17.0.6'
+          ref: 'llvmorg-19.1.7'
           fetch-depth: '1'
 
       - name: Prepare Windows env
