@@ -241,6 +241,7 @@ pub fn disassemble_eravm(paths: Vec<PathBuf>) -> anyhow::Result<()> {
 
     let target_machine = era_compiler_llvm_context::TargetMachine::new(
         era_compiler_common::Target::EraVM,
+        None,
         &era_compiler_llvm_context::OptimizerSettings::cycles(),
         &[],
     )?;
