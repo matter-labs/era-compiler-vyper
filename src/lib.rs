@@ -3,6 +3,7 @@
 //!
 
 #![allow(non_camel_case_types)]
+#![allow(clippy::large_enum_variant)]
 #![allow(clippy::upper_case_acronyms)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::assigning_clones)]
@@ -241,7 +242,6 @@ pub fn disassemble_eravm(paths: Vec<PathBuf>) -> anyhow::Result<()> {
 
     let target_machine = era_compiler_llvm_context::TargetMachine::new(
         era_compiler_common::Target::EraVM,
-        None,
         &era_compiler_llvm_context::OptimizerSettings::cycles(),
         &[],
     )?;

@@ -39,7 +39,6 @@ impl Contract {
     ) -> anyhow::Result<ContractBuild> {
         let target_machine = era_compiler_llvm_context::TargetMachine::new(
             era_compiler_common::Target::EraVM,
-            None,
             &optimizer_settings,
             llvm_options.as_slice(),
         )?;

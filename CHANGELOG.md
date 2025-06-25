@@ -5,6 +5,7 @@
 ### Changed
 
 - Updated to LLVM v19.1
+- Updated to Rust v1.88.0
 
 ## [1.5.10] - 2025-04-07
 
