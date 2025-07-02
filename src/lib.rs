@@ -3,6 +3,7 @@
 //!
 
 #![allow(non_camel_case_types)]
+#![allow(clippy::large_enum_variant)]
 #![allow(clippy::upper_case_acronyms)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::assigning_clones)]
