@@ -477,7 +477,7 @@
 
 ### Added
 
-- Support for the _SELECT_ instruction, used by min/max built-ins
+- Support for the *SELECT* instruction, used by min/max built-ins
 
 ## [1.1.0] - 2022-07-16
 
