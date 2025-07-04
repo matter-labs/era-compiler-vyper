@@ -4,6 +4,7 @@
 
 ### Changed
 
+- Support for Vyper v0.4.2 and v0.4.3
 - Updated to LLVM v19.1
 - Updated to Rust v1.88.0
 

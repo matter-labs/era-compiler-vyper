@@ -27,6 +27,16 @@ fn default_standard_json_0_4_1() {
     default_standard_json(semver::Version::new(0, 4, 1));
 }
 
+#[test]
+fn default_standard_json_0_4_2() {
+    default_standard_json(semver::Version::new(0, 4, 2));
+}
+
+#[test]
+fn default_standard_json_0_4_3() {
+    default_standard_json(semver::Version::new(0, 4, 3));
+}
+
 #[cfg(not(target_arch = "aarch64"))]
 #[test]
 fn default_combined_json_0_3_3() {
@@ -48,6 +58,16 @@ fn default_combined_json_0_4_0() {
 #[test]
 fn default_combined_json_0_4_1() {
     default_combined_json(semver::Version::new(0, 4, 1));
+}
+
+#[test]
+fn default_combined_json_0_4_2() {
+    default_combined_json(semver::Version::new(0, 4, 2));
+}
+
+#[test]
+fn default_combined_json_0_4_3() {
+    default_combined_json(semver::Version::new(0, 4, 3));
 }
 
 fn default_standard_json(version: semver::Version) {

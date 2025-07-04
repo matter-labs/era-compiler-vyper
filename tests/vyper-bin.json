@@ -29,6 +29,18 @@
       "protocol": "https",
       "source": "https://github.com/vyperlang/vyper/releases/download/v${VERSION}/vyper.${VERSION}+commit.8a93dd27.${PLATFORM}",
       "destination": "./vyper-bin/vyper-${VERSION}"
+    },
+    "0.4.2": {
+      "is_enabled": true,
+      "protocol": "https",
+      "source": "https://github.com/vyperlang/vyper/releases/download/v${VERSION}/vyper.${VERSION}+commit.c216787f.${PLATFORM}",
+      "destination": "./vyper-bin/vyper-${VERSION}"
+    },
+    "0.4.3": {
+      "is_enabled": true,
+      "protocol": "https",
+      "source": "https://github.com/vyperlang/vyper/releases/download/v${VERSION}/vyper.${VERSION}+commit.bff19ea2.${PLATFORM}",
+      "destination": "./vyper-bin/vyper-${VERSION}"
     }
   },
   "platforms": {
