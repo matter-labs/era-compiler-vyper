@@ -4,6 +4,8 @@
 
 use crate::common;
 
+// Test for the `create_copy_of` built-in function.
+
 #[test]
 #[should_panic(expected = "Built-in function `create_copy_of` is not supported")]
 fn create_copy_of_0_3_10() {
@@ -36,6 +38,29 @@ fn create_copy_of_0_4_3() {
 fn create_copy_of(version: semver::Version) {
     let _ = common::build_vyper_combined_json(
         vec![common::TEST_CREATE_COPY_OF_CONTRACT_PATH],
+        &version,
+        era_compiler_llvm_context::OptimizerSettings::none(),
+    )
+    .expect("Test failure");
+}
+
+// Test for the `raw_create` built-in function.
+
+#[test]
+#[should_panic(expected = "Built-in function `raw_create` is not supported")]
+fn raw_create_0_4_2() {
+    raw_create(semver::Version::new(0, 4, 2));
+}
+
+#[test]
+#[should_panic(expected = "Built-in function `raw_create` is not supported")]
+fn raw_create_0_4_3() {
+    raw_create(semver::Version::new(0, 4, 3));
+}
+
+fn raw_create(version: semver::Version) {
+    let _ = common::build_vyper_combined_json(
+        vec![common::TEST_RAW_CREATE_CONTRACT_PATH],
         &version,
         era_compiler_llvm_context::OptimizerSettings::none(),
     )

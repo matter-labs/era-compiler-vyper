@@ -65,3 +65,6 @@ pub const TEST_JSON_CONTRACT_PATH: &'static str = "tests/data/contracts/json/def
 
 /// A test input file.
 pub const TEST_BYTECODE_PATH: &'static str = "tests/data/bytecodes/default.zbin";
+
+/// A test input file.
+pub const TEST_RAW_CREATE_CONTRACT_PATH: &'static str = "tests/data/contracts/vyper/raw_create.vy";

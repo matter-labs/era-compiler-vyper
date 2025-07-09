@@ -81,6 +81,9 @@ pub const MINIMAL_PROXY_CONTRACT_NAME: &str = "__VYPER_MINIMAL_PROXY_CONTRACT";
 /// The value is used to route between several built-in codegen when analyzing the CREATE opcode arguments.
 pub const MINIMAL_PROXY_BUILTIN_INPUT_SIZE: usize = 54;
 
+/// The forbidden function `raw_create` introduced at 0.4.2.
+pub const FORBIDDEN_FUNCTION_NAME_RAW_CREATE: &str = "raw_create";
+
 lazy_static! {
     /// Vyper minimal proxy bytecode in bytes.
     pub static ref MINIMAL_PROXY_BUILD: era_compiler_llvm_context::EraVMBuild = {
