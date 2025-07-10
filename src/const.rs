@@ -71,6 +71,9 @@ pub const LABEL_SUFFIX_CLEANUP: &str = "cleanup";
 /// The forbidden function `create_copy_of`.
 pub const FORBIDDEN_FUNCTION_NAME_CREATE_COPY_OF: &str = "create_copy_of";
 
+/// The forbidden function `raw_create` introduced at 0.4.2.
+pub const FORBIDDEN_FUNCTION_NAME_RAW_CREATE: &str = "raw_create";
+
 /// The `EXTCODESIZE` argument LLL IR name when the blueprint size is requested.
 pub const EXTCODESIZE_BLUEPRINT_ARGUMENT_NAME: &str = "create_target";
 
@@ -80,9 +83,6 @@ pub const MINIMAL_PROXY_CONTRACT_NAME: &str = "__VYPER_MINIMAL_PROXY_CONTRACT";
 /// The `create_minimal_proxy_to` contract size that is emitted by the upstream Vyper compiler to CREATE's LLL IR.
 /// The value is used to route between several built-in codegen when analyzing the CREATE opcode arguments.
 pub const MINIMAL_PROXY_BUILTIN_INPUT_SIZE: usize = 54;
-
-/// The forbidden function `raw_create` introduced at 0.4.2.
-pub const FORBIDDEN_FUNCTION_NAME_RAW_CREATE: &str = "raw_create";
 
 lazy_static! {
     /// Vyper minimal proxy bytecode in bytes.
