@@ -43,12 +43,14 @@ impl Compiler {
     pub const DEFAULT_EXECUTABLE_NAME: &'static str = "vyper";
 
     /// The supported versions of `vyper`.
-    pub const SUPPORTED_VERSIONS: [semver::Version; 5] = [
+    pub const SUPPORTED_VERSIONS: [semver::Version; 7] = [
         semver::Version::new(0, 3, 3),
         semver::Version::new(0, 3, 9),
         semver::Version::new(0, 3, 10),
         semver::Version::new(0, 4, 0),
         semver::Version::new(0, 4, 1),
+        semver::Version::new(0, 4, 2),
+        semver::Version::new(0, 4, 3),
     ];
 
     /// The first version where we cannot use the optimizer.
@@ -298,7 +300,10 @@ impl Compiler {
     /// Checks for unsupported code is a Vyper source code file.
     ///
     pub fn check_unsupported(source_code: &str) -> anyhow::Result<()> {
-        for function in [crate::r#const::FORBIDDEN_FUNCTION_NAME_CREATE_COPY_OF] {
+        for function in [
+            crate::r#const::FORBIDDEN_FUNCTION_NAME_CREATE_COPY_OF,
+            crate::r#const::FORBIDDEN_FUNCTION_NAME_RAW_CREATE,
+        ] {
             if source_code.contains(function) {
                 return Err(anyhow::anyhow!(
                     "Built-in function `{function}` is not supported"

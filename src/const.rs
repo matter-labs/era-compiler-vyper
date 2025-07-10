@@ -71,6 +71,9 @@ pub const LABEL_SUFFIX_CLEANUP: &str = "cleanup";
 /// The forbidden function `create_copy_of`.
 pub const FORBIDDEN_FUNCTION_NAME_CREATE_COPY_OF: &str = "create_copy_of";
 
+/// The forbidden function `raw_create` introduced at 0.4.2.
+pub const FORBIDDEN_FUNCTION_NAME_RAW_CREATE: &str = "raw_create";
+
 /// The `EXTCODESIZE` argument LLL IR name when the blueprint size is requested.
 pub const EXTCODESIZE_BLUEPRINT_ARGUMENT_NAME: &str = "create_target";
 

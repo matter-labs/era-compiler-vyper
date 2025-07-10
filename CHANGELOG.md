@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Support for Vyper v0.4.2 and v0.4.3
+
 ### Changed
 
 - Updated to LLVM v19.1
@@ -476,7 +480,7 @@
 
 ### Added
 
-- Support for the *SELECT* instruction, used by min/max built-ins
+- Support for the _SELECT_ instruction, used by min/max built-ins
 
 ## [1.1.0] - 2022-07-16
 

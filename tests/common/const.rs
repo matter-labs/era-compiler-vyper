@@ -54,6 +54,9 @@ pub const TEST_CREATE_MINIMAL_PROXY_TO_CONTRACT_PATH: &'static str =
     "tests/data/contracts/vyper/create_minimal_proxy_to.vy";
 
 /// A test input file.
+pub const TEST_RAW_CREATE_CONTRACT_PATH: &'static str = "tests/data/contracts/vyper/raw_create.vy";
+
+/// A test input file.
 pub const TEST_ERAVM_ASSEMBLY_CONTRACT_PATH: &'static str =
     "tests/data/contracts/eravm/default.zasm";
 
