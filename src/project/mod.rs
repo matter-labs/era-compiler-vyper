@@ -179,7 +179,7 @@ impl Project {
     pub fn compile(
         self,
         evm_version: Option<era_compiler_common::EVMVersion>,
-        metadata_hash_type: era_compiler_common::EraVMMetadataHashType,
+        metadata_hash_type: era_compiler_common::MetadataHashType,
         append_bytecode_metadata: bool,
         optimizer_settings: era_compiler_llvm_context::OptimizerSettings,
         llvm_options: Vec<String>,
@@ -198,11 +198,11 @@ impl Project {
 
         let metadata_bytes = metadata_json.to_string().into_bytes();
         let metadata_hash = match metadata_hash_type {
-            era_compiler_common::EraVMMetadataHashType::None => None,
-            era_compiler_common::EraVMMetadataHashType::Keccak256 => Some(
+            era_compiler_common::MetadataHashType::None => None,
+            era_compiler_common::MetadataHashType::Keccak256 => Some(
                 era_compiler_common::Keccak256Hash::from_slice(metadata_bytes.as_slice()).into(),
             ),
-            era_compiler_common::EraVMMetadataHashType::IPFS => {
+            era_compiler_common::MetadataHashType::IPFS => {
                 Some(era_compiler_common::IPFSHash::from_slice(metadata_bytes.as_slice()).into())
             }
         };
