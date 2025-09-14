@@ -119,7 +119,7 @@ pub fn build_vyper_standard_json(
 ) -> anyhow::Result<Build> {
     crate::common::setup()?;
     let vyper = crate::common::get_vyper_compiler(version)?;
-    era_compiler_llvm_context::initialize_target(era_compiler_common::Target::EraVM);
+    era_compiler_llvm_context::initialize_target();
 
     let input = VyperStandardJsonInput::try_from_sources(
         sources,
@@ -136,7 +136,7 @@ pub fn build_vyper_standard_json(
     let project = Project::try_from_standard_json(output, &vyper.version.default)?;
     let mut build = project.compile(
         None,
-        era_compiler_common::EraVMMetadataHashType::IPFS,
+        era_compiler_common::MetadataHashType::IPFS,
         false,
         optimizer_settings,
         vec![],
@@ -158,7 +158,7 @@ pub fn build_vyper_combined_json(
     crate::common::setup()?;
 
     let vyper = crate::common::get_vyper_compiler(version)?;
-    era_compiler_llvm_context::initialize_target(era_compiler_common::Target::EraVM);
+    era_compiler_llvm_context::initialize_target();
 
     let input_paths = input_paths.into_iter().map(PathBuf::from).collect();
 
@@ -174,7 +174,7 @@ pub fn build_vyper_combined_json(
 
     let mut build = project.compile(
         None,
-        era_compiler_common::EraVMMetadataHashType::IPFS,
+        era_compiler_common::MetadataHashType::IPFS,
         false,
         optimizer_settings,
         vec![],

@@ -1,6 +1,6 @@
 use predicates::prelude::*;
 
-use era_compiler_common::EraVMMetadataHashType;
+use era_compiler_common::MetadataHashType;
 
 use crate::common;
 
@@ -8,7 +8,7 @@ use crate::common;
 fn none() -> anyhow::Result<()> {
     let _ = common::setup();
 
-    let hash_type = EraVMMetadataHashType::None.to_string();
+    let hash_type = MetadataHashType::None.to_string();
     let args = &[
         common::TEST_GREETER_CONTRACT_PATH,
         "--metadata-hash",
@@ -29,7 +29,7 @@ fn none() -> anyhow::Result<()> {
 fn ipfs_vyper() -> anyhow::Result<()> {
     let _ = common::setup();
 
-    let hash_type = EraVMMetadataHashType::IPFS.to_string();
+    let hash_type = MetadataHashType::IPFS.to_string();
     let args = &[
         common::TEST_GREETER_CONTRACT_PATH,
         "--metadata-hash",
@@ -50,7 +50,7 @@ fn ipfs_vyper() -> anyhow::Result<()> {
 fn ipfs_llvm_ir() -> anyhow::Result<()> {
     let _ = common::setup();
 
-    let hash_type = EraVMMetadataHashType::IPFS.to_string();
+    let hash_type = MetadataHashType::IPFS.to_string();
     let args = &[
         "--llvm-ir",
         common::TEST_LLVM_CONTRACT_PATH,
@@ -72,7 +72,7 @@ fn ipfs_llvm_ir() -> anyhow::Result<()> {
 fn ipfs_eravm_assembly() -> anyhow::Result<()> {
     let _ = common::setup();
 
-    let hash_type = EraVMMetadataHashType::IPFS.to_string();
+    let hash_type = MetadataHashType::IPFS.to_string();
     let args = &[
         "--eravm-assembly",
         common::TEST_ERAVM_ASSEMBLY_CONTRACT_PATH,
@@ -94,7 +94,7 @@ fn ipfs_eravm_assembly() -> anyhow::Result<()> {
 fn keccak256() -> anyhow::Result<()> {
     let _ = common::setup();
 
-    let hash_type = EraVMMetadataHashType::Keccak256.to_string();
+    let hash_type = MetadataHashType::Keccak256.to_string();
     let args = &[
         common::TEST_GREETER_CONTRACT_PATH,
         "--metadata-hash",

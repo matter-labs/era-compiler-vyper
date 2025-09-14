@@ -101,7 +101,7 @@ pub struct Arguments {
     /// Available types: `none`, `ipfs`.
     /// The default is `ipfs`.
     #[arg(long)]
-    pub metadata_hash: Option<era_compiler_common::EraVMMetadataHashType>,
+    pub metadata_hash: Option<era_compiler_common::MetadataHashType>,
 
     /// Turn off CBOR metadata at the end of bytecode.
     #[arg(long)]
@@ -158,7 +158,7 @@ impl Arguments {
             anyhow::bail!("No input files provided.");
         }
 
-        if let Some(era_compiler_common::EraVMMetadataHashType::Keccak256) = self.metadata_hash {
+        if let Some(era_compiler_common::MetadataHashType::Keccak256) = self.metadata_hash {
             eprintln!(
                 "Warning: `keccak256` metadata hash type is deprecated. Please use `ipfs` instead."
             );

@@ -1,6 +1,6 @@
 use predicates::prelude::*;
 
-use era_compiler_common::EraVMMetadataHashType;
+use era_compiler_common::MetadataHashType;
 
 use crate::common;
 
@@ -8,7 +8,7 @@ use crate::common;
 fn none() -> anyhow::Result<()> {
     let _ = common::setup();
 
-    let hash_type = EraVMMetadataHashType::None.to_string();
+    let hash_type = MetadataHashType::None.to_string();
     let args = &[
         common::TEST_GREETER_CONTRACT_PATH,
         "--metadata-hash",
@@ -28,7 +28,7 @@ fn none() -> anyhow::Result<()> {
 fn ipfs() -> anyhow::Result<()> {
     let _ = common::setup();
 
-    let hash_type = EraVMMetadataHashType::IPFS.to_string();
+    let hash_type = MetadataHashType::IPFS.to_string();
     let args = &[
         common::TEST_GREETER_CONTRACT_PATH,
         "--metadata-hash",
@@ -48,7 +48,7 @@ fn ipfs() -> anyhow::Result<()> {
 fn keccak256() -> anyhow::Result<()> {
     let _ = common::setup();
 
-    let hash_type = EraVMMetadataHashType::Keccak256.to_string();
+    let hash_type = MetadataHashType::Keccak256.to_string();
     let args = &[
         common::TEST_GREETER_CONTRACT_PATH,
         "--metadata-hash",
